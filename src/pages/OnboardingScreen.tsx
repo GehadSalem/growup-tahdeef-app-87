@@ -51,10 +51,10 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-growup-light">
+    <div className="min-h-screen flex flex-col bg-growup-light w-full h-full">
       {/* Welcome Screen */}
       {step === 1 && (
-        <div className="flex flex-1 flex-col items-center justify-between p-8 text-center">
+        <div className="flex flex-1 flex-col items-center justify-between p-8 text-center h-full">
           <div className="w-full pt-10">
             <Logo size="lg" className="mx-auto" />
           </div>
@@ -68,7 +68,7 @@ export default function OnboardingScreen() {
             </p>
           </div>
           
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-4 mb-4">
             <Button 
               onClick={handleNext}
               className="w-full max-w-xs mx-auto btn-primary h-[52px] text-lg"
@@ -86,7 +86,7 @@ export default function OnboardingScreen() {
 
       {/* Interest Selection */}
       {step === 2 && (
-        <div className="flex flex-1 flex-col p-8">
+        <div className="flex flex-1 flex-col p-8 h-full">
           <Logo className="mb-8" />
           
           <div className="mb-8">
@@ -106,7 +106,7 @@ export default function OnboardingScreen() {
             ))}
           </div>
           
-          <div className="mt-auto">
+          <div className="mt-auto mb-4">
             <Button 
               onClick={handleNext}
               disabled={selectedInterests.length === 0}
@@ -121,7 +121,7 @@ export default function OnboardingScreen() {
 
       {/* Occupation Selection */}
       {step === 3 && (
-        <div className="flex flex-1 flex-col p-8">
+        <div className="flex flex-1 flex-col p-8 h-full">
           <Logo className="mb-8" />
           
           <div className="mb-8">
@@ -129,7 +129,7 @@ export default function OnboardingScreen() {
             <p className="text-growup-text">اختر مجال عملك الحالي</p>
           </div>
           
-          <div className="flex flex-col gap-3 mb-8 h-64 overflow-y-auto">
+          <div className="flex flex-col gap-3 mb-8 max-h-64 overflow-y-auto">
             {OCCUPATIONS.map((occupation) => (
               <button
                 key={occupation.id}
@@ -145,7 +145,7 @@ export default function OnboardingScreen() {
             ))}
           </div>
           
-          <div className="mt-auto">
+          <div className="mt-auto mb-4">
             <Button 
               onClick={handleNext}
               disabled={!selectedOccupation}
