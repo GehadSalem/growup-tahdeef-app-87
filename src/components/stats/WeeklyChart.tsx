@@ -6,6 +6,7 @@ interface DayData {
   name: string;
   value: number;
   label?: string;
+  index?: number; // Add index to the interface
 }
 
 interface WeeklyChartProps {
@@ -15,11 +16,17 @@ interface WeeklyChartProps {
 }
 
 export function WeeklyChart({ data, className, barColor = "#219653" }: WeeklyChartProps) {
+  // Add index to each data point
+  const dataWithIndex = data.map((item, index) => ({
+    ...item,
+    index // Add index property
+  }));
+
   return (
     <div className={cn("w-full h-40", className)}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={dataWithIndex}
           margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
         >
           <XAxis 
@@ -39,8 +46,12 @@ export function WeeklyChart({ data, className, barColor = "#219653" }: WeeklyCha
               direction: 'rtl'
             }}
             formatter={(value, name, props) => {
-              const dayData = data[props.payload.payload.index];
-              return [`${value}%`, dayData.label || 'إنجاز'];
+              if (props && props.payload) {
+                // Safely access label
+                const label = props.payload.label || 'إنجاز';
+                return [`${value}%`, label];
+              }
+              return [`${value}%`, 'إنجاز'];
             }}
             labelFormatter={(label) => `${label}`}
           />
