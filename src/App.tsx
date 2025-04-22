@@ -18,6 +18,7 @@ import FinancialPlanning from "./pages/FinancialPlanning";
 import Investment from "./pages/Investment";
 import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
+import Menu from "./pages/Menu"; // إضافة صفحة القائمة الجديدة
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/" element={<OnboardingScreen />} />
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<OnboardingScreen />} />
+              <Route path="/menu" element={<Menu />} /> {/* إضافة مسار جديد للقائمة */}
               
               {/* Dashboard Routes - These will have the sidebar */}
               <Route
