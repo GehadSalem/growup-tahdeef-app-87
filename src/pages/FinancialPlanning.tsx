@@ -1,12 +1,11 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Plus } from "lucide-react";
+import { Plus, WalletCards } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Sample expense categories
@@ -19,18 +18,10 @@ const EXPENSE_CATEGORIES = [
   { id: "other", name: "أخرى", color: "#8884d8" }
 ];
 
-// Sample data for the expense breakdown
-const initialExpenses = [
-  { category: "food", name: "طعام", value: 1200, color: "#FF8042" },
-  { category: "transport", name: "مواصلات", value: 800, color: "#00C49F" },
-  { category: "entertainment", name: "ترفيه", value: 500, color: "#FFBB28" },
-  { category: "bills", name: "فواتير", value: 1500, color: "#0088FE" },
-];
-
-// Sample data for income/expense
+// Sample data for income/expense - We'll update this later with user input
 const initialMonthlyData = [
-  { name: "الدخل", value: 5000, color: "#4CAF50" },
-  { name: "المصروفات", value: 4000, color: "#F44336" },
+  { name: "الدخل", value: 0, color: "#4CAF50" },
+  { name: "المصروفات", value: 0, color: "#F44336" },
 ];
 
 // Sample savings goal
@@ -39,8 +30,8 @@ const initialSavingsGoal = 20000;
 export default function FinancialPlanning() {
   const { toast } = useToast();
   const [expenses, setExpenses] = useState(initialExpenses);
-  const [monthlyData] = useState(initialMonthlyData);
-  const [income, setIncome] = useState(monthlyData[0].value);
+  const [monthlyData, setMonthlyData] = useState(initialMonthlyData);
+  const [income, setIncome] = useState(0);
   const [savingsGoal, setSavingsGoal] = useState(initialSavingsGoal);
   
   // Calculate total expenses
@@ -52,12 +43,45 @@ export default function FinancialPlanning() {
   
   // Calculate progress toward savings goal
   const savingsProgress = (savings / savingsGoal) * 100;
+
+  // Update monthly data whenever income or expenses change
+  useEffect(() => {
+    setMonthlyData([
+      { name: "الدخل", value: income, color: "#4CAF50" },
+      { name: "المصروفات", value: totalExpenses, color: "#F44336" }
+    ]);
+
+    // Check if expenses are getting too high
+    if (totalExpenses > income * 0.8) {
+      toast({
+        title: "تنبيه!",
+        description: "المصروفات تقترب من حد الدخل الشهري",
+        variant: "destructive"
+      });
+    }
+
+    // Celebrate savings milestones
+    if (savings > 0 && savings >= savingsGoal * 0.5) {
+      toast({
+        title: "أحسنت!",
+        description: "أنت في الطريق الصحيح لتحقيق هدف التوفير",
+      });
+    }
+  }, [income, totalExpenses, savingsGoal]);
   
   // Add new expense
   const [newExpense, setNewExpense] = useState({
     category: "food",
     value: 0
   });
+
+  const handleIncomeChange = (value: number) => {
+    setIncome(value);
+    toast({
+      title: "تم تحديث الدخل الشهري",
+      description: `تم تحديث دخلك الشهري إلى ${value} ريال`,
+    });
+  };
   
   const handleAddExpense = () => {
     if (newExpense.value <= 0) {
@@ -106,6 +130,34 @@ export default function FinancialPlanning() {
       <AppHeader showBackButton title="التخطيط المالي" />
       
       <div className="container mx-auto px-4 py-6">
+        {/* Monthly Income Input */}
+        <section className="mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
+                <WalletCards className="h-5 w-5" />
+                الدخل الشهري
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label className="text-right block font-cairo" htmlFor="monthly-income">
+                  أدخل دخلك الشهري (ر.س)
+                </Label>
+                <Input
+                  id="monthly-income"
+                  type="number"
+                  min="0"
+                  value={income || ''}
+                  onChange={(e) => handleIncomeChange(Number(e.target.value))}
+                  placeholder="مثال: 10000"
+                  className="text-right"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Income and Expenses Summary */}
         <section className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
