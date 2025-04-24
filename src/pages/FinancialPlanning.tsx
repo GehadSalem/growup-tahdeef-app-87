@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ const EXPENSE_CATEGORIES = [
 // Initial empty expenses array
 const initialExpenses = [];
 
-// Sample data for income/expense - We'll update this later with user input
+// Sample data for income/expense
 const initialMonthlyData = [
   { name: "الدخل", value: 0, color: "#4CAF50" },
   { name: "المصروفات", value: 0, color: "#F44336" },
@@ -36,6 +35,7 @@ export default function FinancialPlanning() {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [monthlyData, setMonthlyData] = useState(initialMonthlyData);
   const [income, setIncome] = useState(0);
+  const [tempIncome, setTempIncome] = useState(0);
   const [savingsGoal, setSavingsGoal] = useState(initialSavingsGoal);
   
   // Calculate total expenses
@@ -129,6 +129,14 @@ export default function FinancialPlanning() {
     });
   };
 
+  const handleSaveIncome = () => {
+    setIncome(tempIncome);
+    toast({
+      title: "تم حفظ الدخل الشهري",
+      description: `تم تحديث دخلك الشهري إلى ${tempIncome} ريال`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader showBackButton title="التخطيط المالي" />
@@ -148,15 +156,28 @@ export default function FinancialPlanning() {
                 <Label className="text-right block font-cairo" htmlFor="monthly-income">
                   أدخل دخلك الشهري (ر.س)
                 </Label>
-                <Input
-                  id="monthly-income"
-                  type="number"
-                  min="0"
-                  value={income || ''}
-                  onChange={(e) => handleIncomeChange(Number(e.target.value))}
-                  placeholder="مثال: 10000"
-                  className="text-right"
-                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveIncome}
+                    className="bg-growup hover:bg-growup-dark"
+                  >
+                    حفظ
+                  </Button>
+                  <Input
+                    id="monthly-income"
+                    type="number"
+                    min="0"
+                    value={tempIncome || ''}
+                    onChange={(e) => setTempIncome(Number(e.target.value))}
+                    placeholder="مثال: 10000"
+                    className="text-right"
+                  />
+                </div>
+                {income > 0 && (
+                  <div className="mt-2 text-right text-sm text-gray-600 font-cairo">
+                    الدخل الشهري الحالي: {income} ريال
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
