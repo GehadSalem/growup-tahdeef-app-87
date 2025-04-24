@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/button';
-import { CategoryCard } from '@/components/ui/CategoryCard';
 import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Define the interests data
 const INTERESTS = [
@@ -24,6 +24,26 @@ const OCCUPATIONS = [
   { id: 'education', label: 'التعليم' },
   { id: 'other', label: 'أخرى' },
 ];
+
+// Create a simple Interest Card component specifically for onboarding
+function InterestCard({ emoji, label, isActive, onClick }) {
+  return (
+    <div 
+      className={cn(
+        "w-full flex flex-col items-center justify-center rounded-xl border p-4 shadow-md transition-colors cursor-pointer",
+        isActive ? "border-growup bg-growup/5" : "hover:border-growup/30 hover:bg-growup/5"
+      )}
+      onClick={onClick}
+    >
+      <div className={cn("text-3xl mb-2")}>
+        {emoji}
+      </div>
+      <div className={cn("font-cairo font-medium text-center")}>
+        {label}
+      </div>
+    </div>
+  );
+}
 
 export default function OnboardingScreen() {
   const navigate = useNavigate();
@@ -96,9 +116,9 @@ export default function OnboardingScreen() {
           
           <div className="grid grid-cols-2 gap-4 mb-8">
             {INTERESTS.map((interest) => (
-              <CategoryCard 
+              <InterestCard 
                 key={interest.id}
-                icon={<span className="text-3xl">{interest.emoji}</span>}
+                emoji={interest.emoji}
                 label={interest.label}
                 isActive={selectedInterests.includes(interest.id)}
                 onClick={() => toggleInterest(interest.id)}
