@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ const EXPENSE_CATEGORIES = [
   { id: "shopping", name: "تسوق", color: "#FF8042" },
   { id: "other", name: "أخرى", color: "#8884d8" }
 ];
+
+// Initial empty expenses array
+const initialExpenses = [];
 
 // Sample data for income/expense - We'll update this later with user input
 const initialMonthlyData = [
