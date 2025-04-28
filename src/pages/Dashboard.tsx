@@ -55,7 +55,16 @@ export default function Dashboard() {
     }
   };
   
-  const handleAddHabit = (habit: { title: string; category: string }) => {
+  const handleAddHabit = (habit: { 
+    title: string; 
+    category: string;
+    frequency: {
+      type: 'daily' | 'weekly' | 'monthly';
+      time?: string;
+      days?: number[];
+      dayOfMonth?: number;
+    };
+  }) => {
     const newHabit = {
       id: Date.now().toString(),
       title: habit.title,
@@ -89,6 +98,12 @@ export default function Dashboard() {
       'finance': '💰',
       'social': '👥',
       'other': '✨',
+      'تعلم': '📚',
+      'صحة': '🧘‍♂️',
+      'إنتاجية': '⏱️',
+      'مالي': '💰',
+      'اجتماعي': '👥',
+      'أخرى': '✨',
     };
     
     return icons[category] || '📝';
@@ -137,6 +152,7 @@ export default function Dashboard() {
             <Button 
               onClick={() => setDialogOpen(true)}
               className="bg-growup hover:bg-growup-dark"
+              aria-label="إضافة عادة جديدة"
             >
               <Plus className="mr-0 ml-2 h-4 w-4" />
               إضافة عادة
@@ -182,7 +198,7 @@ export default function Dashboard() {
         </section>
       </div>
       
-      {/* Add Habit Dialog */}
+      {/* Add Habit Dialog - Make sure it's visible */}
       <AddHabitDialog 
         open={dialogOpen} 
         onOpenChange={setDialogOpen} 
