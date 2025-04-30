@@ -1,6 +1,8 @@
 
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { CategoryItem } from "@/lib/types";
+import { APP_CATEGORIES } from "@/lib/constants";
 
 interface CategoryCardProps {
   id: string;
@@ -28,37 +30,10 @@ export function CategoryCard({ id, title, description, icon, route, color }: Cat
   );
 }
 
-const categories = [
-  {
-    id: "self-development",
-    title: "تطوير الذات",
-    description: "طور مهاراتك وعاداتك الإيجابية",
-    icon: "📚",
-    route: "/self-development",
-    color: "bg-purple-100"
-  },
-  {
-    id: "break-habits",
-    title: "كسر العادات السيئة",
-    description: "تخلص من العادات السيئة خطوة بخطوة",
-    icon: "🎯",
-    route: "/break-habits",
-    color: "bg-red-100"
-  },
-  {
-    id: "dashboard",
-    title: "لوحة التحكم",
-    description: "نظرة عامة على تقدمك اليومي",
-    icon: "📊",
-    route: "/dashboard",
-    color: "bg-blue-100"
-  }
-];
-
 export function CategoriesSection() {
   return (
     <section className="grid grid-cols-2 gap-4 md:grid-cols-3">
-      {categories.map((category) => (
+      {APP_CATEGORIES.map((category) => (
         <CategoryCard key={category.id} {...category} />
       ))}
     </section>
