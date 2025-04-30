@@ -42,14 +42,6 @@ const Menu = () => {
             variant="outline" 
             size="lg" 
             className="w-full" 
-            onClick={() => navigate('/mental-health')}
-          >
-            الصحة النفسية
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="w-full" 
             onClick={() => navigate('/financial-planning')}
           >
             التخطيط المالي
@@ -61,14 +53,6 @@ const Menu = () => {
             onClick={() => navigate('/investment')}
           >
             الاستثمار الذكي
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="w-full" 
-            onClick={() => navigate('/community')}
-          >
-            المجتمع
           </Button>
         </div>
       </div>

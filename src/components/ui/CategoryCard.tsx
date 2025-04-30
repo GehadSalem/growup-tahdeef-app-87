@@ -1,5 +1,5 @@
+
 import { cn } from "@/lib/utils";
-import { HomeIcon, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface CategoryCardProps {
@@ -52,20 +52,12 @@ const categories = [
     icon: "📊",
     route: "/dashboard",
     color: "bg-blue-100"
-  },
-  {
-    id: "community",
-    title: "المجتمع",
-    description: "تواصل مع الآخرين وتبادل الخبرات",
-    icon: "👥",
-    route: "/community",
-    color: "bg-yellow-100"
-  },
+  }
 ];
 
 export function CategoriesSection() {
   return (
-    <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <section className="grid grid-cols-2 gap-4 md:grid-cols-3">
       {categories.map((category) => (
         <CategoryCard key={category.id} {...category} />
       ))}

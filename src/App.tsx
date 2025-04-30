@@ -13,12 +13,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import SelfDevelopment from "./pages/SelfDevelopment";
 import BreakHabits from "./pages/BreakHabits";
-import MentalHealth from "./pages/MentalHealth";
 import FinancialPlanning from "./pages/FinancialPlanning";
 import Investment from "./pages/Investment";
-import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
-import Menu from "./pages/Menu"; // إضافة صفحة القائمة الجديدة
+import Menu from "./pages/Menu";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +32,7 @@ const App = () => (
               <Route path="/" element={<OnboardingScreen />} />
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<OnboardingScreen />} />
-              <Route path="/menu" element={<Menu />} /> {/* إضافة مسار جديد للقائمة */}
+              <Route path="/menu" element={<Menu />} />
               
               {/* Dashboard Routes - These will have the sidebar */}
               <Route
@@ -71,17 +69,6 @@ const App = () => (
                 }
               />
               <Route
-                path="/mental-health"
-                element={
-                  <>
-                    <AppSidebar />
-                    <div className="flex-1">
-                      <MentalHealth />
-                    </div>
-                  </>
-                }
-              />
-              <Route
                 path="/financial-planning"
                 element={
                   <>
@@ -99,17 +86,6 @@ const App = () => (
                     <AppSidebar />
                     <div className="flex-1">
                       <Investment />
-                    </div>
-                  </>
-                }
-              />
-              <Route
-                path="/community"
-                element={
-                  <>
-                    <AppSidebar />
-                    <div className="flex-1">
-                      <Community />
                     </div>
                   </>
                 }

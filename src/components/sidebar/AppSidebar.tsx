@@ -16,9 +16,7 @@ import {
   Home, 
   LogOut, 
   PiggyBank, 
-  Settings, 
-  Users, 
-  HeartPulse 
+  Settings 
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -44,11 +42,6 @@ export function AppSidebar() {
       path: "/break-habits",
     },
     {
-      title: "الصحة النفسية",
-      icon: <HeartPulse />,
-      path: "/mental-health",
-    },
-    {
       title: "التخطيط المالي",
       icon: <PiggyBank />,
       path: "/financial-planning",
@@ -57,11 +50,6 @@ export function AppSidebar() {
       title: "الاستثمار الذكي",
       icon: <AreaChart />,
       path: "/investment",
-    },
-    {
-      title: "المجتمع",
-      icon: <Users />,
-      path: "/community",
     },
   ];
   
