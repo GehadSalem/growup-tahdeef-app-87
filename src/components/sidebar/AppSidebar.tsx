@@ -16,7 +16,8 @@ import {
   Home, 
   LogOut, 
   PiggyBank, 
-  Settings 
+  Settings,
+  Target
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,11 @@ export function AppSidebar() {
       icon: <AreaChart />,
       path: "/investment",
     },
+    {
+      title: "أهدافي الكبرى",
+      icon: <Target />,
+      path: "/major-goals",
+    }
   ];
   
   const isActive = (path: string) => {

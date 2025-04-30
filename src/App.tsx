@@ -17,6 +17,7 @@ import FinancialPlanning from "./pages/FinancialPlanning";
 import Investment from "./pages/Investment";
 import NotFound from "./pages/NotFound";
 import Menu from "./pages/Menu";
+import MajorGoals from "./pages/MajorGoals";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,17 @@ const App = () => (
                     <AppSidebar />
                     <div className="flex-1">
                       <Investment />
+                    </div>
+                  </>
+                }
+              />
+              <Route
+                path="/major-goals"
+                element={
+                  <>
+                    <AppSidebar />
+                    <div className="flex-1">
+                      <MajorGoals />
                     </div>
                   </>
                 }

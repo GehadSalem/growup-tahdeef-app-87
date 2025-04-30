@@ -54,6 +54,14 @@ const Menu = () => {
           >
             الاستثمار الذكي
           </Button>
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full" 
+            onClick={() => navigate('/major-goals')}
+          >
+            أهدافي الكبرى
+          </Button>
         </div>
       </div>
     </div>
