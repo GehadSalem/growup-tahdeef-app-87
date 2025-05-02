@@ -1,15 +1,14 @@
+
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-// نظام اشتراك تجريبي للعرض فقط
-// في التطبيق الحقيقي سيتم استبداله بنظام دفع حقيقي مثل Stripe
-
+// تحديد ميزات الاشتراك في مصفوفة لسهولة التعديل
 const SUBSCRIPTION_FEATURES = [
   "وصول كامل لجميع أدوات تطوير الذات",
   "تتبع مخصص للعادات السيئة والجيدة",
@@ -20,6 +19,34 @@ const SUBSCRIPTION_FEATURES = [
   "دعم فني مميز على مدار الساعة",
   "تحديثات مستمرة ومزايا حصرية"
 ];
+
+// مكونات فرعية لتنظيم صفحة الاشتراك
+const SubscriptionFeature = ({ feature }: { feature: string }) => (
+  <div className="flex items-center justify-end gap-2">
+    <span className="text-gray-700 text-right">{feature}</span>
+    <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
+      <Check className="h-3 w-3 text-green-600" />
+    </div>
+  </div>
+);
+
+const BenefitCard = ({ title, description, icon }: { title: string; description: string; icon: string }) => (
+  <Card className="bg-white shadow-md border-0">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-xl font-bold text-right">{icon} {title}</CardTitle>
+    </CardHeader>
+    <CardContent className="text-right">
+      <p>{description}</p>
+    </CardContent>
+  </Card>
+);
+
+const FAQ = ({ question, answer }: { question: string; answer: string }) => (
+  <div className="bg-white rounded-lg p-4 shadow-sm">
+    <h3 className="font-bold mb-2 text-right">{question}</h3>
+    <p className="text-gray-700 text-right">{answer}</p>
+  </div>
+);
 
 export default function Subscription() {
   const navigate = useNavigate();
@@ -36,7 +63,7 @@ export default function Subscription() {
         title: "تم الاشتراك بنجاح!",
         description: "مرحبًا بك في عضوية GrowUp المميزة!",
       });
-      navigate("/dashboard-app"); // تم تغيير مسار إعادة التوجيه إلى dashboard-app
+      navigate("/dashboard-app");
     }, 2000);
   };
 
@@ -75,12 +102,7 @@ export default function Subscription() {
               
               <div className="space-y-3">
                 {SUBSCRIPTION_FEATURES.map((feature, index) => (
-                  <div key={index} className="flex items-center justify-end gap-2">
-                    <span className="text-gray-700 text-right">{feature}</span>
-                    <div className="h-5 w-5 rounded-full bg-green-100 flex items-center justify-center">
-                      <Check className="h-3 w-3 text-green-600" />
-                    </div>
-                  </div>
+                  <SubscriptionFeature key={index} feature={feature} />
                 ))}
               </div>
             </CardContent>
@@ -106,41 +128,29 @@ export default function Subscription() {
             <h2 className="text-2xl font-bold font-cairo mb-6 text-right">لماذا تشترك في GrowUp Premium؟</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-white shadow-md border-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl font-bold text-right">🧠 تطوير ذاتي شامل</CardTitle>
-                </CardHeader>
-                <CardContent className="text-right">
-                  <p>أدوات متكاملة لتطوير عاداتك الإيجابية وكسر العادات السلبية. مع تحليلات مخصصة ونصائح تناسب أسلوب حياتك.</p>
-                </CardContent>
-              </Card>
+              <BenefitCard 
+                icon="🧠"
+                title="تطوير ذاتي شامل"
+                description="أدوات متكاملة لتطوير عاداتك الإيجابية وكسر العادات السلبية. مع تحليلات مخصصة ونصائح تناسب أسلوب حياتك."
+              />
               
-              <Card className="bg-white shadow-md border-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl font-bold text-right">💰 إدارة مالية ذكية</CardTitle>
-                </CardHeader>
-                <CardContent className="text-right">
-                  <p>تخطيط مالي متقدم مع تتبع للنفقات وتذكير بالالتزامات الشهرية. مع تقارير مفصلة ونصائح لزيادة المدخرات.</p>
-                </CardContent>
-              </Card>
+              <BenefitCard 
+                icon="💰"
+                title="إدارة مالية ذكية"
+                description="تخطيط مالي متقدم مع تتبع للنفقات وتذكير بالالتزامات الشهرية. مع تقارير مفصلة ونصائح لزيادة المدخرات."
+              />
               
-              <Card className="bg-white shadow-md border-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl font-bold text-right">🎯 تحقيق الأهداف</CardTitle>
-                </CardHeader>
-                <CardContent className="text-right">
-                  <p>خطط مخصصة لتحقيق أهدافك المالية والشخصية والمهنية. مع تتبع مستمر للتقدم وتحفيز يومي للاستمرار.</p>
-                </CardContent>
-              </Card>
+              <BenefitCard 
+                icon="🎯"
+                title="تحقيق الأهداف"
+                description="خطط مخصصة لتحقيق أهدافك المالية والشخصية والمهنية. مع تتبع مستمر للتقدم وتحفيز يومي للاستمرار."
+              />
               
-              <Card className="bg-white shadow-md border-0">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl font-bold text-right">🛠️ أدوات متقدمة</CardTitle>
-                </CardHeader>
-                <CardContent className="text-right">
-                  <p>حاسبات مالية، تقارير مخصصة، ورسوم بيانية تفاعلية. مع واجهة سهلة الاستخدام لتبسيط رحلة نموك الشخصي.</p>
-                </CardContent>
-              </Card>
+              <BenefitCard 
+                icon="🛠️"
+                title="أدوات متقدمة"
+                description="حاسبات مالية، تقارير مخصصة، ورسوم بيانية تفاعلية. مع واجهة سهلة الاستخدام لتبسيط رحلة نموك الشخصي."
+              />
             </div>
           </div>
 
@@ -149,20 +159,20 @@ export default function Subscription() {
             <h2 className="text-2xl font-bold font-cairo mb-6 text-right">أسئلة متكررة</h2>
             
             <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h3 className="font-bold mb-2 text-right">هل يمكنني إلغاء الاشتراك في أي وقت؟</h3>
-                <p className="text-gray-700 text-right">نعم، يمكنك إلغاء اشتراكك في أي وقت بدون أي رسوم إضافية.</p>
-              </div>
+              <FAQ 
+                question="هل يمكنني إلغاء الاشتراك في أي وقت؟"
+                answer="نعم، يمكنك إلغاء اشتراكك في أي وقت بدون أي رسوم إضافية."
+              />
               
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h3 className="font-bold mb-2 text-right">هل هناك فترة تجريبية مجانية؟</h3>
-                <p className="text-gray-700 text-right">نعم، نقدم ضمان استرداد كامل المبلغ خلال 14 يومًا إذا لم تكن راضيًا عن الخدمة.</p>
-              </div>
+              <FAQ 
+                question="هل هناك فترة تجريبية مجانية؟"
+                answer="نعم، نقدم ضمان استرداد كامل المبلغ خلال 14 يومًا إذا لم تكن راضيًا عن الخدمة."
+              />
               
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <h3 className="font-bold mb-2 text-right">ما هي طرق الدفع المتاحة؟</h3>
-                <p className="text-gray-700 text-right">نقبل بطاقات الائتمان (Visa، MasterCard، American Express) وكذلك Apple Pay وGoogle Pay.</p>
-              </div>
+              <FAQ 
+                question="ما هي طرق الدفع المتاحة؟"
+                answer="نقبل بطاقات الائتمان (Visa، MasterCard، American Express) وكذلك Apple Pay وGoogle Pay."
+              />
             </div>
           </div>
           

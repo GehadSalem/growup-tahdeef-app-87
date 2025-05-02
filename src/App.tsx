@@ -9,7 +9,14 @@ import { appRoutes } from "@/lib/routes";
 import { Suspense } from "react";
 
 // إنشاء عميل للاستعلامات
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // مكون التحميل
 const Loading = () => (

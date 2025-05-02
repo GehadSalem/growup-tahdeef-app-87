@@ -1,6 +1,12 @@
 
-// تعريفات الأنواع المستخدمة في التطبيق
+/**
+ * تعريفات الأنواع المستخدمة في التطبيق
+ * هذا الملف يحتوي على جميع التعريفات التي يمكن استخدامها في مختلف أجزاء التطبيق
+ */
 
+/**
+ * نوع العادة اليومية
+ */
 export interface Habit {
   id: string;
   title: string;
@@ -9,6 +15,9 @@ export interface Habit {
   icon: string;
 }
 
+/**
+ * نوع العادة السيئة المراد التخلص منها
+ */
 export interface BadHabit {
   id: string;
   name: string;
@@ -17,6 +26,9 @@ export interface BadHabit {
   alternativeAction: string;
 }
 
+/**
+ * نوع الالتزام المالي الشهري
+ */
 export interface MonthlyObligation {
   id: string;
   name: string;
@@ -29,6 +41,9 @@ export interface MonthlyObligation {
   notes?: string;
 }
 
+/**
+ * نوع عنصر القائمة/الفئة
+ */
 export interface CategoryItem {
   id: string;
   title: string;
@@ -38,12 +53,18 @@ export interface CategoryItem {
   color: string;
 }
 
+/**
+ * نوع ميزة الاشتراك
+ */
 export interface SubscriptionFeature {
   title: string;
   description: string;
   icon: string;
 }
 
+/**
+ * نوع خطة الاشتراك
+ */
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -54,4 +75,33 @@ export interface SubscriptionPlan {
   isPopular?: boolean;
 }
 
-// أنواع إضافية حسب الحاجة
+/**
+ * نوع الهدف الرئيسي
+ */
+export interface MajorGoal {
+  id: string;
+  title: string;
+  description: string;
+  targetDate: string;
+  progress: number;
+  milestones: {
+    id: string;
+    title: string;
+    isCompleted: boolean;
+  }[];
+}
+
+/**
+ * نوع المستخدم
+ */
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  isSubscribed: boolean;
+  subscriptionEndDate?: string;
+  preferences?: {
+    theme: "light" | "dark";
+    notifications: boolean;
+  };
+}
