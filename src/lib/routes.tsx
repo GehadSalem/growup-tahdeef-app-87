@@ -8,6 +8,7 @@ import OnboardingScreen from '@/pages/OnboardingScreen';
 import Login from '@/pages/Login';
 import Menu from '@/pages/Menu';
 import NotFound from '@/pages/NotFound';
+import Subscription from '@/pages/Subscription'; // تغيير من lazy إلى استيراد مباشر
 
 // استيراد الصفحات الأخرى باستخدام التحميل الكسول (lazy loading)
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -16,7 +17,6 @@ const BreakHabits = lazy(() => import('@/pages/BreakHabits'));
 const FinancialPlanning = lazy(() => import('@/pages/FinancialPlanning'));
 const Investment = lazy(() => import('@/pages/Investment'));
 const MajorGoals = lazy(() => import('@/pages/MajorGoals'));
-const Subscription = lazy(() => import('@/pages/Subscription'));
 
 // مكون التحميل
 const Loading = () => (
