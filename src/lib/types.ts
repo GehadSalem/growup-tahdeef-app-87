@@ -38,4 +38,20 @@ export interface CategoryItem {
   color: string;
 }
 
+export interface SubscriptionFeature {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  interval: "monthly" | "yearly";
+  features: SubscriptionFeature[];
+  isPopular?: boolean;
+}
+
 // أنواع إضافية حسب الحاجة

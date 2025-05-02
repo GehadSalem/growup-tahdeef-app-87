@@ -16,6 +16,7 @@ const BreakHabits = lazy(() => import('@/pages/BreakHabits'));
 const FinancialPlanning = lazy(() => import('@/pages/FinancialPlanning'));
 const Investment = lazy(() => import('@/pages/Investment'));
 const MajorGoals = lazy(() => import('@/pages/MajorGoals'));
+const Subscription = lazy(() => import('@/pages/Subscription'));
 
 // مكون التحميل
 const Loading = () => (
@@ -46,6 +47,9 @@ export const appRoutes: RouteObject[] = [
   { path: '/login', element: <Login /> },
   { path: '/onboarding', element: <OnboardingScreen /> },
   { path: '/menu', element: <Menu /> },
+  
+  // صفحة الاشتراك
+  { path: '/subscription', element: <Subscription /> },
   
   // مسارات لوحة التحكم مع الشريط الجانبي
   { path: '/dashboard', element: withSidebar(Dashboard) },

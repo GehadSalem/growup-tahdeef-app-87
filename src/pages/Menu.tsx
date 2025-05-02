@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
+import { Star } from "lucide-react";
 
 const Menu = () => {
   const navigate = useNavigate();
@@ -61,6 +62,16 @@ const Menu = () => {
             onClick={() => navigate('/major-goals')}
           >
             أهدافي الكبرى
+          </Button>
+          
+          <Button 
+            variant="default" 
+            size="lg" 
+            className="w-full mt-4 bg-gradient-to-r from-growup to-growup-dark" 
+            onClick={() => navigate('/subscription')}
+          >
+            <Star className="h-4 w-4 mr-0 ml-2 fill-yellow-200" />
+            اشترك في العضوية المميزة
           </Button>
         </div>
       </div>
