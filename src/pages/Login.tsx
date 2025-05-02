@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,67 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // إضافة تكامل Google Auth
+  useEffect(() => {
+    // تحميل مكتبة Google API
+    const loadGoogleScript = () => {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      
+      script.onload = initializeGoogleSignIn;
+    };
+    
+    const initializeGoogleSignIn = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: "YOUR_GOOGLE_CLIENT_ID", // يجب استبداله بمعرف العميل الخاص بك
+          callback: handleGoogleCredentialResponse,
+        });
+        
+        window.google.accounts.id.renderButton(
+          document.getElementById("google-signin-button"),
+          { theme: "outline", size: "large", width: "100%", text: "continue_with" }
+        );
+      }
+    };
+    
+    loadGoogleScript();
+    
+    return () => {
+      // تنظيف عند إزالة المكون
+      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (script) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+  
+  const handleGoogleCredentialResponse = (response) => {
+    setIsLoading(true);
+    
+    // هنا يمكنك التحقق من الرمز المميز باستخدام API الخاص بك
+    console.log("Google token:", response.credential);
+    
+    // محاكاة نجاح تسجيل الدخول
+    toast({
+      title: "تم تسجيل الدخول بنجاح",
+      description: "مرحباً بك في GrowUp!",
+    });
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate("/subscription");
+    }, 1000);
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     if (!email || !password || (!isLogin && !name)) {
       toast({
@@ -24,39 +82,27 @@ export default function Login() {
         description: "يرجى إدخال جميع البيانات المطلوبة",
         variant: "destructive",
       });
+      setIsLoading(false);
       return;
     }
     
-    // In a real app, this would make an API call for authentication
-    if (isLogin) {
-      // Simulate login success
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك مجدداً!",
-      });
-    } else {
-      // Simulate registration success
-      toast({
-        title: "تم إنشاء الحساب بنجاح",
-        description: "مرحباً بك في GrowUp!",
-      });
-    }
-    
-    // Navigate to subscription page after login/signup
-    navigate("/subscription");
-  };
-  
-  const handleGoogleSignIn = () => {
-    // In a real app, this would trigger Google OAuth
-    toast({
-      title: "جاري تسجيل الدخول",
-      description: "سيتم تحويلك إلى Google للمتابعة",
-    });
-    
-    // Simulate OAuth login after a short delay
+    // محاكاة التحقق من API
     setTimeout(() => {
+      if (isLogin) {
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك مجدداً!",
+        });
+      } else {
+        toast({
+          title: "تم إنشاء الحساب بنجاح",
+          description: "مرحباً بك في GrowUp!",
+        });
+      }
+      
+      setIsLoading(false);
       navigate("/subscription");
-    }, 1500);
+    }, 1000);
   };
   
   return (
@@ -70,18 +116,7 @@ export default function Login() {
               {isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
             </h1>
             
-            <Button 
-              variant="outline" 
-              className="w-full mb-4 flex items-center justify-center gap-2 font-cairo"
-              onClick={handleGoogleSignIn}
-            >
-              <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" fill="#4285F4"/>
-              </svg>
-              <span>
-                {isLogin ? "تسجيل الدخول بواسطة Google" : "تسجيل بواسطة Google"}
-              </span>
-            </Button>
+            <div id="google-signin-button" className="w-full mb-4"></div>
             
             <div className="relative my-6">
               <hr className="border-gray-300" />
@@ -139,8 +174,19 @@ export default function Login() {
               <Button 
                 type="submit" 
                 className="w-full bg-growup hover:bg-growup-dark text-white h-12"
+                disabled={isLoading}
               >
-                {isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -mr-1 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="mr-2">جاري التحميل...</span>
+                  </span>
+                ) : (
+                  isLogin ? "تسجيل الدخول" : "إنشاء الحساب"
+                )}
               </Button>
             </form>
           </div>
@@ -149,6 +195,7 @@ export default function Login() {
             <button
               onClick={() => setIsLogin(!isLogin)}
               className="text-growup hover:underline font-cairo"
+              disabled={isLoading}
             >
               {isLogin 
                 ? "ليس لديك حساب؟ إنشاء حساب جديد" 
@@ -160,4 +207,19 @@ export default function Login() {
       </div>
     </div>
   );
+}
+
+// إضافة الواجهة لمكتبة Google
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: (callback: any) => void;
+          renderButton: (element: HTMLElement | null, options: any) => void;
+        };
+      };
+    };
+  }
 }
