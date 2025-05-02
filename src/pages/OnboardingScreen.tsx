@@ -65,8 +65,11 @@ export default function OnboardingScreen() {
     } else if (step === 2) {
       setStep(3);
     } else {
-      // Save user preferences and navigate to dashboard
-      navigate('/dashboard');
+      // بعد إكمال الاستبيان، توجيه المستخدم إلى صفحة تسجيل الدخول
+      localStorage.setItem('onboardingCompleted', 'true');
+      localStorage.setItem('userInterests', JSON.stringify(selectedInterests));
+      localStorage.setItem('userOccupation', selectedOccupation);
+      navigate('/login');
     }
   };
 
@@ -171,7 +174,7 @@ export default function OnboardingScreen() {
               disabled={!selectedOccupation}
               className="w-full btn-primary h-[52px] text-lg"
             >
-              بدء الرحلة
+              إنشاء حساب
               <ArrowLeft className="mr-2 h-5 w-5" />
             </Button>
           </div>

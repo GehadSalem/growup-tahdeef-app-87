@@ -42,8 +42,8 @@ export default function Login() {
       });
     }
     
-    // Navigate to onboarding
-    navigate("/onboarding");
+    // Navigate to subscription page after login/signup
+    navigate("/subscription");
   };
   
   const handleGoogleSignIn = () => {
@@ -55,7 +55,7 @@ export default function Login() {
     
     // Simulate OAuth login after a short delay
     setTimeout(() => {
-      navigate("/onboarding");
+      navigate("/subscription");
     }, 1500);
   };
   
@@ -72,7 +72,7 @@ export default function Login() {
             
             <Button 
               variant="outline" 
-              className="w-full mb-4 flex items-center gap-2 font-cairo"
+              className="w-full mb-4 flex items-center justify-center gap-2 font-cairo"
               onClick={handleGoogleSignIn}
             >
               <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -103,6 +103,7 @@ export default function Login() {
                     value={name}
                     onChange={e => setName(e.target.value)}
                     className="input-field"
+                    dir="rtl"
                   />
                 </div>
               )}
@@ -117,7 +118,7 @@ export default function Login() {
                   placeholder="your@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="input-field"
+                  className="input-field text-right"
                 />
               </div>
               
@@ -137,7 +138,7 @@ export default function Login() {
               
               <Button 
                 type="submit" 
-                className="w-full btn-primary"
+                className="w-full bg-growup hover:bg-growup-dark text-white h-12"
               >
                 {isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
               </Button>
