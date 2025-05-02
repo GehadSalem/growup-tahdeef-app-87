@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ export default function Subscription() {
         title: "تم الاشتراك بنجاح!",
         description: "مرحبًا بك في عضوية GrowUp المميزة!",
       });
-      navigate("/dashboard");
+      navigate("/dashboard-app"); // تم تغيير مسار إعادة التوجيه إلى dashboard-app
     }, 2000);
   };
 

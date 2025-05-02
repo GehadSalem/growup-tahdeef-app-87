@@ -1,6 +1,6 @@
 
 import { lazy, Suspense } from 'react';
-import { RouteObject } from 'react-router-dom';
+import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
 
 // استيراد الصفحات الأساسية بشكل مباشر (تحميل أولي)
@@ -51,8 +51,11 @@ export const appRoutes: RouteObject[] = [
   // صفحة الاشتراك
   { path: '/subscription', element: <Subscription /> },
   
-  // مسارات لوحة التحكم مع الشريط الجانبي
-  { path: '/dashboard', element: withSidebar(Dashboard) },
+  // إعادة توجيه من الداشبورد إلى صفحة الاشتراك أولاً
+  { path: '/dashboard', element: <Navigate to="/subscription" replace /> },
+  
+  // مسارات لوحة التحكم مع الشريط الجانبي (المحمية)
+  { path: '/dashboard-app', element: withSidebar(Dashboard) },
   { path: '/self-development', element: withSidebar(SelfDevelopment) },
   { path: '/break-habits', element: withSidebar(BreakHabits) },
   { path: '/financial-planning', element: withSidebar(FinancialPlanning) },

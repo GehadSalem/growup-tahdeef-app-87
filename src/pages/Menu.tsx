@@ -19,7 +19,7 @@ const Menu = () => {
             variant="default" 
             size="lg" 
             className="w-full" 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/dashboard-app')}
           >
             الرئيسية
           </Button>
