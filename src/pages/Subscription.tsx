@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PaymentForm from "@/components/payment/PaymentForm";
 
 // تحديد ميزات الاشتراك في مصفوفة لسهولة التعديل
 const SUBSCRIPTION_FEATURES = [
@@ -52,24 +53,29 @@ export default function Subscription() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const handleSubscribe = () => {
-    setIsLoading(true);
-    
-    // محاكاة طلب الدفع
+    setShowPaymentForm(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentForm(false);
     setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "تم الاشتراك بنجاح!",
-        description: "مرحبًا بك في عضوية GrowUp المميزة!",
-      });
       navigate("/dashboard-app");
-    }, 2000);
+    }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader showBackButton title="اشترك الآن" />
+      
+      {showPaymentForm && (
+        <PaymentForm 
+          onClose={() => setShowPaymentForm(false)} 
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
       
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto">
