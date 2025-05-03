@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Calendar, AlertTriangle } from "lucide-react";
-import { format, addMonths, isEqual } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -21,6 +21,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { cn } from "@/lib/utils";
 
 // تعريف نموذج البيانات
 const formSchema = z.object({
@@ -333,8 +334,7 @@ export function InstallmentCalculator() {
                   </div>
                   <Progress 
                     value={percentageOfIncome} 
-                    className="h-2" 
-                    indicatorClassName={percentageOfIncome > 40 ? "bg-red-500" : "bg-green-500"}
+                    className={cn("h-2", percentageOfIncome > 40 ? "bg-red-500" : "bg-green-500")}
                   />
                 </div>
                 

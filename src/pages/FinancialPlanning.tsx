@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -46,10 +47,10 @@ export default function FinancialPlanning() {
   
   // Calculate savings
   const savings = income - totalExpenses;
-  const savingsPercentage = (savings / income) * 100;
+  const savingsPercentage = income > 0 ? (savings / income) * 100 : 0;
   
   // Calculate progress toward savings goal
-  const savingsProgress = (savings / savingsGoal) * 100;
+  const savingsProgress = savingsGoal > 0 ? (savings / savingsGoal) * 100 : 0;
 
   // Update monthly data whenever income or expenses change
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function FinancialPlanning() {
     ]);
 
     // Check if expenses are getting too high
-    if (totalExpenses > income * 0.8) {
+    if (totalExpenses > income * 0.8 && income > 0) {
       toast({
         title: "تنبيه!",
         description: "المصروفات تقترب من حد الدخل الشهري",
@@ -74,7 +75,7 @@ export default function FinancialPlanning() {
         description: "أنت في الطريق الصحيح لتحقيق هدف التوفير",
       });
     }
-  }, [income, totalExpenses, savingsGoal]);
+  }, [income, totalExpenses, savingsGoal, toast]);
   
   // Add new expense
   const [newExpense, setNewExpense] = useState({
@@ -133,11 +134,7 @@ export default function FinancialPlanning() {
   };
 
   const handleSaveIncome = () => {
-    setIncome(tempIncome);
-    toast({
-      title: "تم حفظ الدخل الشهري",
-      description: `تم تحديث دخلك الشهري إلى ${tempIncome} ريال`,
-    });
+    handleIncomeChange(tempIncome);
   };
 
   return (
@@ -296,7 +293,7 @@ export default function FinancialPlanning() {
                       <Label className="text-right block font-cairo" htmlFor="expense-category">الفئة</Label>
                       <select
                         id="expense-category"
-                        className="input-field"
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={newExpense.category}
                         onChange={e => setNewExpense({...newExpense, category: e.target.value})}
                       >
@@ -313,10 +310,10 @@ export default function FinancialPlanning() {
                       <Input
                         id="expense-value"
                         type="number"
-                        className="input-field"
                         value={newExpense.value || ''}
                         onChange={e => setNewExpense({...newExpense, value: Number(e.target.value)})}
                         min={0}
+                        className="text-right"
                       />
                     </div>
                   </div>
@@ -374,7 +371,7 @@ export default function FinancialPlanning() {
                         <Input
                           id="savings-goal"
                           type="number"
-                          className="input-field"
+                          className="text-right"
                           value={savingsGoal}
                           onChange={e => setSavingsGoal(Number(e.target.value))}
                           min={0}
@@ -421,7 +418,7 @@ export default function FinancialPlanning() {
                   <h2 className="text-xl font-bold font-cairo mb-2 text-right">حاسبة الأقساط الشهرية</h2>
                   <p className="text-right text-gray-700">
                     هذه الأداة تساعدك على حساب الأقساط الشهرية وتقييم مدى تناسبها مع دخلك الشهري.
-                    يمكنك الوصول إليها أيضًا من تبو��ب الالتزامات الشهرية.
+                    يمكنك الوصول إليها أيضًا من تبويب الالتزامات الشهرية.
                   </p>
                 </CardContent>
               </Card>
