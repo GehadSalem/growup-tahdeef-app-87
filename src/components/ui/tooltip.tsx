@@ -6,9 +6,9 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-// Fixed: TooltipProvider using correct method without ref forwarding
-const TooltipProvider = ({ ...props }) => {
-  return <TooltipPrimitive.Provider {...props} />
+// Fixed: TooltipProvider with proper children prop handling
+const TooltipProvider = ({ children, ...props }: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>) => {
+  return <TooltipPrimitive.Provider {...props}>{children}</TooltipPrimitive.Provider>
 }
 TooltipProvider.displayName = TooltipPrimitive.Provider.displayName
 
