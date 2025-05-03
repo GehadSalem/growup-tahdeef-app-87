@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Bell, ShieldAlert, Wallet } from "lucide-react";
+import { Bell, LightbulbIcon, ShieldAlert, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
@@ -32,7 +32,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
   const { toast } = useToast();
   const [totalEmergencyFund, setTotalEmergencyFund] = useState<number>(0);
   const [transactions, setTransactions] = useState<EmergencyTransaction[]>([]);
-  const [emergencyPercentage, setEmergencyPercentage] = useState<number>(15);
+  const [emergencyPercentage, setEmergencyPercentage] = useState<number>(10); // Changed default to 10%
   const [showWithdrawDialog, setShowWithdrawDialog] = useState<boolean>(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(0);
   const [withdrawalReason, setWithdrawalReason] = useState<string>("");
@@ -73,17 +73,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
     }
   }, [income, emergencyPercentage, toast]);
   
-  // Check if emergency fund is below threshold (2 months of income)
-  useEffect(() => {
-    const threshold = income * 2;
-    if (totalEmergencyFund < threshold && totalEmergencyFund > 0) {
-      toast({
-        title: "تنبيه صندوق الطوارئ",
-        description: "رصيد صندوق الطوارئ أقل من المستوى الموصى به (راتب شهرين)",
-        variant: "destructive",
-      });
-    }
-  }, [totalEmergencyFund, income, toast]);
+  // Remove the minimum threshold check that was here before
 
   // Handle withdrawal
   const handleWithdrawal = () => {
@@ -175,12 +165,13 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                 الهدف الموصى به: ما يعادل 6 أشهر من الدخل الشهري
               </div>
               
-              {totalEmergencyFund < income * 2 && totalEmergencyFund > 0 && (
-                <Alert variant="destructive" className="mt-2">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle className="text-right">تحذير</AlertTitle>
-                  <AlertDescription className="text-right">
-                    رصيد صندوق الطوارئ أقل من المستوى الموصى به (راتب شهرين على الأقل)
+              {/* Replace warning with encouraging message */}
+              {totalEmergencyFund > 0 && (
+                <Alert className="mt-2 bg-green-50 border-green-200">
+                  <Bell className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-right text-green-700">ممتاز!</AlertTitle>
+                  <AlertDescription className="text-right text-green-700">
+                    💡 أنت تدخر للطوارئ بشكل منتظم بنسبة {emergencyPercentage}٪ من دخلك. الاستمرارية هي المفتاح!
                   </AlertDescription>
                 </Alert>
               )}
@@ -247,7 +238,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
               <div className="bg-white p-3 rounded-lg">
                 <div className="text-right mb-3 font-cairo font-bold">نسبة المساهمة الشهرية</div>
                 <RadioGroup 
-                  defaultValue="15" 
+                  defaultValue="10" 
                   value={emergencyPercentage.toString()} 
                   onValueChange={handlePercentageChange} 
                   className="flex flex-row-reverse gap-6 justify-end"
