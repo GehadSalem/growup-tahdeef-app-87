@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Lightbulb, Target, TrendingUp } from "lucide-react";
+import { Lightbulb, Target } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 // أنواع الأهداف الكبرى
@@ -17,31 +17,6 @@ const GOAL_TYPES = [
   { id: "business", name: "بدء مشروع", icon: "💼" },
   { id: "education", name: "التعليم", icon: "🎓" },
   { id: "other", name: "أخرى", icon: "🎯" }
-];
-
-// الفرص الاستثمارية
-const INVESTMENT_OPPORTUNITIES = [
-  {
-    title: "استثمار في الأسهم",
-    description: "توزيع استثمارات في محفظة أسهم متنوعة مع عائد سنوي متوقع 8-12%",
-    risk: "متوسطة",
-    minAmount: 5000,
-    returnRate: 10
-  },
-  {
-    title: "صناديق الاستثمار",
-    description: "استثمار في صناديق مُدارة بعائد سنوي متوقع 6-9%",
-    risk: "منخفضة-متوسطة",
-    minAmount: 1000,
-    returnRate: 7
-  },
-  {
-    title: "العقارات",
-    description: "الاستثمار في العقارات بعائد إيجاري سنوي 5-7% مع إمكانية ارتفاع القيمة",
-    risk: "منخفضة",
-    minAmount: 50000,
-    returnRate: 6
-  },
 ];
 
 // الفرص المهنية لزيادة الدخل
@@ -79,9 +54,6 @@ interface Goal {
 export default function MajorGoals() {
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
-  const [possibleMonthlySaving, setPossibleMonthlySaving] = useState<number>(0);
-  const [showCalculator, setShowCalculator] = useState<boolean>(false);
   
   // نموذج لإضافة هدف جديد
   const [newGoal, setNewGoal] = useState<Omit<Goal, "id">>({
@@ -185,9 +157,6 @@ export default function MajorGoals() {
       title: "تم الإضافة",
       description: "تم إضافة الهدف الجديد بنجاح",
     });
-    
-    // إظهار التحليل عند إضافة هدف
-    setShowCalculator(true);
   };
   
   // حساب نسبة التقدم نحو الهدف
@@ -321,96 +290,6 @@ export default function MajorGoals() {
               </div>
             </CardContent>
           </Card>
-          
-          {/* الحاسبة الذكية */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
-                <TrendingUp className="h-5 w-5" />
-                الحاسبة الذكية لتحقيق الهدف
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-right block">راتبك الشهري الحالي</Label>
-                  <Input 
-                    type="number" 
-                    className="text-right" 
-                    placeholder="أدخل راتبك الشهري" 
-                    value={monthlyIncome || ''}
-                    onChange={e => setMonthlyIncome(Number(e.target.value))}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-right block">المبلغ الذي يمكنك ادخاره شهريا</Label>
-                  <Input 
-                    type="number" 
-                    className="text-right" 
-                    placeholder="كم يمكنك توفيره شهريا؟" 
-                    value={possibleMonthlySaving || ''}
-                    onChange={e => setPossibleMonthlySaving(Number(e.target.value))}
-                  />
-                </div>
-                
-                {showCalculator && newGoal.cost > 0 && newGoal.targetDate && (
-                  <div className="p-4 bg-blue-50 rounded-lg mt-4">
-                    <h3 className="font-bold text-right mb-2">تحليل الهدف:</h3>
-                    <div className="space-y-2 text-right">
-                      <p>
-                        التكلفة التقريبية للهدف: 
-                        <span className="font-bold"> {newGoal.cost.toLocaleString()} ريال</span>
-                      </p>
-                      
-                      <p>
-                        المبلغ الشهري المطلوب توفيره: 
-                        <span className="font-bold"> {calculateRequiredMonthlySaving(newGoal).toLocaleString()} ريال</span>
-                      </p>
-                      
-                      {possibleMonthlySaving > 0 && (
-                        <>
-                          <p>
-                            الوقت اللازم للوصول للهدف بالتوفير الحالي: 
-                            <span className="font-bold"> 
-                              {Math.ceil((newGoal.cost - (newGoal.currentSaving || 0)) / possibleMonthlySaving)} شهر
-                            </span>
-                          </p>
-                          
-                          {possibleMonthlySaving < calculateRequiredMonthlySaving(newGoal) && (
-                            <div className="bg-amber-100 p-3 rounded-md mt-2">
-                              <p className="font-bold text-amber-700">مبلغ التوفير الشهري الحالي غير كافٍ!</p>
-                              <p>
-                                أنت بحاجة لتوفير {calculateRequiredMonthlySaving(newGoal) - possibleMonthlySaving} ريال إضافي شهرياً
-                                لتحقيق هدفك في الموعد المحدد.
-                              </p>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      
-                      {monthlyIncome > 0 && (
-                        <p>
-                          نسبة المبلغ المطلوب من دخلك الشهري: 
-                          <span className="font-bold"> 
-                            {((calculateRequiredMonthlySaving(newGoal) / monthlyIncome) * 100).toFixed(1)}%
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full mt-2"
-                  onClick={() => setShowCalculator(true)}
-                >
-                  حساب وتحليل الهدف
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
         
         {/* القسم الثاني: عرض الأهداف */}
@@ -479,7 +358,7 @@ export default function MajorGoals() {
         )}
         
         {/* القسم الثالث: نصائح وفرص */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
             <CardHeader>
               <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
@@ -507,55 +386,6 @@ export default function MajorGoals() {
                     </div>
                   </div>
                 ))}
-                
-                <div className="text-right">
-                  <Button variant="link" className="p-0 h-auto text-growup">
-                    اكتشف المزيد من الفرص <ArrowRight className="h-3 w-3 inline ml-1" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-right font-cairo">فرص استثمارية</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-right text-sm text-gray-500 mb-3">
-                  يمكن للاستثمار أن يساعدك في تحقيق أهدافك بشكل أسرع من خلال تنمية مدخراتك
-                </p>
-                
-                {INVESTMENT_OPPORTUNITIES.map((opp, index) => (
-                  <div key={index} className="border p-3 rounded-lg">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="text-sm">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                          opp.risk === "منخفضة" ? "bg-green-100 text-green-800" : 
-                          opp.risk === "متوسطة" ? "bg-yellow-100 text-yellow-800" : 
-                          "bg-red-100 text-red-800"
-                        }`}>
-                          {opp.risk}
-                        </span>
-                      </div>
-                      <h4 className="font-bold">{opp.title}</h4>
-                    </div>
-                    <p className="text-sm text-right">{opp.description}</p>
-                    <div className="flex justify-between items-center mt-2 text-sm">
-                      <div>العائد المتوقع: {opp.returnRate}%</div>
-                      <div>الحد الأدنى: {opp.minAmount.toLocaleString()} ريال</div>
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="bg-blue-50 p-3 rounded-lg text-right">
-                  <h4 className="font-bold text-blue-800 mb-1">حاسبة القوة المركبة للاستثمار:</h4>
-                  <p className="text-sm">
-                    استثمار 1000 ريال شهريًا بعائد 8% سنويًا لمدة 10 سنوات =
-                    <span className="font-bold"> 184,166 ريال</span>
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
