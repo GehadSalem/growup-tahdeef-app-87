@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Plus, WalletCards } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonthlyObligations } from "@/components/financial/MonthlyObligations";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmergencyFund } from "@/components/financial/EmergencyFund";
 
 // Sample expense categories
 const EXPENSE_CATEGORIES = [
@@ -195,6 +195,11 @@ export default function FinancialPlanning() {
                   </div>
                 </CardContent>
               </Card>
+            </section>
+
+            {/* Emergency Fund Section */}
+            <section className="mb-6">
+              <EmergencyFund income={income} setIncome={setIncome} />
             </section>
 
             {/* Income and Expenses Summary */}
