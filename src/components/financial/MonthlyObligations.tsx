@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, addMonths, addDays, isAfter, isBefore } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -12,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InstallmentCalculator } from "./InstallmentCalculator";
 
 // تعريف أنواع الالتزامات
 type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
@@ -46,6 +47,7 @@ export function MonthlyObligations() {
   });
   
   const [savingsGoal, setSavingsGoal] = useState<number>(3000);
+  const [activeTab, setActiveTab] = useState<string>("obligations");
 
   // حساب إجمالي الالتزامات
   const totalObligations = obligations.reduce((sum, obligation) => sum + obligation.amount, 0);
@@ -243,288 +245,301 @@ export function MonthlyObligations() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between items-center mb-6">
-            <Dialog open={showAddObligationDialog} onOpenChange={setShowAddObligationDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-growup hover:bg-growup-dark">
-                  <Plus className="mr-0 ml-2 h-4 w-4" />
-                  إضافة التزام جديد
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-right">إضافة التزام جديد</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label className="text-right block">الاسم</Label>
-                    <Input 
-                      className="text-right" 
-                      placeholder="مثال: قسط سيارة" 
-                      value={newObligation.name}
-                      onChange={e => setNewObligation({...newObligation, name: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-right block">نوع الالتزام</Label>
-                    <select 
-                      className="w-full p-2 border rounded text-right" 
-                      value={newObligation.type}
-                      onChange={e => setNewObligation({...newObligation, type: e.target.value as ObligationType})}
-                    >
-                      <option value="قسط">قسط</option>
-                      <option value="مناسبة">مناسبة</option>
-                      <option value="شراء">شراء</option>
-                      <option value="آخر">آخر</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-right block">المبلغ (ريال)</Label>
-                    <Input 
-                      type="number" 
-                      className="text-right" 
-                      placeholder="مثال: 3000" 
-                      value={newObligation.amount || ''}
-                      onChange={e => setNewObligation({...newObligation, amount: Number(e.target.value)})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-right block">تاريخ الاستحقاق</Label>
-                    <Input 
-                      type="date" 
-                      className="text-right" 
-                      value={newObligation.dueDate}
-                      onChange={e => setNewObligation({...newObligation, dueDate: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-right block">تكرار الالتزام</Label>
-                    <select 
-                      className="w-full p-2 border rounded text-right" 
-                      value={newObligation.recurrence}
-                      onChange={e => setNewObligation({...newObligation, recurrence: e.target.value as RecurrenceType})}
-                    >
-                      <option value="شهري">شهري</option>
-                      <option value="ربع سنوي">ربع سنوي</option>
-                      <option value="سنوي">سنوي</option>
-                      <option value="مرة واحدة">مرة واحدة</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-right block">ملاحظة إضافية (اختياري)</Label>
-                    <Textarea 
-                      className="text-right" 
-                      placeholder="أضف أي ملاحظات إضافية هنا" 
-                      value={newObligation.notes}
-                      onChange={e => setNewObligation({...newObligation, notes: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button type="button" variant="outline" onClick={() => setShowAddObligationDialog(false)}>
-                      إلغاء
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="obligations" className="font-cairo">الالتزامات</TabsTrigger>
+              <TabsTrigger value="calculator" className="font-cairo">حاسبة الأقساط</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="obligations">
+              <div className="flex justify-between items-center mb-6">
+                <Dialog open={showAddObligationDialog} onOpenChange={setShowAddObligationDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-growup hover:bg-growup-dark">
+                      <Plus className="mr-0 ml-2 h-4 w-4" />
+                      إضافة التزام جديد
                     </Button>
-                    <Button 
-                      className="bg-growup hover:bg-growup-dark"
-                      onClick={handleAddObligation}
-                    >
-                      إضافة
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-            
-            <div className="text-right text-lg font-bold font-cairo">
-              إدارة الالتزامات المالية
-            </div>
-          </div>
-          
-          {/* ملخص الالتزامات */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="p-4 text-right">
-                <div className="text-sm text-gray-500">إجمالي الالتزامات</div>
-                <div className="text-xl font-bold">{totalObligations} ريال</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="p-4 text-right">
-                <div className="text-sm text-gray-500">الراتب بعد الالتزامات</div>
-                <div className="text-xl font-bold">{remainingIncome} ريال</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-purple-50 border-purple-200">
-              <CardContent className="p-4 text-right">
-                <div className="text-sm text-gray-500">المتبقي للادخار</div>
-                <div className="text-xl font-bold">{savingsRemaining} ريال</div>
-              </CardContent>
-            </Card>
-            
-            <Card className={`${obligationPercentage > 50 ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
-              <CardContent className="p-4 text-right">
-                <div className="text-sm text-gray-500">نسبة الالتزامات من الدخل</div>
-                <div className="text-xl font-bold">{obligationPercentage.toFixed(1)}%</div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {obligationPercentage > 50 && (
-            <div className="bg-red-100 border-r-4 border-red-500 p-4 mb-6 flex items-center rounded-md">
-              <div className="flex-1 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <span className="font-bold text-red-700">تحذير</span>
-                  <AlertTriangle className="h-5 w-5 text-red-700" />
-                </div>
-                <p className="text-red-700">الالتزامات تستهلك أكثر من 50% من دخلك. يُنصح بمراجعة الإنفاق الشهري.</p>
-              </div>
-            </div>
-          )}
-          
-          {savingsRemaining < 0 && (
-            <div className="bg-amber-100 border-r-4 border-amber-500 p-4 mb-6 flex items-center rounded-md">
-              <div className="flex-1 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <span className="font-bold text-amber-700">تنبيه</span>
-                  <AlertTriangle className="h-5 w-5 text-amber-700" />
-                </div>
-                <p className="text-amber-700">
-                  أنت بحاجة إلى {Math.abs(savingsRemaining)} ريال إضافية لتحقيق هدف الادخار لهذا الشهر.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {/* جدول الالتزامات */}
-          <div className="mb-6 overflow-x-auto">
-            <h3 className="text-lg font-bold mb-3 text-right font-cairo">قائمة الالتزامات</h3>
-            {obligations.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">نسبة التأثير</TableHead>
-                    <TableHead className="text-right">حالة السداد</TableHead>
-                    <TableHead className="text-right">تاريخ السداد القادم</TableHead>
-                    <TableHead className="text-right">المبلغ</TableHead>
-                    <TableHead className="text-right">النوع</TableHead>
-                    <TableHead className="text-right">اسم الالتزام</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {obligations.map((obligation) => (
-                    <TableRow key={obligation.id}>
-                      <TableCell className="text-right">{calculateImpact(obligation.amount)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant={obligation.isPaid ? "default" : "outline"} 
-                          size="sm" 
-                          onClick={() => togglePaymentStatus(obligation.id)}
-                          className={obligation.isPaid ? "bg-green-500 hover:bg-green-600" : ""}
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-right">إضافة التزام جديد</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-right block">الاسم</Label>
+                        <Input 
+                          className="text-right" 
+                          placeholder="مثال: قسط سيارة" 
+                          value={newObligation.name}
+                          onChange={e => setNewObligation({...newObligation, name: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-right block">نوع الالتزام</Label>
+                        <select 
+                          className="w-full p-2 border rounded text-right" 
+                          value={newObligation.type}
+                          onChange={e => setNewObligation({...newObligation, type: e.target.value as ObligationType})}
                         >
-                          {obligation.isPaid ? "تم الدفع" : "غير مدفوع"}
+                          <option value="قسط">قسط</option>
+                          <option value="مناسبة">مناسبة</option>
+                          <option value="شراء">شراء</option>
+                          <option value="آخر">آخر</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-right block">المبلغ (ريال)</Label>
+                        <Input 
+                          type="number" 
+                          className="text-right" 
+                          placeholder="مثال: 3000" 
+                          value={newObligation.amount || ''}
+                          onChange={e => setNewObligation({...newObligation, amount: Number(e.target.value)})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-right block">تاريخ الاستحقاق</Label>
+                        <Input 
+                          type="date" 
+                          className="text-right" 
+                          value={newObligation.dueDate}
+                          onChange={e => setNewObligation({...newObligation, dueDate: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-right block">تكرار الالتزام</Label>
+                        <select 
+                          className="w-full p-2 border rounded text-right" 
+                          value={newObligation.recurrence}
+                          onChange={e => setNewObligation({...newObligation, recurrence: e.target.value as RecurrenceType})}
+                        >
+                          <option value="شهري">شهري</option>
+                          <option value="ربع سنوي">ربع سنوي</option>
+                          <option value="سنوي">سنوي</option>
+                          <option value="مرة واحدة">مرة واحدة</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-right block">ملاحظة إضافية (اختياري)</Label>
+                        <Textarea 
+                          className="text-right" 
+                          placeholder="أضف أي ملاحظات إضافية هنا" 
+                          value={newObligation.notes}
+                          onChange={e => setNewObligation({...newObligation, notes: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button type="button" variant="outline" onClick={() => setShowAddObligationDialog(false)}>
+                          إلغاء
                         </Button>
-                      </TableCell>
-                      <TableCell className="text-right" dir="rtl">
-                        {formatDate(getNextPaymentDate(obligation.dueDate, obligation.recurrence))}
-                      </TableCell>
-                      <TableCell className="text-right">{obligation.amount} ريال</TableCell>
-                      <TableCell className="text-right">{obligation.type}</TableCell>
-                      <TableCell className="text-right">{obligation.name}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center p-4 bg-gray-50 rounded-md">
-                لا يوجد التزامات مضافة بعد. قم بإضافة التزام جديد باستخدام الزر أعلاه.
-              </div>
-            )}
-          </div>
-          
-          {/* الرسوم البيانية والتحليلات */}
-          {obligations.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-right font-cairo">توزيع الالتزامات حسب النوع</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={pieChartData()}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({name, value}) => `${name}: ${value} ريال`}
-                      >
-                        {pieChartData().map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => `${value} ريال`} />
-                      <Legend layout="vertical" verticalAlign="middle" align="right" />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-right font-cairo">أكثر الالتزامات استنزافاً للراتب</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart
-                      data={obligations
-                        .sort((a, b) => b.amount - a.amount)
-                        .slice(0, 5)
-                        .map(item => ({ name: item.name, amount: item.amount }))
-                      }
-                      layout="vertical"
-                    >
-                      <XAxis type="number" />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
-                      <Tooltip formatter={(value) => `${value} ريال`} />
-                      <Bar dataKey="amount" fill="#8884d8" name="المبلغ" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-          
-          {/* نصائح مالية */}
-          <div className="mt-6">
-            <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-bold font-cairo mb-3 text-right">نصائح لإدارة الالتزامات</h3>
+                        <Button 
+                          className="bg-growup hover:bg-growup-dark"
+                          onClick={handleAddObligation}
+                        >
+                          إضافة
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 
-                <div className="space-y-3 text-right">
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="font-cairo">خصص ما بين 50-30-20 من دخلك: 50% للضروريات، 30% للرغبات، 20% للادخار.</p>
-                  </div>
-                  
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="font-cairo">حدد الالتزامات غير الضرورية وفكر في تقليلها أو إلغائها.</p>
-                  </div>
-                  
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="font-cairo">جدول دفعاتك مبكراً لتجنب الغرامات والفوائد الإضافية.</p>
+                <div className="text-right text-lg font-bold font-cairo">
+                  إدارة الالتزامات المالية
+                </div>
+              </div>
+              
+              {/* ملخص الالتزامات */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4 text-right">
+                    <div className="text-sm text-gray-500">إجمالي الالتزامات</div>
+                    <div className="text-xl font-bold">{totalObligations} ريال</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-green-50 border-green-200">
+                  <CardContent className="p-4 text-right">
+                    <div className="text-sm text-gray-500">الراتب بعد الالتزامات</div>
+                    <div className="text-xl font-bold">{remainingIncome} ريال</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-purple-50 border-purple-200">
+                  <CardContent className="p-4 text-right">
+                    <div className="text-sm text-gray-500">المتبقي للادخار</div>
+                    <div className="text-xl font-bold">{savingsRemaining} ريال</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className={`${obligationPercentage > 50 ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                  <CardContent className="p-4 text-right">
+                    <div className="text-sm text-gray-500">نسبة الالتزامات من الدخل</div>
+                    <div className="text-xl font-bold">{obligationPercentage.toFixed(1)}%</div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {obligationPercentage > 50 && (
+                <div className="bg-red-100 border-r-4 border-red-500 p-4 mb-6 flex items-center rounded-md">
+                  <div className="flex-1 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-bold text-red-700">تحذير</span>
+                      <AlertTriangle className="h-5 w-5 text-red-700" />
+                    </div>
+                    <p className="text-red-700">الالتزامات تستهلك أكثر من 50% من دخلك. يُنصح بمراجعة الإنفاق الشهري.</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+              
+              {savingsRemaining < 0 && (
+                <div className="bg-amber-100 border-r-4 border-amber-500 p-4 mb-6 flex items-center rounded-md">
+                  <div className="flex-1 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="font-bold text-amber-700">تنبيه</span>
+                      <AlertTriangle className="h-5 w-5 text-amber-700" />
+                    </div>
+                    <p className="text-amber-700">
+                      أنت بحاجة إلى {Math.abs(savingsRemaining)} ريال إضافية لتحقيق هدف الادخار لهذا الشهر.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* جدول الالتزامات */}
+              <div className="mb-6 overflow-x-auto">
+                <h3 className="text-lg font-bold mb-3 text-right font-cairo">قائمة الالتزامات</h3>
+                {obligations.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">نسبة التأثير</TableHead>
+                        <TableHead className="text-right">حالة السداد</TableHead>
+                        <TableHead className="text-right">تاريخ السداد القادم</TableHead>
+                        <TableHead className="text-right">المبلغ</TableHead>
+                        <TableHead className="text-right">النوع</TableHead>
+                        <TableHead className="text-right">اسم الالتزام</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {obligations.map((obligation) => (
+                        <TableRow key={obligation.id}>
+                          <TableCell className="text-right">{calculateImpact(obligation.amount)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant={obligation.isPaid ? "default" : "outline"} 
+                              size="sm" 
+                              onClick={() => togglePaymentStatus(obligation.id)}
+                              className={obligation.isPaid ? "bg-green-500 hover:bg-green-600" : ""}
+                            >
+                              {obligation.isPaid ? "تم الدفع" : "غير مدفوع"}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-right" dir="rtl">
+                            {formatDate(getNextPaymentDate(obligation.dueDate, obligation.recurrence))}
+                          </TableCell>
+                          <TableCell className="text-right">{obligation.amount} ريال</TableCell>
+                          <TableCell className="text-right">{obligation.type}</TableCell>
+                          <TableCell className="text-right">{obligation.name}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center p-4 bg-gray-50 rounded-md">
+                    لا يوجد التزامات مضافة بعد. قم بإضافة التزام جديد باستخدام الزر أعلاه.
+                  </div>
+                )}
+              </div>
+              
+              {/* الرسوم البيانية والتحليلات */}
+              {obligations.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-right font-cairo">توزيع الالتزامات حسب النوع</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={pieChartData()}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({name, value}) => `${name}: ${value} ريال`}
+                          >
+                            {pieChartData().map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => `${value} ريال`} />
+                          <Legend layout="vertical" verticalAlign="middle" align="right" />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-right font-cairo">أكثر الالتزامات استنزافاً للراتب</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <ResponsiveContainer width="100%" height={250}>
+                        <BarChart
+                          data={obligations
+                            .sort((a, b) => b.amount - a.amount)
+                            .slice(0, 5)
+                            .map(item => ({ name: item.name, amount: item.amount }))
+                          }
+                          layout="vertical"
+                        >
+                          <XAxis type="number" />
+                          <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
+                          <Tooltip formatter={(value) => `${value} ريال`} />
+                          <Bar dataKey="amount" fill="#8884d8" name="المبلغ" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              
+              {/* نصائح مالية */}
+              <div className="mt-6">
+                <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-bold font-cairo mb-3 text-right">نصائح لإدارة الالتزامات</h3>
+                    
+                    <div className="space-y-3 text-right">
+                      <div className="bg-white/60 p-3 rounded-lg">
+                        <p className="font-cairo">خصص ما بين 50-30-20 من دخلك: 50% للضروريات، 30% للرغبات، 20% للادخار.</p>
+                      </div>
+                      
+                      <div className="bg-white/60 p-3 rounded-lg">
+                        <p className="font-cairo">حدد الالتزامات غير الضرورية وفكر في تقليلها أو إلغائها.</p>
+                      </div>
+                      
+                      <div className="bg-white/60 p-3 rounded-lg">
+                        <p className="font-cairo">جدول دفعاتك مبكراً لتجنب الغرامات والفوائد الإضافية.</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="calculator">
+              <InstallmentCalculator />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

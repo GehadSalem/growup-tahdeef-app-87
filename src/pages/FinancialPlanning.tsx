@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -153,9 +152,10 @@ export default function FinancialPlanning() {
           onValueChange={setActiveTab}
           className="mb-6"
         >
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="expenses" className="font-cairo">المصروفات</TabsTrigger>
             <TabsTrigger value="obligations" className="font-cairo">الالتزامات الشهرية</TabsTrigger>
+            <TabsTrigger value="installment" className="font-cairo">حاسبة الأقساط</TabsTrigger>
           </TabsList>
           
           <TabsContent value="expenses">
@@ -411,6 +411,21 @@ export default function FinancialPlanning() {
           </TabsContent>
           
           <TabsContent value="obligations">
+            <MonthlyObligations />
+          </TabsContent>
+          
+          <TabsContent value="installment">
+            <div className="mb-6">
+              <Card className="bg-gradient-to-br from-blue-100/50 to-growup/5">
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-bold font-cairo mb-2 text-right">حاسبة الأقساط الشهرية</h2>
+                  <p className="text-right text-gray-700">
+                    هذه الأداة تساعدك على حساب الأقساط الشهرية وتقييم مدى تناسبها مع دخلك الشهري.
+                    يمكنك الوصول إليها أيضًا من تبو��ب الالتزامات الشهرية.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
             <MonthlyObligations />
           </TabsContent>
         </Tabs>
