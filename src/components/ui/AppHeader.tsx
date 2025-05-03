@@ -28,6 +28,16 @@ export function AppHeader({
   const navigate = useNavigate();
   const [notificationCount] = useState(3);
   
+  const handleNotificationsClick = () => {
+    // التأكد من أن مسار الإشعارات موجود ويعمل
+    navigate('/notifications');
+    console.log('Navigating to notifications page');
+  };
+  
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+  
   return (
     <header className={cn(
       "sticky top-0 z-50 flex w-full items-center justify-between bg-white/80 backdrop-blur-md py-4 px-5", 
@@ -69,7 +79,7 @@ export function AppHeader({
             variant="ghost" 
             size="icon"
             className="relative rounded-full"
-            onClick={() => navigate('/notifications')}
+            onClick={handleNotificationsClick}
           >
             <Bell className="h-5 w-5" />
             {notificationCount > 0 && (
@@ -85,7 +95,7 @@ export function AppHeader({
             variant="ghost" 
             size="icon"
             className="rounded-full"
-            onClick={() => navigate('/profile')}
+            onClick={handleProfileClick}
           >
             <User className="h-5 w-5" />
           </Button>
