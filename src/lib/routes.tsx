@@ -29,7 +29,6 @@ const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const SelfDevelopment = lazy(() => import('@/pages/SelfDevelopment'));
 const BreakHabits = lazy(() => import('@/pages/BreakHabits'));
 const FinancialPlanning = lazy(() => import('@/pages/FinancialPlanning'));
-const Investment = lazy(() => import('@/pages/Investment'));
 const MajorGoals = lazy(() => import('@/pages/MajorGoals'));
 
 // =========================================
@@ -70,7 +69,6 @@ export const appRoutes: RouteObject[] = [
   { path: '/self-development', element: withSidebar(SelfDevelopment) },
   { path: '/break-habits', element: withSidebar(BreakHabits) },
   { path: '/financial-planning', element: withSidebar(FinancialPlanning) },
-  { path: '/investment', element: withSidebar(Investment) },
   { path: '/major-goals', element: withSidebar(MajorGoals) },
   
   // ---- مسار غير موجود ----

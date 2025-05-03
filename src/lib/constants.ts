@@ -1,4 +1,3 @@
-
 // ثوابت وإعدادات التطبيق
 
 import { CategoryItem } from "./types";
@@ -36,14 +35,6 @@ export const APP_CATEGORIES: CategoryItem[] = [
     icon: "💰",
     route: "/financial-planning",
     color: "bg-green-100"
-  },
-  {
-    id: "investment",
-    title: "الاستثمار",
-    description: "إدارة استثماراتك وتنميتها",
-    icon: "📈",
-    route: "/investment",
-    color: "bg-yellow-100"
   },
   {
     id: "major-goals",

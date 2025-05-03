@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +9,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/ui/Logo";
 import { 
-  AreaChart, 
   BookText, 
   CircleX, 
   Home, 
@@ -46,11 +44,6 @@ export function AppSidebar() {
       title: "التخطيط المالي",
       icon: <PiggyBank />,
       path: "/financial-planning",
-    },
-    {
-      title: "الاستثمار الذكي",
-      icon: <AreaChart />,
-      path: "/investment",
     },
     {
       title: "أهدافي الكبرى",

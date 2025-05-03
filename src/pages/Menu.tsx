@@ -10,7 +10,6 @@ const menuItems = [
   { title: "تطوير الذات", route: "/self-development" },
   { title: "كسر العادات السيئة", route: "/break-habits" },
   { title: "التخطيط المالي", route: "/financial-planning" },
-  { title: "الاستثمار الذكي", route: "/investment" },
   { title: "أهدافي الكبرى", route: "/major-goals" },
 ];
 
