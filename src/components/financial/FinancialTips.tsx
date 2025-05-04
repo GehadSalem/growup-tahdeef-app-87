@@ -1,5 +1,6 @@
 
 import { Card, CardContent } from "@/components/ui/card";
+import { LightbulbIcon } from "lucide-react";
 
 type Tip = {
   id: string;
@@ -26,7 +27,10 @@ export function FinancialTips() {
     <section className="mb-6">
       <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
         <CardContent className="pt-6">
-          <h3 className="text-lg font-bold font-cairo mb-3 text-right">نصائح مالية</h3>
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <h3 className="text-lg font-bold font-cairo">نصائح مالية</h3>
+            <LightbulbIcon className="h-5 w-5 text-amber-500" />
+          </div>
           
           <div className="space-y-3 text-right">
             {financialTips.map(tip => (

@@ -105,3 +105,26 @@ export interface User {
     notifications: boolean;
   };
 }
+
+/**
+ * نوع التقرير المالي
+ */
+export interface FinancialReport {
+  month: string;
+  income: number;
+  totalExpenses: number;
+  expensePercentage: number;
+  remainingAmount: number;
+  categories: {
+    name: string;
+    amount: number;
+    percentage: number;
+  }[];
+  highestExpense: {
+    category: string;
+    amount: number;
+  };
+  emergencyFundWithdrawal: number;
+  emergencyFundWithdrawalReason: string;
+  tips: string[];
+}

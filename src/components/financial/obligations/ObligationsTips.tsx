@@ -1,12 +1,16 @@
 
 import { Card, CardContent } from "@/components/ui/card";
+import { LightbulbIcon } from "lucide-react";
 
 export function ObligationsTips() {
   return (
     <div className="mt-6">
       <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
         <CardContent className="pt-6">
-          <h3 className="text-lg font-bold font-cairo mb-3 text-right">نصائح لإدارة الالتزامات</h3>
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <h3 className="text-lg font-bold font-cairo">نصائح لإدارة الالتزامات</h3>
+            <LightbulbIcon className="h-5 w-5 text-amber-500" />
+          </div>
           
           <div className="space-y-3 text-right">
             <div className="bg-white/60 p-3 rounded-lg">

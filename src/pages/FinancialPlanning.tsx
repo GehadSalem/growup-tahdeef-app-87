@@ -14,12 +14,32 @@ import { ExpenseTracker } from "@/components/financial/ExpenseTracker";
 import { MonthlySummary } from "@/components/financial/MonthlySummary";
 import { SavingsGoal } from "@/components/financial/SavingsGoal";
 import { FinancialTips } from "@/components/financial/FinancialTips";
+import { MonthlyReport } from "@/components/financial/MonthlyReport";
 
 export default function FinancialPlanning() {
   const { toast } = useToast();
   const [income, setIncome] = useState(0);
   const [tempIncome, setTempIncome] = useState(0);
   const [activeTab, setActiveTab] = useState("expenses");
+  const [expenses, setExpenses] = useState([]);
+  const [emergencyFundData, setEmergencyFundData] = useState({
+    totalAmount: 0,
+    withdrawals: []
+  });
+  
+  // Simulate expenses for demo
+  useEffect(() => {
+    // Sample data for demonstration
+    const demoExpenses = [
+      { name: "الطعام والشراب", value: 1200, color: "#FF6384" },
+      { name: "المواصلات", value: 800, color: "#36A2EB" },
+      { name: "اشتراكات وخدمات", value: 400, color: "#FFCE56" },
+      { name: "ترفيه وتسوق", value: 600, color: "#4BC0C0" },
+      { name: "التزامات", value: 1500, color: "#9966FF" }
+    ];
+    
+    setExpenses(demoExpenses);
+  }, []);
   
   const handleIncomeChange = (value: number) => {
     setIncome(value);
@@ -44,9 +64,10 @@ export default function FinancialPlanning() {
           onValueChange={setActiveTab}
           className="mb-6"
         >
-          <TabsList className="grid grid-cols-2 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="expenses" className="font-cairo">المصروفات</TabsTrigger>
-            <TabsTrigger value="obligations" className="font-cairo">الالتزامات الشهرية</TabsTrigger>
+            <TabsTrigger value="obligations" className="font-cairo">الالتزامات</TabsTrigger>
+            <TabsTrigger value="reports" className="font-cairo">التقارير</TabsTrigger>
           </TabsList>
           
           <TabsContent value="expenses">
@@ -111,6 +132,15 @@ export default function FinancialPlanning() {
           
           <TabsContent value="obligations">
             <MonthlyObligations />
+          </TabsContent>
+          
+          <TabsContent value="reports">
+            {/* Monthly Report Component */}
+            <MonthlyReport 
+              income={income} 
+              expenses={expenses}
+              emergencyFund={emergencyFundData} 
+            />
           </TabsContent>
         </Tabs>
       </div>
