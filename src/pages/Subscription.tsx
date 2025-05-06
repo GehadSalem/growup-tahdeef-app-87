@@ -192,8 +192,11 @@ export default function Subscription() {
               ابدأ رحلة تطورك الآن - اشترك مقابل $4 فقط شهريًا
             </Button>
           </div>
+          <p className="text-center text-gray-600 text-xs md:text-sm px-2 mb-2">
+            بالاشتراك، أنت توافق على <a href="/terms-of-service" className="text-growup hover:underline">شروط الاستخدام</a> و<a href="/privacy-policy" className="text-growup hover:underline">سياسة الخصوصية</a>
+          </p>
           <p className="text-center text-gray-600 text-xs md:text-sm px-2">
-            بالاشتراك، أنت توافق على <a href="#" className="text-growup hover:underline">شروط الاستخدام</a> و<a href="#" className="text-growup hover:underline">سياسة الخصوصية</a>
+            للمزيد من المعلومات حول سياسة الاسترداد، يرجى الاطلاع على <a href="/refund-policy" className="text-growup hover:underline">سياسة استرداد الأموال</a>
           </p>
         </div>
       </div>

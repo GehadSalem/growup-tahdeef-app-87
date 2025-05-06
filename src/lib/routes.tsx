@@ -24,6 +24,12 @@ import Menu from '@/pages/Menu';
 import NotFound from '@/pages/NotFound';
 import Subscription from '@/pages/Subscription';
 
+// استيراد صفحات المستندات القانونية
+import LegalMenu from '@/pages/legal/LegalMenu';
+import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
+import TermsOfService from '@/pages/legal/TermsOfService';
+import RefundPolicy from '@/pages/legal/RefundPolicy';
+
 // استيراد الصفحات الأخرى باستخدام التحميل الكسول (lazy loading)
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const SelfDevelopment = lazy(() => import('@/pages/SelfDevelopment'));
@@ -60,6 +66,12 @@ export const appRoutes: RouteObject[] = [
   
   // ---- صفحة الاشتراك ----
   { path: '/subscription', element: <Subscription /> },
+  
+  // ---- المستندات القانونية ----
+  { path: '/legal', element: <LegalMenu /> },
+  { path: '/privacy-policy', element: <PrivacyPolicy /> },
+  { path: '/terms-of-service', element: <TermsOfService /> },
+  { path: '/refund-policy', element: <RefundPolicy /> },
   
   // ---- إعادة توجيه للصفحات المحمية ----
   { path: '/dashboard', element: <Navigate to="/subscription" replace /> },

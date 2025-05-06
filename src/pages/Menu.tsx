@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
-import { Star } from "lucide-react";
+import { FileText, Star } from "lucide-react";
 
 // تحديد قائمة الأزرار لسهولة التعديل والصيانة
 const menuItems = [
@@ -36,6 +36,17 @@ const Menu = () => {
               {item.title}
             </Button>
           ))}
+          
+          {/* زر المستندات القانونية */}
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full" 
+            onClick={() => navigate('/legal')}
+          >
+            <FileText className="h-4 w-4 mr-0 ml-2" />
+            المستندات القانونية
+          </Button>
           
           {/* زر الاشتراك المميز */}
           <Button 
