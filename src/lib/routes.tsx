@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
+import { adminRoutes } from './admin-routes';
 
 // مكون التحميل المشترك
 const Loading = () => (
@@ -82,6 +83,9 @@ export const appRoutes: RouteObject[] = [
   { path: '/break-habits', element: withSidebar(BreakHabits) },
   { path: '/financial-planning', element: withSidebar(FinancialPlanning) },
   { path: '/major-goals', element: withSidebar(MajorGoals) },
+  
+  // ---- مسارات لوحة التحكم الإدارية ----
+  ...adminRoutes,
   
   // ---- مسار غير موجود ----
   { path: '*', element: <NotFound /> }

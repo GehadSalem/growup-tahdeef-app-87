@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AppSidebar } from "@/components/sidebar/AppSidebar";
-import { FileText, Star } from "lucide-react";
+import { FileText, LayoutDashboard, Star } from "lucide-react";
 
 // تحديد قائمة الأزرار لسهولة التعديل والصيانة
 const menuItems = [
@@ -36,6 +36,17 @@ const Menu = () => {
               {item.title}
             </Button>
           ))}
+          
+          {/* زر لوحة التحكم */}
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full" 
+            onClick={() => navigate('/admin')}
+          >
+            <LayoutDashboard className="h-4 w-4 mr-0 ml-2" />
+            لوحة التحكم
+          </Button>
           
           {/* زر المستندات القانونية */}
           <Button 
