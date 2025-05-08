@@ -25,6 +25,7 @@ import Menu from '@/pages/Menu';
 import NotFound from '@/pages/NotFound';
 import Subscription from '@/pages/Subscription';
 import Notifications from '@/pages/Notifications';
+import Profile from '@/pages/Profile';
 
 // استيراد صفحات المستندات القانونية
 import LegalMenu from '@/pages/legal/LegalMenu';
@@ -66,6 +67,7 @@ export const appRoutes: RouteObject[] = [
   { path: '/onboarding', element: <OnboardingScreen /> },
   { path: '/menu', element: <Menu /> },
   { path: '/notifications', element: <Notifications /> },
+  { path: '/profile', element: <Profile /> },
   
   // ---- صفحة الاشتراك ----
   { path: '/subscription', element: <Subscription /> },

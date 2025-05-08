@@ -1,4 +1,3 @@
-
 /**
  * تعريفات الأنواع المستخدمة في التطبيق
  * هذا الملف يحتوي على جميع التعريفات التي يمكن استخدامها في مختلف أجزاء التطبيق
@@ -103,6 +102,32 @@ export interface User {
   preferences?: {
     theme: "light" | "dark";
     notifications: boolean;
+  };
+}
+
+/**
+ * نوع بيانات الملف الشخصي
+ */
+export interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  avatarUrl?: string;
+  joinDate: string;
+  subscription: {
+    isSubscribed: boolean;
+    plan?: string;
+    startDate?: string;
+    endDate?: string;
+    autoRenew?: boolean;
+  };
+  stats: {
+    completedGoals: number;
+    activeDays: number;
+    financialHealthScore: number;
   };
 }
 
