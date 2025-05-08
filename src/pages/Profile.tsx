@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Camera, Edit, Lock, Mail, Phone, Settings } from "lucide-react";
+import { Calendar, Camera, Edit, Gift, Link, Lock, Mail, Phone, Settings, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { ProfileData } from "@/lib/types";
@@ -33,6 +33,9 @@ const Profile = () => {
       activeDays: 45,
       financialHealthScore: 85,
     },
+    referralCode: "AHMAD2023",
+    referralCount: 3,
+    freeMonthsEarned: 2,
   });
 
   const getInitials = (name: string) => {
@@ -66,6 +69,10 @@ const Profile = () => {
 
   const handleManageSubscription = () => {
     navigate("/subscription");
+  };
+  
+  const handleNavigateToReferral = () => {
+    navigate("/referral");
   };
 
   return (
@@ -138,6 +145,36 @@ const Profile = () => {
                   <Settings className="h-4 w-4" />
                   <span>الإعدادات</span>
                 </Button>
+              </div>
+              
+              {/* بطاقة الإحالة المميزة */}
+              <div className="bg-growup/10 rounded-lg p-4 mb-4 relative overflow-hidden">
+                <div className="absolute top-2 right-2">
+                  <Gift className="h-12 w-12 text-growup opacity-20" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">نظام الإحالة</h3>
+                <p className="text-sm mb-3">
+                  ادعُ أصدقاءك واحصل على شهر مجاني من اشتراك Premium!
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleNavigateToReferral}
+                    className="flex items-center gap-1"
+                  >
+                    <Link className="h-4 w-4" />
+                    <span>رابط الإحالة</span>
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={handleNavigateToReferral} 
+                    className="flex items-center gap-1 bg-growup hover:bg-growup/90"
+                  >
+                    <Share className="h-4 w-4" />
+                    <span>دعوة الأصدقاء</span>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -218,6 +255,14 @@ const Profile = () => {
                     </div>
                     <div>{formatDate(profileData.joinDate)}</div>
                   </div>
+                  
+                  <div className="flex justify-between py-2 border-b">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Gift className="h-4 w-4" />
+                      <span>رمز الإحالة</span>
+                    </div>
+                    <div className="font-mono">{profileData.referralCode}</div>
+                  </div>
                 </CardContent>
                 <CardFooter>
                   <Button
@@ -275,6 +320,11 @@ const Profile = () => {
                             <Badge variant="secondary">غير مفعل</Badge>
                           )}
                         </div>
+                      </div>
+                      
+                      <div className="flex justify-between py-2 border-b">
+                        <div className="text-gray-600">شهور مجانية من الإحالات</div>
+                        <div>{profileData.freeMonthsEarned || 0} شهر</div>
                       </div>
                     </>
                   )}

@@ -1,3 +1,4 @@
+
 /**
  * تعريفات الأنواع المستخدمة في التطبيق
  * هذا الملف يحتوي على جميع التعريفات التي يمكن استخدامها في مختلف أجزاء التطبيق
@@ -103,6 +104,8 @@ export interface User {
     theme: "light" | "dark";
     notifications: boolean;
   };
+  referralCode?: string;
+  referralCount?: number;
 }
 
 /**
@@ -129,6 +132,9 @@ export interface ProfileData {
     activeDays: number;
     financialHealthScore: number;
   };
+  referralCode?: string;
+  referralCount?: number;
+  freeMonthsEarned?: number;
 }
 
 /**
@@ -153,3 +159,17 @@ export interface FinancialReport {
   emergencyFundWithdrawalReason: string;
   tips: string[];
 }
+
+/**
+ * نوع الإحالة
+ */
+export interface Referral {
+  id: string;
+  referrerId: string; // معرف المستخدم الذي أرسل الدعوة
+  referredEmail: string; // بريد الشخص المدعو
+  status: "pending" | "completed" | "expired"; // حالة الإحالة
+  createdAt: string; // تاريخ إنشاء الإحالة
+  completedAt?: string; // تاريخ اكتمال الإحالة
+  rewardClaimed: boolean; // هل تم استلام المكافأة
+}
+
