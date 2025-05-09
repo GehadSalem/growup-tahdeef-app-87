@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,8 +72,6 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
     }
   }, [income, emergencyPercentage, toast]);
   
-  // Remove the minimum threshold check that was here before
-
   // Handle withdrawal
   const handleWithdrawal = () => {
     if (withdrawalAmount <= 0) {
@@ -311,7 +308,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                 <li>- ابدأ بتجميع راتب شهر، ثم راتب شهرين، وصولاً لراتب 6 أشهر</li>
                 <li>- استخدم صندوق الطوارئ للحالات الطارئة فقط مثل الإصلاحات المفاجئة أو المشاكل الصحية</li>
                 <li>- حاول تعويض المبلغ المسحوب في أقرب وقت ممكن</li>
-                <li>- احتفظ بجزء من صندوق الطوارئ في حساب يسهل الوصول إليه بسرعة</li>
+                <li>- احتفظ بجزء من صندوق الطوارئ في حساب يسهل الوصول إل��ه بسرعة</li>
               </ul>
             </div>
           </div>

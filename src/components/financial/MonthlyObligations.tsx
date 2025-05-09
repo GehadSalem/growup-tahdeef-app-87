@@ -10,6 +10,8 @@ import { ObligationsSummary } from "./obligations/ObligationsSummary";
 import { ObligationsList } from "./obligations/ObligationsList";
 import { ObligationsCharts } from "./obligations/ObligationsCharts";
 import { ObligationsTips } from "./obligations/ObligationsTips";
+import { format, addMonths, addDays, isAfter, isBefore } from "date-fns";
+import { ar } from "date-fns/locale";
 
 export function MonthlyObligations() {
   const { toast } = useToast();
@@ -136,9 +138,7 @@ export function MonthlyObligations() {
     return format(date, "d MMMM yyyy", { locale: ar });
   };
 
-  // استيراد التبعيات التي تحتاجها التنسيقات
-  const { format, addMonths, addDays, isAfter, isBefore } = require("date-fns");
-  const { ar } = require("date-fns/locale");
+  // Removed the CommonJS require statements and moved them to imports at the top
 
   return (
     <div className="space-y-6">
