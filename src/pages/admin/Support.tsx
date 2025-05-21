@@ -9,8 +9,11 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { SupportTicketsTable } from "@/components/admin/SupportTicketsTable";
 import { FeedbackAnalytics } from "@/components/admin/FeedbackAnalytics";
 import { CustomerSatisfactionChart } from "@/components/admin/CustomerSatisfactionChart";
+import { ContactTickets } from "@/components/admin/ContactTickets";
 
 export default function SupportPage() {
+  const [activeTab, setActiveTab] = useState("tickets");
+
   return (
     <div className="flex min-h-screen bg-background">
       <AdminNav />
@@ -64,9 +67,10 @@ export default function SupportPage() {
           </Card>
         </div>
 
-        <Tabs defaultValue="tickets" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="tickets">تذاكر الدعم</TabsTrigger>
+            <TabsTrigger value="contact">رسائل الاتصال</TabsTrigger>
             <TabsTrigger value="analytics">تحليلات الملاحظات</TabsTrigger>
             <TabsTrigger value="satisfaction">رضا العملاء</TabsTrigger>
           </TabsList>
@@ -77,6 +81,14 @@ export default function SupportPage() {
               <Button size="sm">تذكرة جديدة</Button>
             </div>
             <SupportTicketsTable />
+          </TabsContent>
+          
+          <TabsContent value="contact" className="space-y-4">
+            <div className="flex justify-between">
+              <h3 className="text-lg font-medium">رسائل نموذج الاتصال</h3>
+              <Button size="sm">تصدير البيانات</Button>
+            </div>
+            <ContactTickets />
           </TabsContent>
           
           <TabsContent value="analytics" className="space-y-4">

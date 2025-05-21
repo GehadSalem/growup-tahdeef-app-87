@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,10 @@ const Profile = () => {
   
   const handleNavigateToReferral = () => {
     navigate("/referral");
+  };
+  
+  const handleNavigateToContact = () => {
+    navigate("/contact");
   };
 
   return (
@@ -372,7 +377,7 @@ const Profile = () => {
           <div className="text-center text-gray-500 text-sm">
             <p>
               واجهت مشكلة؟{" "}
-              <button className="text-growup hover:underline">تواصل مع الدعم</button>
+              <button className="text-growup hover:underline" onClick={handleNavigateToContact}>تواصل مع الدعم</button>
             </p>
           </div>
         </div>
