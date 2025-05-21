@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Calendar, Camera, Edit, Gift, Link, LogOut, Mail, Settings, Share } from "lucide-react";
+import { Calendar, Camera, Gift, Link, LogOut, Mail, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { ProfileData } from "@/lib/types";
@@ -66,22 +65,13 @@ const Profile = () => {
     });
   };
 
-  const handleEditProfile = () => {
-    toast.info("سيتم إضافة إمكانية تعديل الملف الشخصي قريباً");
-  };
-
   const handleLogout = () => {
     setShowLogoutConfirm(true);
   };
   
   const confirmLogout = () => {
     // في تطبيق حقيقي، هنا نقوم بحذف بيانات الجلسة والتوكن
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("user");
-    
     toast.success("تم تسجيل الخروج بنجاح");
-    
-    // توجيه المستخدم إلى صفحة تسجيل الدخول
     navigate("/login");
   };
 
@@ -139,26 +129,7 @@ const Profile = () => {
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-3 mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5"
-                  onClick={handleEditProfile}
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>تعديل الملف</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>تسجيل الخروج</span>
-                </Button>
-              </div>
+              {/* Removed the buttons that were highlighted in red */}
               
               {/* بطاقة الإحالة المميزة */}
               <div className="bg-growup/10 rounded-lg p-4 mb-4 relative overflow-hidden">
@@ -189,6 +160,15 @@ const Profile = () => {
                   </Button>
                 </div>
               </div>
+              
+              {/* Adding the logout button at the bottom */}
+              <Button
+                className="w-full bg-red-500 hover:bg-red-600 text-white mt-4"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 ml-2" />
+                تسجيل الخروج
+              </Button>
             </CardContent>
           </Card>
 

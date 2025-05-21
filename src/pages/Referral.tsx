@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Copy, Gift, Share, Users } from "lucide-react";
+import { Copy, Gift, Share, Users, Star, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ProfileData } from "@/lib/types";
 
