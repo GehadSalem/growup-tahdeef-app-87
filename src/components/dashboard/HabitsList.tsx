@@ -1,16 +1,26 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { HabitCard } from "@/components/ui/HabitCard";
 import { AddHabitDialog } from "@/components/ui/AddHabitDialog";
+import { EditHabitDialog } from "@/components/ui/EditHabitDialog";
 import { Habit } from "@/lib/types";
 
 interface HabitsListProps {
   habits: Habit[];
   onHabitComplete: (id: string) => void;
   onHabitDelete: (id: string) => void;
+  onHabitEdit?: (id: string, habit: { 
+    title: string; 
+    category: string;
+    frequency?: {
+      type: 'daily' | 'weekly' | 'monthly';
+      time?: string;
+      days?: number[];
+      dayOfMonth?: number;
+    };
+  }) => void;
   onAddHabit: (habit: { 
     title: string; 
     category: string;
@@ -23,9 +33,18 @@ interface HabitsListProps {
   }) => void;
 }
 
-export function HabitsList({ habits, onHabitComplete, onHabitDelete, onAddHabit }: HabitsListProps) {
-  const navigate = useNavigate();
+export function HabitsList({ habits, onHabitComplete, onHabitDelete, onHabitEdit, onAddHabit }: HabitsListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  
+  const handleOpenEditDialog = (id: string) => {
+    const habit = habits.find(h => h.id === id);
+    if (habit) {
+      setSelectedHabit(habit);
+      setEditDialogOpen(true);
+    }
+  };
   
   return (
     <section className="mb-8">
@@ -52,7 +71,7 @@ export function HabitsList({ habits, onHabitComplete, onHabitDelete, onAddHabit 
             icon={<span>{habit.icon}</span>}
             onComplete={onHabitComplete}
             onDelete={onHabitDelete}
-            onEdit={(id) => navigate(`/edit-habit/${id}`)}
+            onEdit={onHabitEdit ? handleOpenEditDialog : undefined}
           />
         ))}
       </div>
@@ -75,6 +94,16 @@ export function HabitsList({ habits, onHabitComplete, onHabitDelete, onAddHabit 
         onOpenChange={setDialogOpen} 
         onAddHabit={onAddHabit} 
       />
+      
+      {/* Edit Habit Dialog */}
+      {selectedHabit && onHabitEdit && (
+        <EditHabitDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onEditHabit={onHabitEdit}
+          habit={selectedHabit}
+        />
+      )}
     </section>
   );
 }

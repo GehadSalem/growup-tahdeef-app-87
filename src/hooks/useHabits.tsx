@@ -47,6 +47,7 @@ export function useHabits() {
       category: habitData.category,
       completed: false,
       icon: getIconForCategory(habitData.category),
+      frequency: habitData.frequency
     };
     
     setHabits([...habits, newHabit]);
@@ -54,6 +55,33 @@ export function useHabits() {
     toast({
       title: "تمت الإضافة",
       description: "تم إضافة عادة جديدة بنجاح",
+    });
+  };
+  
+  // تعديل عادة
+  const editHabit = (id: string, habitData: { 
+    title: string; 
+    category: string;
+    frequency?: {
+      type: 'daily' | 'weekly' | 'monthly';
+      time?: string;
+      days?: number[];
+      dayOfMonth?: number;
+    };
+  }) => {
+    setHabits(habits.map(habit => 
+      habit.id === id ? { 
+        ...habit, 
+        title: habitData.title,
+        category: habitData.category,
+        icon: getIconForCategory(habitData.category),
+        frequency: habitData.frequency || habit.frequency
+      } : habit
+    ));
+    
+    toast({
+      title: "تم التعديل",
+      description: "تم تعديل العادة بنجاح",
     });
   };
   
@@ -91,7 +119,8 @@ export function useHabits() {
     habits, 
     setHabits, 
     toggleHabitComplete, 
-    addHabit, 
+    addHabit,
+    editHabit, 
     deleteHabit, 
     getIconForCategory,
     calculateDailyProgress

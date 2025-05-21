@@ -25,10 +25,24 @@ export function HabitCard({
   onDelete
 }: HabitCardProps) {
   const [isCompleted, setIsCompleted] = useState(completed);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleComplete = () => {
     setIsCompleted(!isCompleted);
     if (onComplete) onComplete(id);
+  };
+  
+  const handleDelete = () => {
+    if (confirmDelete) {
+      if (onDelete) onDelete(id);
+      setConfirmDelete(false);
+    } else {
+      setConfirmDelete(true);
+      // إعادة تعيين حالة التأكيد بعد 3 ثواني
+      setTimeout(() => {
+        setConfirmDelete(false);
+      }, 3000);
+    }
   };
 
   return (
@@ -68,6 +82,7 @@ export function HabitCard({
             "rounded-full p-1 transition-colors",
             isCompleted ? "text-growup hover:bg-growup/20" : "text-gray-400 hover:bg-gray-100 hover:text-growup"
           )}
+          aria-label={isCompleted ? "علّم كغير مكتمل" : "علّم كمكتمل"}
         >
           <CheckCircle size={20} />
         </button>
@@ -75,13 +90,20 @@ export function HabitCard({
         <button 
           onClick={() => onEdit && onEdit(id)}
           className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-500 transition-colors"
+          aria-label="تعديل العادة"
         >
           <Edit size={18} />
         </button>
         
         <button 
-          onClick={() => onDelete && onDelete(id)}
-          className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-red-500 transition-colors"
+          onClick={handleDelete}
+          className={cn(
+            "rounded-full p-1 transition-colors",
+            confirmDelete 
+              ? "bg-red-100 text-red-500" 
+              : "text-gray-400 hover:bg-gray-100 hover:text-red-500"
+          )}
+          aria-label={confirmDelete ? "اضغط للتأكيد" : "حذف العادة"}
         >
           <Trash size={18} />
         </button>

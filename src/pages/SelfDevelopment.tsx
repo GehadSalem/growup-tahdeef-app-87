@@ -5,7 +5,9 @@ import { HabitCard } from "@/components/ui/HabitCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { AddHabitDialog } from "@/components/ui/AddHabitDialog";
+import { EditHabitDialog } from "@/components/ui/EditHabitDialog";
 import { useToast } from "@/hooks/use-toast";
+import { Habit } from "@/lib/types";
 
 // Sample daily habits for self development
 const initialHabits = [
@@ -18,8 +20,10 @@ const initialHabits = [
 
 export default function SelfDevelopment() {
   const { toast } = useToast();
-  const [habits, setHabits] = useState(initialHabits);
+  const [habits, setHabits] = useState<Habit[]>(initialHabits);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [points, setPoints] = useState(30);
   
   // Calculate progress
@@ -41,13 +45,23 @@ export default function SelfDevelopment() {
     ));
   };
   
-  const handleAddHabit = (habit: { title: string; category: string }) => {
+  const handleAddHabit = (habit: { 
+    title: string; 
+    category: string;
+    frequency: {
+      type: 'daily' | 'weekly' | 'monthly';
+      time?: string;
+      days?: number[];
+      dayOfMonth?: number;
+    };
+  }) => {
     const newHabit = {
       id: Date.now().toString(),
       title: habit.title,
       category: habit.category,
       completed: false,
       icon: getIconForCategory(habit.category),
+      frequency: habit.frequency,
     };
     
     setHabits([...habits, newHabit]);
@@ -55,6 +69,32 @@ export default function SelfDevelopment() {
     toast({
       title: "تمت الإضافة",
       description: "تم إضافة عادة جديدة بنجاح",
+    });
+  };
+  
+  const handleEditHabit = (id: string, habitData: { 
+    title: string; 
+    category: string;
+    frequency?: {
+      type: 'daily' | 'weekly' | 'monthly';
+      time?: string;
+      days?: number[];
+      dayOfMonth?: number;
+    };
+  }) => {
+    setHabits(habits.map(habit => 
+      habit.id === id ? { 
+        ...habit, 
+        title: habitData.title,
+        category: habitData.category,
+        icon: getIconForCategory(habitData.category),
+        frequency: habitData.frequency || habit.frequency
+      } : habit
+    ));
+    
+    toast({
+      title: "تم التعديل",
+      description: "تم تعديل العادة بنجاح",
     });
   };
   
@@ -67,6 +107,14 @@ export default function SelfDevelopment() {
     });
   };
   
+  const handleOpenEditDialog = (id: string) => {
+    const habit = habits.find(h => h.id === id);
+    if (habit) {
+      setSelectedHabit(habit);
+      setEditDialogOpen(true);
+    }
+  };
+  
   const getIconForCategory = (category: string) => {
     const icons: {[key: string]: string} = {
       'learning': '📚',
@@ -75,6 +123,11 @@ export default function SelfDevelopment() {
       'finance': '💰',
       'social': '👥',
       'other': '✨',
+      'قراءة': '📚',
+      'سمعي': '🎧',
+      'معرفة': '🌐',
+      'تعلم': '🎯',
+      'كتابة': '✏️',
     };
     
     return icons[category] || '📝';
@@ -123,7 +176,7 @@ export default function SelfDevelopment() {
                 icon={<span>{habit.icon}</span>}
                 onComplete={handleHabitComplete}
                 onDelete={handleDeleteHabit}
-                onEdit={() => {}}
+                onEdit={handleOpenEditDialog}
               />
             ))}
           </div>
@@ -153,6 +206,16 @@ export default function SelfDevelopment() {
         onOpenChange={setDialogOpen} 
         onAddHabit={handleAddHabit} 
       />
+      
+      {/* Edit Habit Dialog */}
+      {selectedHabit && (
+        <EditHabitDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onEditHabit={handleEditHabit}
+          habit={selectedHabit}
+        />
+      )}
     </div>
   );
 }
