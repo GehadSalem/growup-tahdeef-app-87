@@ -128,8 +128,6 @@ const Profile = () => {
                   عضو منذ {formatDate(profileData.joinDate)}
                 </Badge>
               </div>
-
-              {/* Removed the buttons that were highlighted in red */}
               
               {/* بطاقة الإحالة المميزة */}
               <div className="bg-growup/10 rounded-lg p-4 mb-4 relative overflow-hidden">
