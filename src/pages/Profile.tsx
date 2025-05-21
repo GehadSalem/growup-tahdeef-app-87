@@ -16,7 +16,6 @@ const Profile = () => {
     id: "user-123",
     name: "أحمد محمد",
     email: "ahmad@example.com",
-    phone: "+966 50 123 4567",
     country: "المملكة العربية السعودية",
     city: "الرياض",
     joinDate: "2023-01-15",
@@ -190,14 +189,6 @@ const Profile = () => {
                       <span>البريد الإلكتروني</span>
                     </div>
                     <div>{profileData.email}</div>
-                  </div>
-
-                  <div className="flex justify-between py-2 border-b">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone className="h-4 w-4" />
-                      <span>رقم الهاتف</span>
-                    </div>
-                    <div>{profileData.phone || "غير محدد"}</div>
                   </div>
 
                   <div className="flex justify-between py-2 border-b">
