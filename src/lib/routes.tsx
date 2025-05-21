@@ -27,6 +27,8 @@ import Subscription from '@/pages/Subscription';
 import Notifications from '@/pages/Notifications';
 import Profile from '@/pages/Profile';
 import Referral from '@/pages/Referral';
+import Settings from '@/pages/Settings';
+import Logout from '@/pages/Logout';
 
 // استيراد صفحات المستندات القانونية
 import LegalMenu from '@/pages/legal/LegalMenu';
@@ -70,6 +72,8 @@ export const appRoutes: RouteObject[] = [
   { path: '/notifications', element: <Notifications /> },
   { path: '/profile', element: <Profile /> },
   { path: '/referral', element: <Referral /> },
+  { path: '/settings', element: <Settings /> },
+  { path: '/logout', element: <Logout /> },
   
   // ---- صفحة الاشتراك ----
   { path: '/subscription', element: <Subscription /> },
