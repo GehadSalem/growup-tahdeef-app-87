@@ -10,8 +10,7 @@ import { ObligationsSummary } from "./obligations/ObligationsSummary";
 import { ObligationsList } from "./obligations/ObligationsList";
 import { ObligationsCharts } from "./obligations/ObligationsCharts";
 import { ObligationsTips } from "./obligations/ObligationsTips";
-import { format, addMonths, addDays, isAfter, isBefore } from "date-fns";
-import { ar } from "date-fns/locale";
+import { checkUpcomingObligations } from "./utils/dateUtils";
 
 export function MonthlyObligations() {
   const { toast } = useToast();
@@ -46,44 +45,16 @@ export function MonthlyObligations() {
 
   // فحص الالتزامات القريبة وإرسال إشعارات
   useEffect(() => {
-    const today = new Date();
-    const threeDaysLater = addDays(today, 3);
+    const notify = (title: string, description: string) => {
+      toast({ title, description });
+    };
     
-    obligations.forEach(obligation => {
-      if (!obligation.isPaid && obligation.enableNotifications) {
-        const nextPaymentDate = new Date(getNextPaymentDate(obligation.dueDate, obligation.recurrence));
-        
-        // إشعار لليوم نفسه
-        if (format(today, "yyyy-MM-dd") === format(nextPaymentDate, "yyyy-MM-dd") && !obligation.notificationSent) {
-          toast({
-            title: "موعد سداد اليوم!",
-            description: `حان موعد سداد "${obligation.name}" بمبلغ ${obligation.amount} ريال`,
-          });
-          
-          // تحديث حالة الإشعار
-          setObligations(prev => prev.map(item => 
-            item.id === obligation.id ? { ...item, notificationSent: true } : item
-          ));
-        }
-        
-        // إشعار قبل 3 أيام
-        else if (
-          isAfter(nextPaymentDate, today) && 
-          isBefore(nextPaymentDate, threeDaysLater) && 
-          !obligation.notificationSent
-        ) {
-          toast({
-            title: "تذكير بموعد سداد قريب",
-            description: `موعد سداد "${obligation.name}" سيكون في ${formatDate(nextPaymentDate.toString())}`,
-          });
-          
-          // تحديث حالة الإشعار
-          setObligations(prev => prev.map(item => 
-            item.id === obligation.id ? { ...item, notificationSent: true } : item
-          ));
-        }
-      }
-    });
+    const updatedObligations = checkUpcomingObligations(obligations, notify);
+    
+    // تحديث حالة الإشعارات إذا تغيرت
+    if (JSON.stringify(updatedObligations) !== JSON.stringify(obligations)) {
+      setObligations(updatedObligations);
+    }
     
     // إعادة تعيين حالة الإشعارات كل يوم
     const resetNotifications = () => {
@@ -94,51 +65,6 @@ export function MonthlyObligations() {
     
     return () => clearInterval(midnightReset);
   }, [obligations, toast]);
-
-  // حساب تاريخ السداد القادم حسب التكرار
-  const getNextPaymentDate = (dueDate: string, recurrence: string): string => {
-    const date = new Date(dueDate);
-    const today = new Date();
-    
-    let nextDate = new Date(date);
-    
-    // إذا كان التاريخ قد مر، نحسب التاريخ القادم
-    if (isBefore(nextDate, today)) {
-      switch (recurrence) {
-        case "شهري":
-          // نضيف شهر حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 1);
-          }
-          break;
-        case "ربع سنوي":
-          // نضيف 3 أشهر حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 3);
-          }
-          break;
-        case "سنوي":
-          // نضيف سنة (12 شهر) حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 12);
-          }
-          break;
-        case "مرة واحدة":
-          // لا نغير التاريخ لأنه يحدث مرة واحدة فقط
-          break;
-      }
-    }
-    
-    return format(nextDate, "yyyy-MM-dd");
-  };
-
-  // تنسيق التاريخ بالعربية
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return format(date, "d MMMM yyyy", { locale: ar });
-  };
-
-  // Removed the CommonJS require statements and moved them to imports at the top
 
   return (
     <div className="space-y-6">

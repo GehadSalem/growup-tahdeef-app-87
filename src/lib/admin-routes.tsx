@@ -1,16 +1,7 @@
 
 import { lazy, Suspense } from 'react';
 import { RouteObject } from 'react-router-dom';
-
-// مكون التحميل المشترك
-const AdminLoading = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="text-center">
-      <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
-    </div>
-  </div>
-);
+import { Loading } from '@/components/shared/Loading';
 
 // استيراد صفحات لوحة التحكم باستخدام التحميل الكسول
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
@@ -25,7 +16,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminDashboard />
       </Suspense>
     ),
@@ -33,7 +24,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin/users',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminUsers />
       </Suspense>
     ),
@@ -41,7 +32,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin/subscriptions',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminSubscriptions />
       </Suspense>
     ),
@@ -49,7 +40,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin/content',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminContent />
       </Suspense>
     ),
@@ -57,7 +48,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin/support',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminSupport />
       </Suspense>
     ),
@@ -65,7 +56,7 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin/settings',
     element: (
-      <Suspense fallback={<AdminLoading />}>
+      <Suspense fallback={<Loading />}>
         <AdminSettings />
       </Suspense>
     ),
