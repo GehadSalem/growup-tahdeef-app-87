@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -163,15 +162,6 @@ const Profile = () => {
                   </Button>
                 </div>
               </div>
-              
-              {/* Adding the logout button at the bottom */}
-              <Button
-                className="w-full bg-red-500 hover:bg-red-600 text-white mt-4"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5 ml-2" />
-                تسجيل الخروج
-              </Button>
             </CardContent>
           </Card>
 
