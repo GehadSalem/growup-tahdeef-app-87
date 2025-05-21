@@ -157,7 +157,7 @@ export default function Contact() {
               <div className="mt-6 pt-6 border-t border-gray-200 text-center">
                 <div className="flex items-center justify-center gap-2 text-growup">
                   <Mail className="h-5 w-5" />
-                  <span className="font-bold">support@growup.com</span>
+                  <span className="font-bold">contact@growupe.com</span>
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
                   نستجيب عادة خلال 24 ساعة من استلام الرسالة
