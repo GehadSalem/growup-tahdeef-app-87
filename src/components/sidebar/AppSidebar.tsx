@@ -1,3 +1,4 @@
+
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +15,6 @@ import {
   Home, 
   LogOut, 
   PiggyBank, 
-  Settings,
   Target
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -90,16 +90,6 @@ export function AppSidebar() {
       
       <SidebarFooter className="px-3 py-4">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              onClick={() => navigate('/settings')}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold font-cairo transition-colors hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-            >
-              <Settings className="h-5 w-5" />
-              <span>الإعدادات</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          
           <SidebarMenuItem>
             <SidebarMenuButton 
               onClick={() => navigate('/logout')}

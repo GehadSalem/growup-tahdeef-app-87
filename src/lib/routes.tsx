@@ -27,7 +27,6 @@ import Subscription from '@/pages/Subscription';
 import Notifications from '@/pages/Notifications';
 import Profile from '@/pages/Profile';
 import Referral from '@/pages/Referral';
-import Settings from '@/pages/Settings';
 import Logout from '@/pages/Logout';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
@@ -74,7 +73,6 @@ export const appRoutes: RouteObject[] = [
   { path: '/notifications', element: <Notifications /> },
   { path: '/profile', element: <Profile /> },
   { path: '/referral', element: <Referral /> },
-  { path: '/settings', element: <Settings /> },
   { path: '/logout', element: <Logout /> },
   
   // ---- صفحات استعادة كلمة المرور ----

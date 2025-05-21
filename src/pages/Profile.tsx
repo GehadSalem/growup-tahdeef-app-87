@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Camera, Edit, Gift, Link, Lock, Mail, Phone, Settings, Share } from "lucide-react";
+import { Calendar, Camera, Edit, Gift, Link, LogOut, Mail, Phone, Settings, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { ProfileData } from "@/lib/types";
@@ -59,8 +58,8 @@ const Profile = () => {
     toast.info("سيتم إضافة إمكانية تعديل الملف الشخصي قريباً");
   };
 
-  const handleChangePassword = () => {
-    toast.info("سيتم إضافة إمكانية تغيير كلمة المرور قريباً");
+  const handleLogout = () => {
+    navigate("/logout");
   };
 
   const handleChangePhoto = () => {
@@ -130,20 +129,11 @@ const Profile = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-1.5"
-                  onClick={handleChangePassword}
+                  className="flex items-center gap-1.5 text-red-500 hover:bg-red-50 hover:text-red-600"
+                  onClick={handleLogout}
                 >
-                  <Lock className="h-4 w-4" />
-                  <span>تغيير كلمة المرور</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5"
-                  onClick={() => navigate("/settings")}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>الإعدادات</span>
+                  <LogOut className="h-4 w-4" />
+                  <span>تسجيل الخروج</span>
                 </Button>
               </div>
               

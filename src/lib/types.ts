@@ -1,4 +1,3 @@
-
 /**
  * تعريفات الأنواع المستخدمة في التطبيق
  * هذا الملف يحتوي على جميع التعريفات التي يمكن استخدامها في مختلف أجزاء التطبيق
@@ -13,6 +12,12 @@ export interface Habit {
   category: string;
   completed: boolean;
   icon: string;
+  frequency?: {
+    type: 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    days?: number[];
+    dayOfMonth?: number;
+  };
 }
 
 /**
@@ -172,4 +177,3 @@ export interface Referral {
   completedAt?: string; // تاريخ اكتمال الإحالة
   rewardClaimed: boolean; // هل تم استلام المكافأة
 }
-
