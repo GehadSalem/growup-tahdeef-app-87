@@ -29,6 +29,8 @@ import Profile from '@/pages/Profile';
 import Referral from '@/pages/Referral';
 import Settings from '@/pages/Settings';
 import Logout from '@/pages/Logout';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 
 // استيراد صفحات المستندات القانونية
 import LegalMenu from '@/pages/legal/LegalMenu';
@@ -74,6 +76,10 @@ export const appRoutes: RouteObject[] = [
   { path: '/referral', element: <Referral /> },
   { path: '/settings', element: <Settings /> },
   { path: '/logout', element: <Logout /> },
+  
+  // ---- صفحات استعادة كلمة المرور ----
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPassword /> },
   
   // ---- صفحة الاشتراك ----
   { path: '/subscription', element: <Subscription /> },
