@@ -1,19 +1,19 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
-import { Share, Gift, Award, Star } from "lucide-react";
+import { toast } from "sonner";
+import { Copy, Gift, Share, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ProfileData } from "@/lib/types";
 
-const Referral = () => {
-  const [profileData, setProfileData] = useState<ProfileData>({
+export default function Referral() {
+  const navigate = useNavigate();
+  const [referralData, setReferralData] = useState<ProfileData>({
     id: "user-123",
     name: "أحمد محمد",
     email: "ahmad@example.com",
-    phone: "+966 50 123 4567",
     country: "المملكة العربية السعودية",
     city: "الرياض",
     joinDate: "2023-01-15",
@@ -41,8 +41,8 @@ const Referral = () => {
   // إنشاء رابط الإحالة عند تحميل الصفحة
   useEffect(() => {
     const baseUrl = window.location.origin;
-    setReferralLink(`${baseUrl}/signup?ref=${profileData.referralCode}`);
-  }, [profileData.referralCode]);
+    setReferralLink(`${baseUrl}/signup?ref=${referralData.referralCode}`);
+  }, [referralData.referralCode]);
   
   // نسخ رابط الإحالة إلى الحافظة
   const copyReferralLink = () => {
@@ -73,7 +73,7 @@ const Referral = () => {
     if (navigator.share) {
       navigator.share({
         title: "انضم إلى تطبيق GrowUp",
-        text: `انضم إلي في تطبيق GrowUp مع شهر مجاني عند التسجيل! استخدم رمز الإحالة: ${profileData.referralCode}`,
+        text: `انضم إلي في تطبيق GrowUp مع شهر مجاني عند التسجيل! استخدم رمز الإحالة: ${referralData.referralCode}`,
         url: referralLink,
       }).catch(() => {
         toast.error("حدث خطأ أثناء مشاركة الرابط");
@@ -105,12 +105,12 @@ const Referral = () => {
                 {/* إحصائيات الإحالة */}
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="p-3 bg-growup/10 rounded-lg">
-                    <p className="text-2xl font-bold mb-1">{profileData.referralCount || 0}</p>
+                    <p className="text-2xl font-bold mb-1">{referralData.referralCount || 0}</p>
                     <p className="text-sm text-gray-600">الدعوات المقبولة</p>
                   </div>
                   
                   <div className="p-3 bg-growup/10 rounded-lg">
-                    <p className="text-2xl font-bold mb-1">{profileData.freeMonthsEarned || 0}</p>
+                    <p className="text-2xl font-bold mb-1">{referralData.freeMonthsEarned || 0}</p>
                     <p className="text-sm text-gray-600">شهور مجانية</p>
                   </div>
                   
@@ -127,7 +127,7 @@ const Referral = () => {
                 <div className="bg-growup/5 rounded-lg p-4">
                   <p className="text-gray-600 mb-2 text-center">رمز الإحالة الخاص بك</p>
                   <div className="bg-white border border-gray-200 rounded-lg py-3 px-4 font-bold text-center text-lg tracking-widest">
-                    {profileData.referralCode}
+                    {referralData.referralCode}
                   </div>
                 </div>
                 
@@ -284,6 +284,4 @@ const Referral = () => {
       </div>
     </div>
   );
-};
-
-export default Referral;
+}

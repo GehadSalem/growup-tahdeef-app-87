@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Camera, Edit, Gift, Link, LogOut, Mail, Phone, Settings, Share } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Calendar, Camera, Edit, Gift, Link, LogOut, Mail, Settings, Share } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { ProfileData } from "@/lib/types";
@@ -35,6 +46,8 @@ const Profile = () => {
     referralCount: 3,
     freeMonthsEarned: 2,
   });
+  
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const getInitials = (name: string) => {
     return name
@@ -58,7 +71,18 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    navigate("/logout");
+    setShowLogoutConfirm(true);
+  };
+  
+  const confirmLogout = () => {
+    // في تطبيق حقيقي، هنا نقوم بحذف بيانات الجلسة والتوكن
+    // localStorage.removeItem("token");
+    // localStorage.removeItem("user");
+    
+    toast.success("تم تسجيل الخروج بنجاح");
+    
+    // توجيه المستخدم إلى صفحة تسجيل الدخول
+    navigate("/login");
   };
 
   const handleChangePhoto = () => {
@@ -247,11 +271,11 @@ const Profile = () => {
                 </CardContent>
                 <CardFooter>
                   <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={handleEditProfile}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white"
+                    onClick={handleLogout}
                   >
-                    تعديل البيانات الشخصية
+                    <LogOut className="h-5 w-5 ml-2" />
+                    تسجيل الخروج
                   </Button>
                 </CardFooter>
               </Card>
@@ -354,6 +378,15 @@ const Profile = () => {
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full bg-red-500 hover:bg-red-600 text-white"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-5 w-5 ml-2" />
+                    تسجيل الخروج
+                  </Button>
+                </CardFooter>
               </Card>
             </TabsContent>
           </Tabs>
@@ -366,6 +399,28 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      
+      {/* مربع حوار تأكيد تسجيل الخروج */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl text-center mb-2">تسجيل الخروج</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              هل أنت متأكد من رغبتك في تسجيل الخروج من حسابك؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:space-x-4 space-x-0 gap-2">
+            <AlertDialogCancel className="sm:w-auto w-full">إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-500 hover:bg-red-600 text-white sm:w-auto w-full"
+              onClick={confirmLogout}
+            >
+              <LogOut className="h-5 w-5 ml-2" />
+              نعم، تسجيل الخروج
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
