@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, useRoutes } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { appRoutes } from "@/lib/routes";
 import { Suspense } from "react";
+import { AuthProvider } from "@/hooks/useAuth";
 
 // إنشاء عميل للاستعلامات
 const queryClient = new QueryClient({
@@ -37,17 +38,19 @@ const AppRoutes = () => {
 // المكون الرئيسي للتطبيق
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full">
-            <AppRoutes />
-          </div>
-        </SidebarProvider>
-      </TooltipProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+              <AppRoutes />
+            </div>
+          </SidebarProvider>
+        </TooltipProvider>
+      </BrowserRouter>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
