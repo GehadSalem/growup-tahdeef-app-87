@@ -1,3 +1,4 @@
+
 // Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 const SECRET_PREFIX = 'yoursecretkey__';
@@ -32,7 +33,11 @@ class ApiClient {
       headers,
     };
 
+    console.log(`API Request: ${options.method || 'GET'} ${this.baseURL}${endpoint}`);
+    
     const response = await fetch(`${this.baseURL}${endpoint}`, config);
+    
+    console.log(`API Response: ${response.status} ${response.statusText}`);
     
     if (!response.ok) {
       if (response.status === 401) {
@@ -45,7 +50,18 @@ class ApiClient {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    // Check if response has content before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json();
+    }
+    
+    return undefined as T;
   }
 
   async get<T>(endpoint: string): Promise<T> {

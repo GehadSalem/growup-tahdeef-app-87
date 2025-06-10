@@ -48,15 +48,23 @@ export function HabitsList({
   const handleOpenEditDialog = (id: string) => {
     const habit = habits.find(h => h.id === id);
     if (habit) {
+      console.log('Opening edit dialog for habit:', habit);
       setSelectedHabit(habit);
       setEditDialogOpen(true);
     }
   };
   
-  // Add a delete handler that directly calls onHabitDelete
-  const handleOpenDeleteDialog = async (id: string) => {
+  const handleHabitComplete = async (id: string) => {
+    console.log('HabitsList: Completing habit:', id);
+    await onHabitComplete(id);
+  };
+
+  const handleHabitDelete = async (id: string) => {
+    console.log('HabitsList: Deleting habit:', id);
     await onHabitDelete(id);
   };
+
+  console.log('HabitsList: Rendering with habits:', habits);
 
   return (
     <section className="mb-8">
@@ -75,16 +83,20 @@ export function HabitsList({
       <div className="space-y-3">
         {habits.map((habit) => (
           <HabitCard 
-  id={habit.id}
-  name={habit.name} 
-  category={habit.category}
-  completed={habit.completed}
-  icon={getIconForCategory(habit.category)}
-  frequency={habit.frequency}
-  onComplete={async () => { await onHabitComplete(habit.id); }}
-  onDelete={async () => await handleOpenDeleteDialog(habit.id)}
-  onEdit={onHabitEdit ? () => handleOpenEditDialog(habit.id) : undefined}
-/>
+            key={habit.id}
+            id={habit.id}
+            name={habit.name} 
+            category={habit.category}
+            completed={habit.completed}
+            icon={getIconForCategory(habit.category)}
+            streak={habit.streak}
+            createdAt={habit.createdAt}
+            updatedAt={habit.updatedAt}
+            frequency={habit.frequency}
+            onComplete={handleHabitComplete}
+            onDelete={handleHabitDelete}
+            onEdit={onHabitEdit ? () => handleOpenEditDialog(habit.id) : undefined}
+          />
         ))}
       </div>
       
@@ -107,12 +119,12 @@ export function HabitsList({
         onAddHabit={onAddHabit} 
       />
       
-      {/* Edit Habit Dialog */}
       {selectedHabit && onHabitEdit && (
         <EditHabitDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           onEditHabit={async (updatedHabit) => {
+            console.log('Editing habit via dialog:', selectedHabit.id, updatedHabit);
             onHabitEdit(selectedHabit.id, updatedHabit);
           }}
           habit={selectedHabit}

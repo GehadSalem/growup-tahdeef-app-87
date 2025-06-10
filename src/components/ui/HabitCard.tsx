@@ -1,13 +1,18 @@
+
 import { CheckCircle, Edit, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { getIconForCategory } from "@/lib/icons";
+
 interface HabitCardProps {
   id: string;
   name: string;
   category: string;
   completed?: boolean;
   icon?: React.ReactNode;
+  streak?: number;
+  createdAt?: string;
+  updatedAt?: string;
   frequency?: {
     type: 'daily' | 'weekly' | 'monthly';
     time?: string;
@@ -25,80 +30,115 @@ export function HabitCard({
   category, 
   completed = false, 
   icon, 
+  streak = 0,
+  createdAt,
+  updatedAt,
   frequency,
   onComplete,
   onEdit,
   onDelete
 }: HabitCardProps) {
-  const [isCompleted, setIsCompleted] = useState(completed);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-   const handleComplete = async (e: React.MouseEvent) => {
+  const handleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!onComplete) return;
+    if (!onComplete || isCompleting) return;
     
     try {
-      setIsLoading(true);
+      setIsCompleting(true);
+      console.log('HabitCard: Completing habit:', id);
       await onComplete(id);
-      setIsCompleted(!isCompleted); // تحديث الحالة المحلية
+      console.log('HabitCard: Habit completed successfully');
     } catch (error) {
-      console.error("Error marking habit complete:", error);
-      setIsCompleted(isCompleted); // الرجوع للحالة الأصلية في حالة الخطأ
+      console.error("HabitCard: Error completing habit:", error);
     } finally {
-      setIsLoading(false);
+      setIsCompleting(false);
     }
   };
   
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onEdit) onEdit(id);
+    if (onEdit) {
+      console.log('HabitCard: Editing habit:', id);
+      onEdit(id);
+    }
   };
   
   const handleDelete = async (e: React.MouseEvent) => {
-  e.stopPropagation();
-  if (!onDelete) return;
-  
-  try {
-    setIsLoading(true);
-    await onDelete(id);
-  } catch (error) {
-    console.error("Error deleting habit:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+    e.stopPropagation();
+    if (!onDelete || isDeleting) return;
+    
+    try {
+      setIsDeleting(true);
+      console.log('HabitCard: Deleting habit:', id);
+      await onDelete(id);
+      console.log('HabitCard: Habit deleted successfully');
+    } catch (error) {
+      console.error("HabitCard: Error deleting habit:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return new Date(dateString).toLocaleDateString('ar-SA');
+    } catch {
+      return dateString;
+    }
+  };
 
   return (
     <div 
       className={cn(
         "relative flex items-center justify-between rounded-xl border p-4 transition-all",
-        isCompleted 
+        completed 
           ? "border-growup/50 bg-growup/10" 
           : "border-gray-200 hover:border-growup/30 hover:bg-growup/5",
-        isLoading && "opacity-70 pointer-events-none"
+        (isCompleting || isDeleting) && "opacity-70 pointer-events-none"
       )}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className={cn(
-  "flex h-10 w-10 items-center justify-center rounded-full text-2xl shrink-0",
-  isCompleted ? "bg-growup/20 text-growup" : "bg-gray-100 text-gray-400"
-)}>
-  {getIconForCategory(category)}
-</div>
+          "flex h-10 w-10 items-center justify-center rounded-full text-2xl shrink-0",
+          completed ? "bg-growup/20 text-growup" : "bg-gray-100 text-gray-400"
+        )}>
+          {getIconForCategory(category)}
+        </div>
         
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className={cn(
             "font-cairo font-semibold text-lg truncate", 
-            isCompleted && "text-growup line-through opacity-70"
+            completed && "text-growup line-through opacity-70"
           )}>
             {name}
           </h3>
-          <span className="text-sm text-gray-500 truncate">{category}</span>
+          
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span className="truncate">{category}</span>
+            {streak > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-growup font-medium">🔥 {streak} أيام</span>
+              </>
+            )}
+          </div>
+          
           {frequency?.time && (
             <p className="text-xs text-gray-400 mt-1">
               {frequency.time}
             </p>
+          )}
+          
+          {(createdAt || updatedAt) && (
+            <div className="text-xs text-gray-400 mt-1">
+              {createdAt && <span>إنشاء: {formatDate(createdAt)}</span>}
+              {updatedAt && createdAt !== updatedAt && (
+                <span> • تحديث: {formatDate(updatedAt)}</span>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -106,23 +146,23 @@ export function HabitCard({
       <div className="flex items-center gap-2">
         <button 
           onClick={handleComplete}
-          disabled={isLoading}
+          disabled={isCompleting || isDeleting}
           className={cn(
             "rounded-full p-1 transition-colors",
-            isCompleted ? "text-growup hover:bg-growup/20" : "text-gray-400 hover:bg-gray-100 hover:text-growup",
-            isLoading && "opacity-50"
+            completed ? "text-growup hover:bg-growup/20" : "text-gray-400 hover:bg-gray-100 hover:text-growup",
+            (isCompleting || isDeleting) && "opacity-50"
           )}
-          aria-label={isCompleted ? "علّم كغير مكتمل" : "علّم كمكتمل"}
+          aria-label={completed ? "علّم كغير مكتمل" : "علّم كمكتمل"}
         >
           <CheckCircle size={20} />
         </button>
         
         <button 
           onClick={handleEdit}
-          disabled={isLoading}
+          disabled={isCompleting || isDeleting}
           className={cn(
             "rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-500 transition-colors",
-            isLoading && "opacity-50"
+            (isCompleting || isDeleting) && "opacity-50"
           )}
           aria-label="تعديل العادة"
         >
@@ -131,15 +171,12 @@ export function HabitCard({
         
         <button 
           onClick={handleDelete}
-          disabled={isLoading}
+          disabled={isCompleting || isDeleting}
           className={cn(
-            "rounded-full p-1 transition-colors",
-            showDeleteConfirm 
-              ? "bg-red-100 text-red-500" 
-              : "text-gray-400 hover:bg-gray-100 hover:text-red-500",
-            isLoading && "opacity-50"
+            "rounded-full p-1 transition-colors text-gray-400 hover:bg-gray-100 hover:text-red-500",
+            (isCompleting || isDeleting) && "opacity-50"
           )}
-          aria-label={showDeleteConfirm ? "اضغط للتأكيد" : "حذف العادة"}
+          aria-label="حذف العادة"
         >
           <Trash size={18} />
         </button>
