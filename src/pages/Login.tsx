@@ -5,175 +5,263 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Lock } from "lucide-react";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { apiClient } from "@/lib/api";
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  avatar?: string;
+}
 
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // إضافة تكامل Google Auth
+  const [authError, setAuthError] = useState<{ type: string; message: string } | null>(null);
+
   useEffect(() => {
-    // تحميل مكتبة Google API
-    const loadGoogleScript = () => {
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-      
-      script.onload = initializeGoogleSignIn;
-    };
-    
-    const initializeGoogleSignIn = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: "YOUR_GOOGLE_CLIENT_ID", // يجب استبداله بمعرف العميل الخاص بك
-          callback: handleGoogleCredentialResponse,
-        });
-        
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-signin-button"),
-          { theme: "outline", size: "large", width: "100%", text: "continue_with" }
-        );
-      }
-    };
-    
-    loadGoogleScript();
-    
-    return () => {
-      // تنظيف عند إزالة المكون
-      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-      if (script) {
-        document.body.removeChild(script);
-      }
-    };
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
+    if (token && userData) {
+      const user: UserData = JSON.parse(userData);
+      redirectBasedOnRole(user.role);
+    }
   }, []);
-  
-  const handleGoogleCredentialResponse = (response) => {
-    setIsLoading(true);
-    
-    // هنا يمكنك التحقق من الرمز المميز باستخدام API الخاص بك
-    console.log("Google token:", response.credential);
-    
-    // محاكاة نجاح تسجيل الدخول
-    toast({
-      title: "تم تسجيل الدخول بنجاح",
-      description: "مرحباً بك في GrowUp!",
-    });
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/subscription");
-    }, 1000);
+
+  const redirectBasedOnRole = (role: 'user' | 'admin') => {
+    navigate(role === 'admin' ? '/admin' : '/dashboard-app');
   };
-  
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const toggleAuthMode = () => {
+    setIsLogin((prev) => !prev);
+    setAuthError(null);
+  };
+
+  const signInWithGoogle = async () => {
+    setIsLoading(true);
+    setAuthError(null);
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+
+      const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
+
+      const { user: userData, token } = res;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في GrowUp!" });
+      redirectBasedOnRole(userData.role);
+    } catch (error: any) {
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: error.response?.data?.message || error.message || "حدث خطأ غير متوقع",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setAuthError(null);
+
     if (!email || !password || (!isLogin && !name)) {
       toast({
         title: "خطأ في البيانات",
-        description: "يرجى إدخال جميع البيانات المطلوبة",
+        description: "يرجى إدخال جميع الحقول المطلوبة",
         variant: "destructive",
       });
       setIsLoading(false);
       return;
     }
-    
-    // محاكاة التحقق من API
-    setTimeout(() => {
-      if (isLogin) {
+
+    try {
+      const endpoint = isLogin ? "/auth/login" : "/auth/register";
+      const body = isLogin ? { email, password } : { email, password, name };
+
+      const res = await apiClient.post<{ user: UserData; token: string }>(endpoint, body);
+      const { user: userData, token } = res;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      toast({
+        title: isLogin ? "تم تسجيل الدخول بنجاح" : "تم إنشاء الحساب بنجاح",
+        description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
+      });
+
+      redirectBasedOnRole(userData.role);
+    } catch (error: any) {
+      const errData = error.response?.data;
+
+      if (errData) {
+        handleAuthErrors(errData);
+      }
+
+      if (!authError) {
         toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك مجدداً!",
-        });
-      } else {
-        toast({
-          title: "تم إنشاء الحساب بنجاح",
-          description: "مرحباً بك في GrowUp!",
+          title: "خطأ",
+          description: errData?.message || error.message || "حدث خطأ غير متوقع",
+          variant: "destructive",
         });
       }
-      
+    } finally {
       setIsLoading(false);
-      navigate("/subscription");
-    }, 1000);
+    }
   };
-  
+
+  const handleAuthErrors = (errorData: any) => {
+    const messages: Record<string, string> = {
+      user_not_found: "لا يوجد حساب مرتبط بهذا البريد الإلكتروني. هل ترغب في إنشاء حساب جديد؟",
+      invalid_password: "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
+      email_exists: "البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول بدلاً من ذلك.",
+    };
+
+    setAuthError({
+      type: errorData.errorType || "general_error",
+      message: messages[errorData.errorType] || errorData.message || "حدث خطأ أثناء المصادقة",
+    });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-growup-light">
-      <div className="flex flex-col flex-1 items-center justify-center p-8">
-        <div className="w-full max-w-md">
+    <div className="min-h-screen w-full bg-growup-light">
+      <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
+        <div className="w-full max-w-lg">
           <Logo size="lg" className="mx-auto mb-8" />
-          
-          <div className="bg-white rounded-xl shadow-md p-8">
+
+          <div className="bg-white rounded-xl shadow-md p-8 w-full">
             <h1 className="text-2xl font-bold font-cairo mb-6 text-center">
               {isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
             </h1>
-            
-            <div id="google-signin-button" className="w-full mb-4"></div>
-            
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mb-4 gap-2"
+              onClick={signInWithGoogle}
+              disabled={isLoading}
+            >
+              <img src="/icons/google.svg" alt="Google" className="w-4 h-4" />
+              {isLogin ? "تسجيل الدخول باستخدام Google" : "التسجيل باستخدام Google"}
+            </Button>
+
             <div className="relative my-6">
               <hr className="border-gray-300" />
               <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-gray-500 font-cairo">
                 أو
               </span>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
+              {authError && (
+                <div
+                  className={`p-3 rounded-md font-cairo text-sm ${
+                    authError.type === "user_not_found"
+                      ? "bg-blue-50 text-blue-800"
+                      : authError.type === "email_exists"
+                      ? "bg-yellow-50 text-yellow-800"
+                      : "bg-red-50 text-red-800"
+                  }`}
+                >
+                  {authError.message}
+
+                  {authError.type === "user_not_found" && (
+                    <div className="text-center mt-2">
+                      <button
+                        onClick={toggleAuthMode}
+                        className="text-growup hover:underline"
+                        disabled={isLoading}
+                      >
+                        إنشاء حساب جديد
+                      </button>
+                    </div>
+                  )}
+                  {authError.type === "email_exists" && (
+                    <div className="text-center mt-2">
+                      <button
+                        onClick={() => setIsLogin(true)}
+                        className="text-growup hover:underline"
+                        disabled={isLoading}
+                      >
+                        تسجيل الدخول
+                      </button>
+                    </div>
+                  )}
+                  {authError.type === "invalid_password" && (
+                    <div className="text-left mt-2">
+                      <Link
+                        to="/forgot-password"
+                        className="text-sm text-growup hover:underline"
+                      >
+                        نسيت كلمة المرور؟
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {!isLogin && (
                 <div className="space-y-1">
-                  <Label htmlFor="name" className="text-right block font-cairo">
+                  <Label htmlFor="name" className="block text-right font-cairo">
                     الاسم
                   </Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="أدخل اسمك"
                     value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="input-field"
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="أدخل اسمك"
                     dir="rtl"
                   />
                 </div>
               )}
-              
+
               <div className="space-y-1">
-                <Label htmlFor="email" className="text-right block font-cairo">
+                <Label htmlFor="email" className="block text-right font-cairo">
                   البريد الإلكتروني
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your@email.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="input-field text-right"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="text-right"
                 />
               </div>
-              
+
               <div className="space-y-1">
-                <Label htmlFor="password" className="text-right block font-cairo">
+                <Label htmlFor="password" className="block text-right font-cairo">
                   كلمة المرور
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="input-field"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                 />
               </div>
-              
+
               {isLogin && (
                 <div className="text-left">
-                  <Link 
+                  <Link
                     to="/forgot-password"
                     className="text-sm text-growup hover:underline font-cairo"
                   >
@@ -181,56 +269,29 @@ export default function Login() {
                   </Link>
                 </div>
               )}
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-growup hover:bg-growup-dark text-white h-12"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -mr-1 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span className="mr-2">جاري التحميل...</span>
-                  </span>
-                ) : (
-                  isLogin ? "تسجيل الدخول" : "إنشاء الحساب"
-                )}
+                {isLoading ? "جاري المعالجة..." : isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
               </Button>
             </form>
-          </div>
-          
-          <div className="text-center mt-4">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-growup hover:underline font-cairo"
-              disabled={isLoading}
-            >
-              {isLogin 
-                ? "ليس لديك حساب؟ إنشاء حساب جديد" 
-                : "لديك حساب بالفعل؟ تسجيل الدخول"
-              }
-            </button>
+
+            <p className="mt-6 text-center text-sm font-cairo">
+              {isLogin ? "ليس لديك حساب؟" : "هل لديك حساب؟"}{" "}
+              <button
+                onClick={toggleAuthMode}
+                className="text-growup hover:underline"
+                disabled={isLoading}
+              >
+                {isLogin ? "أنشئ حسابًا" : "تسجيل الدخول"}
+              </button>
+            </p>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-// إضافة الواجهة لمكتبة Google
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          prompt: (callback: any) => void;
-          renderButton: (element: HTMLElement | null, options: any) => void;
-        };
-      };
-    };
-  }
 }

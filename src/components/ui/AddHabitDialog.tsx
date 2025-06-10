@@ -38,7 +38,7 @@ interface AddHabitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddHabit: (habit: {
-    title: string;
+    name: string;
     category: string;
     frequency: {
       type: 'daily' | 'weekly' | 'monthly';
@@ -48,9 +48,8 @@ interface AddHabitDialogProps {
     };
   }) => void;
 }
-
 export function AddHabitDialog({ open, onOpenChange, onAddHabit }: AddHabitDialogProps) {
-  const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
   const [category, setCategory] = useState('learning');
   const [frequencyType, setFrequencyType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [selectedTime, setSelectedTime] = useState('09:00');
@@ -59,9 +58,9 @@ export function AddHabitDialog({ open, onOpenChange, onAddHabit }: AddHabitDialo
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
+    if (name.trim()) {
       const habit = {
-        title,
+        name,
         category,
         frequency: {
           type: frequencyType,
@@ -78,7 +77,7 @@ export function AddHabitDialog({ open, onOpenChange, onAddHabit }: AddHabitDialo
   };
   
   const resetForm = () => {
-    setTitle('');
+    setName('');
     setCategory('learning');
     setFrequencyType('daily');
     setSelectedTime('09:00');
@@ -98,8 +97,8 @@ export function AddHabitDialog({ open, onOpenChange, onAddHabit }: AddHabitDialo
             <Label htmlFor="habit-title" className="text-right block">اسم العادة</Label>
             <Input
               id="habit-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="مثال: قراءة 10 صفحات يومياً"
               className="input-field"
               required

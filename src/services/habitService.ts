@@ -36,6 +36,11 @@ export class HabitService {
   }
 
   static async deleteHabit(id: string): Promise<void> {
-    return apiClient.delete(`/habits/${id}`);
+  try {
+    await apiClient.delete(`/habits/${id}`);
+  } catch (error) {
+    console.error('Error in HabitService.deleteHabit:', error);
+    throw error;
   }
+}
 }

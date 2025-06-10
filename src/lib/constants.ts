@@ -6,7 +6,7 @@ import { CategoryItem } from "./types";
 export const APP_CATEGORIES: CategoryItem[] = [
   {
     id: "self-development",
-    title: "تطوير الذات",
+    name: "تطوير الذات",
     description: "طور مهاراتك وعاداتك الإيجابية",
     icon: "📚",
     route: "/self-development",
@@ -14,7 +14,7 @@ export const APP_CATEGORIES: CategoryItem[] = [
   },
   {
     id: "break-habits",
-    title: "كسر العادات السيئة",
+    name: "كسر العادات السيئة",
     description: "تخلص من العادات السيئة خطوة بخطوة",
     icon: "🎯",
     route: "/break-habits",
@@ -22,7 +22,7 @@ export const APP_CATEGORIES: CategoryItem[] = [
   },
   {
     id: "dashboard",
-    title: "لوحة التحكم",
+    name: "لوحة التحكم",
     description: "نظرة عامة على تقدمك اليومي",
     icon: "📊",
     route: "/dashboard",
@@ -30,7 +30,7 @@ export const APP_CATEGORIES: CategoryItem[] = [
   },
   {
     id: "financial-planning",
-    title: "التخطيط المالي",
+    name: "التخطيط المالي",
     description: "إدارة ميزانيتك ومصاريفك الشهرية",
     icon: "💰",
     route: "/financial-planning",
@@ -38,7 +38,7 @@ export const APP_CATEGORIES: CategoryItem[] = [
   },
   {
     id: "major-goals",
-    title: "الأهداف الكبرى",
+    name: "الأهداف الكبرى",
     description: "حدد وتابع أهدافك الرئيسية",
     icon: "🎯",
     route: "/major-goals", 
@@ -48,11 +48,11 @@ export const APP_CATEGORIES: CategoryItem[] = [
 
 // بيانات نموذجية للعادات اليومية
 export const SAMPLE_HABITS = [
-  { id: "1", title: "قرأت 10 صفحات من كتاب", category: "تعلم", completed: false, icon: "📚" },
-  { id: "2", title: "استمعت لبودكاست", category: "تطوير", completed: false, icon: "🎧" },
-  { id: "3", title: "ممارسة التأمل", category: "صحة", completed: true, icon: "🧘‍♂️" },
-  { id: "4", title: "متابعة أخبار مهنية", category: "تطوير", completed: false, icon: "🌐" },
-  { id: "5", title: "تواصل مع العائلة", category: "اجتماعي", completed: false, icon: "👨‍👩‍👧" },
+  { id: "1", name: "قرأت 10 صفحات من كتاب", category: "تعلم", completed: false, icon: "📚" },
+  { id: "2", name: "استمعت لبودكاست", category: "تطوير", completed: false, icon: "🎧" },
+  { id: "3", name: "ممارسة التأمل", category: "صحة", completed: true, icon: "🧘‍♂️" },
+  { id: "4", name: "متابعة أخبار مهنية", category: "تطوير", completed: false, icon: "🌐" },
+  { id: "5", name: "تواصل مع العائلة", category: "اجتماعي", completed: false, icon: "👨‍👩‍👧" },
 ];
 
 // بيانات نموذجية للعادات السيئة

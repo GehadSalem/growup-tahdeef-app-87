@@ -6,13 +6,14 @@ import { HabitCard } from "@/components/ui/HabitCard";
 import { AddHabitDialog } from "@/components/ui/AddHabitDialog";
 import { EditHabitDialog } from "@/components/ui/EditHabitDialog";
 import { Habit } from "@/lib/types";
+import { getIconForCategory } from "@/lib/icons";
 
 interface HabitsListProps {
   habits: Habit[];
   onHabitComplete: (id: string) => void;
   onHabitDelete: (id: string) => void;
   onHabitEdit?: (id: string, habit: { 
-    title: string; 
+    name: string; 
     category: string;
     frequency?: {
       type: 'daily' | 'weekly' | 'monthly';
@@ -22,7 +23,7 @@ interface HabitsListProps {
     };
   }) => void;
   onAddHabit: (habit: { 
-    title: string; 
+    name: string; 
     category: string;
     frequency: {
       type: 'daily' | 'weekly' | 'monthly';
@@ -33,7 +34,13 @@ interface HabitsListProps {
   }) => void;
 }
 
-export function HabitsList({ habits, onHabitComplete, onHabitDelete, onHabitEdit, onAddHabit }: HabitsListProps) {
+export function HabitsList({ 
+  habits, 
+  onHabitComplete, 
+  onHabitDelete, 
+  onHabitEdit, 
+  onAddHabit 
+}: HabitsListProps)  {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
@@ -46,6 +53,11 @@ export function HabitsList({ habits, onHabitComplete, onHabitDelete, onHabitEdit
     }
   };
   
+  // Add a delete handler that directly calls onHabitDelete
+  const handleOpenDeleteDialog = async (id: string) => {
+    await onHabitDelete(id);
+  };
+
   return (
     <section className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -63,16 +75,16 @@ export function HabitsList({ habits, onHabitComplete, onHabitDelete, onHabitEdit
       <div className="space-y-3">
         {habits.map((habit) => (
           <HabitCard 
-            key={habit.id} 
-            id={habit.id}
-            title={habit.title} 
-            category={habit.category}
-            completed={habit.completed}
-            icon={<span>{habit.icon}</span>}
-            onComplete={onHabitComplete}
-            onDelete={onHabitDelete}
-            onEdit={onHabitEdit ? handleOpenEditDialog : undefined}
-          />
+  id={habit.id}
+  name={habit.name} 
+  category={habit.category}
+  completed={habit.completed}
+  icon={getIconForCategory(habit.category)}
+  frequency={habit.frequency}
+  onComplete={async () => { await onHabitComplete(habit.id); }}
+  onDelete={async () => await handleOpenDeleteDialog(habit.id)}
+  onEdit={onHabitEdit ? () => handleOpenEditDialog(habit.id) : undefined}
+/>
         ))}
       </div>
       
@@ -100,7 +112,9 @@ export function HabitsList({ habits, onHabitComplete, onHabitDelete, onHabitEdit
         <EditHabitDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-          onEditHabit={onHabitEdit}
+          onEditHabit={async (updatedHabit) => {
+            onHabitEdit(selectedHabit.id, updatedHabit);
+          }}
           habit={selectedHabit}
         />
       )}

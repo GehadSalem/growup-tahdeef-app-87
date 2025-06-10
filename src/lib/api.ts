@@ -1,6 +1,6 @@
-
 // Base API configuration
-const API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const SECRET_PREFIX = 'yoursecretkey__';
 
 // API client with authentication
 class ApiClient {
@@ -14,20 +14,34 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)
+        ? options.headers as Record<string, string>
+        : {}),
+    };
+
+    if (token) {
+      headers.Authorization = `${SECRET_PREFIX}${token}`;
+    }
+
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
       ...options,
+      headers,
     };
 
     const response = await fetch(`${this.baseURL}${endpoint}`, config);
     
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 

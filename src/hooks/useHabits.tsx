@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "./use-toast";
 import { Habit } from "@/lib/types";
 import { SAMPLE_HABITS } from "@/lib/constants";
+import { getIconForCategory } from "@/lib/icons";
 
 export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>(SAMPLE_HABITS);
@@ -25,14 +26,14 @@ export function useHabits() {
     if (habit && !habit.completed) {
       toast({
         title: "أحسنت! 👏",
-        description: `لقد أكملت "${habit.title}"`,
+        description: `لقد أكملت "${habit.name}"`,
       });
     }
   };
   
   // إضافة عادة جديدة
   const addHabit = (habitData: { 
-    title: string; 
+    name: string; 
     category: string;
     frequency: {
       type: 'daily' | 'weekly' | 'monthly';
@@ -43,7 +44,7 @@ export function useHabits() {
   }) => {
     const newHabit = {
       id: Date.now().toString(),
-      title: habitData.title,
+      name: habitData.name,
       category: habitData.category,
       completed: false,
       icon: getIconForCategory(habitData.category),
@@ -60,7 +61,7 @@ export function useHabits() {
   
   // تعديل عادة
   const editHabit = (id: string, habitData: { 
-    title: string; 
+    name: string; 
     category: string;
     frequency?: {
       type: 'daily' | 'weekly' | 'monthly';
@@ -72,7 +73,7 @@ export function useHabits() {
     setHabits(habits.map(habit => 
       habit.id === id ? { 
         ...habit, 
-        title: habitData.title,
+        name: habitData.name,
         category: habitData.category,
         icon: getIconForCategory(habitData.category),
         frequency: habitData.frequency || habit.frequency
@@ -95,25 +96,7 @@ export function useHabits() {
     });
   };
   
-  // الحصول على أيقونة مناسبة للفئة
-  const getIconForCategory = (category: string) => {
-    const icons: {[key: string]: string} = {
-      'learning': '📚',
-      'health': '🧘‍♂️',
-      'productivity': '⏱️',
-      'finance': '💰',
-      'social': '👥',
-      'other': '✨',
-      'تعلم': '📚',
-      'صحة': '🧘‍♂️',
-      'إنتاجية': '⏱️',
-      'مالي': '💰',
-      'اجتماعي': '👥',
-      'أخرى': '✨',
-    };
-    
-    return icons[category] || '📝';
-  };
+
 
   return { 
     habits, 

@@ -16,6 +16,7 @@ export default function Dashboard() {
     toggleHabitComplete, 
     addHabit, 
     deleteHabit,
+    editHabit,
     calculateDailyProgress,
     isLoading
   } = useHabitsAPI();
@@ -65,6 +66,9 @@ export default function Dashboard() {
           onHabitComplete={toggleHabitComplete}
           onHabitDelete={deleteHabit}
           onAddHabit={addHabit}
+          onHabitEdit={(id, habitData) => {
+            editHabit({ id, habitData });
+          }}
         />
         
         {/* اقتباس تحفيزي */}

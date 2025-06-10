@@ -3,13 +3,15 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HabitService, Habit, CreateHabitRequest } from '@/services/habitService';
 import { useToast } from './use-toast';
+import { apiClient } from '@/lib/api.ts';
 
 export const useHabitsAPI = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
+  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+  const [habits, setHabits] = useState<Habit[]>([]);
   // Get all habits
-  const { data: habits = [], isLoading, error } = useQuery({
+  const { data: habitsData = [], isLoading, error } = useQuery({
     queryKey: ['habits'],
     queryFn: HabitService.getHabits,
   });
@@ -52,24 +54,45 @@ export const useHabitsAPI = () => {
     }
   });
 
+  const editHabitMutation = useMutation({
+  mutationFn: ({ id, habitData }: { id: string; habitData: Partial<CreateHabitRequest> }) => 
+    HabitService.updateHabit(id, habitData),
+  onSuccess: (updatedHabit) => {
+    queryClient.invalidateQueries({ queryKey: ['habits'] });
+    toast({
+      title: "تم التعديل",
+      description: "تم تعديل العادة بنجاح",
+    });
+  },
+  onError: (error: any) => {
+    toast({
+      title: "خطأ",
+      description: error?.response?.data?.message || "فشل في تعديل العادة",
+      variant: "destructive",
+    });
+  }
+});
+
   // Delete habit mutation
   const deleteHabitMutation = useMutation({
-    mutationFn: (habitId: string) => HabitService.deleteHabit(habitId),
+    mutationFn: (id: string) => HabitService.deleteHabit(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habits'] });
       toast({
-        title: "تم حذف العادة",
-        description: "تم حذف العادة بنجاح"
+        title: "تم الحذف",
+        description: "تم حذف العادة بنجاح",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "خطأ",
-        description: "فشل في حذف العادة",
-        variant: "destructive"
+        description: error?.response?.data?.message || "فشل في حذف العادة",
+        variant: "destructive",
       });
+      console.error("Error deleting habit:", error);
     }
   });
+
 
   // Update habit mutation
   const updateHabitMutation = useMutation({
@@ -93,23 +116,22 @@ export const useHabitsAPI = () => {
 
   // Calculate daily progress
   const calculateDailyProgress = () => {
-    if (habits.length === 0) return 0;
-    const completedHabits = habits.filter(habit => habit.completed).length;
-    return Math.round((completedHabits / habits.length) * 100);
+    if (habitsData.length === 0) return 0;
+    const completedHabits = habitsData.filter(habit => habit.completed).length;
+    return Math.round((completedHabits / habitsData.length) * 100);
   };
 
   return {
-    habits,
+    habits: habitsData,
     isLoading,
     error,
     addHabit: createHabitMutation.mutate,
     toggleHabitComplete: toggleHabitMutation.mutate,
     deleteHabit: deleteHabitMutation.mutate,
-    updateHabit: updateHabitMutation.mutate,
-    calculateDailyProgress,
+  editHabit: editHabitMutation.mutateAsync,    calculateDailyProgress,
     isCreating: createHabitMutation.isPending,
     isToggling: toggleHabitMutation.isPending,
     isDeleting: deleteHabitMutation.isPending,
-    isUpdating: updateHabitMutation.isPending,
+    isEditing: updateHabitMutation.isPending,
   };
 };
