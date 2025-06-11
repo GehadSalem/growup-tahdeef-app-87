@@ -66,8 +66,8 @@ export default function Dashboard() {
           onHabitComplete={toggleHabitComplete}
           onHabitDelete={deleteHabit}
           onAddHabit={addHabit}
-          onHabitEdit={(id, habitData) => {
-            editHabit({ id, habitData });
+          onHabitEdit={async (id, habitData) => {
+            await editHabit({ id, habitData });
           }}
         />
         

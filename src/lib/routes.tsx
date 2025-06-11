@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
@@ -7,6 +8,7 @@ import { Loading } from '@/components/shared/Loading';
 import OnboardingScreen from '@/pages/OnboardingScreen';
 import Login from '@/pages/Login';
 import Menu from '@/pages/Menu';
+import MainMenu from '@/pages/MainMenu';
 import NotFound from '@/pages/NotFound';
 import Subscription from '@/pages/Subscription';
 import Notifications from '@/pages/Notifications';
@@ -70,11 +72,18 @@ const withSidebar = (Component: React.ComponentType) => (
 
 export const appRoutes: RouteObject[] = [
   // Public Routes
-  { path: '/', element: <OnboardingScreen /> },
+  { 
+    path: '/', 
+    element: localStorage.getItem('token') ? (
+      <Navigate to="/main-menu" replace />
+    ) : (
+      <OnboardingScreen />
+    )
+  },
   {
     path: '/login',
     element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard-app" replace />
+      <Navigate to="/main-menu" replace />
     ) : (
       <Login />
     ),
@@ -88,9 +97,19 @@ export const appRoutes: RouteObject[] = [
   { path: '/contact', element: <Contact /> },
   { path: '/not-authorized', element: <div className="p-4 text-center">ليس لديك صلاحية الوصول إلى هذه الصفحة</div> },
 
+  // Main Menu Route
+  {
+    path: '/main-menu',
+    element: (
+      <ProtectedRoute>
+        <MainMenu />
+      </ProtectedRoute>
+    ),
+  },
+
   // Protected Routes - User
   {
-    path: '/dashboard-app',
+    path: '/dashboard',
     element: (
       <ProtectedRoute>
         {withSidebar(Dashboard)}

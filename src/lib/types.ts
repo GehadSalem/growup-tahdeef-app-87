@@ -8,10 +8,15 @@
  * نوع العادة اليومية
  */
 export interface Habit {
-  name: any;
   id: string;
+  name: string;
+  title?: string; // Optional for backward compatibility
   category: string;
   completed: boolean;
+  streak?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  icon?: string;
   frequency?: {
     type: 'daily' | 'weekly' | 'monthly';
     time?: string;
@@ -52,6 +57,7 @@ export interface MonthlyObligation {
 export interface CategoryItem {
   id: string;
   name: string;
+  title?: string; // Add title for compatibility
   description: string;
   icon: string;
   route: string;

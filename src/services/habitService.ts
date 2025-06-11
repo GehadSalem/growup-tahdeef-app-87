@@ -7,15 +7,27 @@ export interface Habit {
   description?: string;
   category: string;
   completed: boolean;
-  streak: number;
-  createdAt: string;
-  updatedAt: string;
+  streak?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  frequency?: {
+    type: 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    days?: number[];
+    dayOfMonth?: number;
+  };
 }
 
 export interface CreateHabitRequest {
   name: string;
   description?: string;
   category: string;
+  frequency?: {
+    type: 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    days?: number[];
+    dayOfMonth?: number;
+  };
 }
 
 export class HabitService {
