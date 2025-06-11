@@ -73,13 +73,14 @@ const withSidebar = (Component: React.ComponentType) => (
 
 export const appRoutes: RouteObject[] = [
   // Public Routes
-  { 
-    path: '/', 
+  { path: '/', element: <OnboardingScreen /> },
+  {
+    path: '/login',
     element: localStorage.getItem('token') ? (
-      <Navigate to="/main-menu" replace />
+      <Navigate to="/dashboard" replace />
     ) : (
-      <OnboardingScreen />
-    )
+      <Login />
+    ),
   },
   {
     path: '/login',
@@ -165,14 +166,14 @@ export const appRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: '/menu',
-    element: (
-      <ProtectedRoute>
-        <Menu />
-      </ProtectedRoute>
-    ),
-  },
+  // {
+  //   path: '/menu',
+  //   element: (
+  //     <ProtectedRoute>
+  //       <Menu />
+  //     </ProtectedRoute>
+  //   ),
+  // },
   {
     path: '/profile',
     element: (
