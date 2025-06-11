@@ -34,6 +34,10 @@ export interface BadHabit {
   goal: string;
   dayCount: number;
   alternativeAction: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastOccurrence?: string;
 }
 
 /**
@@ -57,7 +61,7 @@ export interface MonthlyObligation {
 export interface CategoryItem {
   id: string;
   name: string;
-  title?: string; // Add title for compatibility
+  title: string; // Make required
   description: string;
   icon: string;
   route: string;
@@ -181,4 +185,32 @@ export interface Referral {
   createdAt: string; // تاريخ إنشاء الإحالة
   completedAt?: string; // تاريخ اكتمال الإحالة
   rewardClaimed: boolean; // هل تم استلام المكافأة
+}
+
+/**
+ * نوع المهمة اليومية
+ */
+export interface DailyTask {
+  id: string;
+  title: string;
+  description?: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+}
+
+/**
+ * نوع الإشعار
+ */
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  createdAt: string;
+  userId: string;
 }

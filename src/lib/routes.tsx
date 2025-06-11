@@ -18,6 +18,7 @@ import Logout from '@/pages/Logout';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Contact from '@/pages/Contact';
+import DailyTasks from '@/pages/DailyTasks';
 
 // Legal Pages
 import LegalMenu from '@/pages/legal/LegalMenu';
@@ -145,6 +146,14 @@ export const appRoutes: RouteObject[] = [
     element: (
       <ProtectedRoute>
         {withSidebar(MajorGoals)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/daily-tasks',
+    element: (
+      <ProtectedRoute>
+        <DailyTasks />
       </ProtectedRoute>
     ),
   },

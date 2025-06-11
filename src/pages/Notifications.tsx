@@ -1,52 +1,78 @@
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Bell, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { NotificationService, Notification } from "@/services/notificationService";
 
 const Notifications = () => {
-  // بيانات الإشعارات - يمكن أن تأتي من API في المستقبل
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "تذكير بهدفك اليومي",
-      message: "حان الوقت لممارسة القراءة اليومية",
-      time: "منذ 10 دقائق",
-      read: false,
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Get notifications
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: NotificationService.getNotifications,
+    enabled: isAuthenticated,
+  });
+
+  // Mark as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: NotificationService.markNotificationRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
-    {
-      id: 2,
-      title: "عمل رائع!",
-      message: "لقد أكملت 7 أيام متتالية من التأمل",
-      time: "منذ 3 ساعات",
-      read: false,
+  });
+
+  // Delete notification mutation
+  const deleteNotificationMutation = useMutation({
+    mutationFn: NotificationService.deleteNotification,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.success("تم حذف الإشعار");
     },
-    {
-      id: 3,
-      title: "تحديث في التطبيق",
-      message: "تم إضافة ميزات جديدة في تطبيق GrowUp",
-      time: "منذ يوم واحد",
-      read: true,
-    },
-  ]);
+  });
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   const noNotifications = notifications.length === 0;
 
   // وظيفة لتحديد الإشعار كمقروء
-  const markAsRead = (id: number) => {
-    setNotifications(
-      notifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
+  const markAsRead = (id: string) => {
+    markAsReadMutation.mutate(id);
   };
 
   // وظيفة لتحديد كل الإشعارات كمقروءة
-  const markAllAsRead = () => {
-    setNotifications(
-      notifications.map((notification) => ({ ...notification, read: true }))
-    );
+  const markAllAsRead = async () => {
+    const unreadNotifications = notifications.filter((n: Notification) => !n.read);
+    for (const notification of unreadNotifications) {
+      await markAsReadMutation.mutateAsync(notification.id);
+    }
     toast.success("تم تحديد جميع الإشعارات كمقروءة");
   };
 
@@ -72,7 +98,7 @@ const Notifications = () => {
               <Button variant="ghost" className="text-sm" onClick={markAllAsRead}>تحديد الكل كمقروء</Button>
             </div>
 
-            {notifications.map((notification) => (
+            {notifications.map((notification: Notification) => (
               <div
                 key={notification.id}
                 className={`p-4 border rounded-lg ${
@@ -93,7 +119,7 @@ const Notifications = () => {
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <div className="text-xs text-muted-foreground">
-                    {notification.time}
+                    {new Date(notification.createdAt).toLocaleDateString('ar-SA')}
                   </div>
                   {!notification.read && (
                     <Button 

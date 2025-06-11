@@ -1,3 +1,4 @@
+
 import { AppHeader } from "@/components/ui/AppHeader";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import {
   Target,
   LayoutGrid,
   FileText,
-  Star
+  Star,
+  CheckSquare
 } from "lucide-react";
 
 export default function MainMenu() {
@@ -30,6 +32,14 @@ export default function MainMenu() {
       description: 'عادات لتطوير نفسك',
       icon: <BookText className="h-6 w-6" />,
       path: '/self-development',
+      color: 'bg-gray-100 hover:bg-gray-200'
+    },
+    {
+      id: 'daily-tasks',
+      title: 'المهام اليومية',
+      description: 'إدارة مهامك اليومية',
+      icon: <CheckSquare className="h-6 w-6" />,
+      path: '/daily-tasks',
       color: 'bg-gray-100 hover:bg-gray-200'
     },
     {
