@@ -36,8 +36,8 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-lg sm:text-xl font-cairo text-gray-600">جاري التحميل...</p>
         </div>
       </div>
     );
@@ -49,10 +49,10 @@ export default function Dashboard() {
   const dailyProgress = calculateDailyProgress();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showMenu title="لوحة التحكم" onMenuClick={() => navigate('/main-menu')} />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
         {/* قسم تقدم الإنجاز اليومي */}
         <DailyProgressSection 
           completedHabits={completedHabits} 

@@ -1,136 +1,135 @@
 
-import { AppHeader } from "@/components/ui/AppHeader";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Home, 
-  BookText, 
-  CircleX, 
+  Target, 
+  TrendingUp, 
+  Calendar, 
   PiggyBank, 
-  Target,
-  LayoutGrid,
-  FileText,
-  Star,
-  CheckSquare
+  BookOpen, 
+  CheckCircle2,
+  Bell,
+  User,
+  ArrowLeft
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 export default function MainMenu() {
   const navigate = useNavigate();
-  
+  const { isAuthenticated } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   const menuItems = [
     {
-      id: 'dashboard',
-      title: 'الرئيسية',
-      icon: <Home className="h-8 w-8" />,
-      path: '/dashboard',
-      color: 'bg-growup hover:bg-growup-dark'
+      title: "لوحة التحكم",
+      description: "عرض التقدم اليومي والإحصائيات",
+      icon: <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/dashboard",
+      color: "bg-blue-50 hover:bg-blue-100"
     },
     {
-      id: 'self-development',
-      title: 'تطوير الذات',
-      description: 'عادات لتطوير نفسك',
-      icon: <BookText className="h-6 w-6" />,
-      path: '/self-development',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "الأهداف الكبيرة",
+      description: "تحديد وتتبع أهدافك طويلة المدى",
+      icon: <Target className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/major-goals", 
+      color: "bg-green-50 hover:bg-green-100"
     },
     {
-      id: 'daily-tasks',
-      title: 'المهام اليومية',
-      description: 'إدارة مهامك اليومية',
-      icon: <CheckSquare className="h-6 w-6" />,
-      path: '/daily-tasks',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "المهام اليومية",
+      description: "إدارة وتنظيم مهامك اليومية",
+      icon: <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/daily-tasks",
+      color: "bg-purple-50 hover:bg-purple-100"
     },
     {
-      id: 'break-habits',
-      title: 'كسر العادات السيئة',
-      description: 'التخلص من العادات الضارة',
-      icon: <CircleX className="h-6 w-6" />,
-      path: '/break-habits',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "التخطيط المالي",
+      description: "إدارة أموالك وتخطيط ميزانيتك",
+      icon: <PiggyBank className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/financial-planning",
+      color: "bg-yellow-50 hover:bg-yellow-100"
     },
     {
-      id: 'financial-planning',
-      title: 'التخطيط المالي',
-      description: 'إدارة أموالك بذكاء',
-      icon: <PiggyBank className="h-6 w-6" />,
-      path: '/financial-planning',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "تطوير الذات",
+      description: "بناء عادات إيجابية للنمو الشخصي",
+      icon: <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/self-development",
+      color: "bg-indigo-50 hover:bg-indigo-100"
     },
     {
-      id: 'major-goals',
-      title: 'أهدافي الكبرى',
-      description: 'تحقيق أهدافك الطموحة',
-      icon: <Target className="h-6 w-6" />,
-      path: '/major-goals',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "كسر العادات السيئة",
+      description: "التخلص من العادات الضارة",
+      icon: <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/break-habits",
+      color: "bg-red-50 hover:bg-red-100"
     },
     {
-      id: 'legal',
-      title: 'المستندات القانونية',
-      description: 'الشروط والسياسات',
-      icon: <FileText className="h-6 w-6" />,
-      path: '/legal',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "الإشعارات",
+      description: "عرض التنبيهات والتذكيرات",
+      icon: <Bell className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/notifications",
+      color: "bg-orange-50 hover:bg-orange-100"
+    },
+    {
+      title: "الملف الشخصي",
+      description: "إعداداتك ومعلوماتك الشخصية",
+      icon: <User className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
+      route: "/profile",
+      color: "bg-gray-50 hover:bg-gray-100"
     }
   ];
-  
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader title="قائمة GrowUp" showBackButton />
+    <div className="min-h-screen bg-gray-50 w-full">
+      <AppHeader 
+        showBackButton 
+        title="القائمة الرئيسية" 
+        onBackClick={() => navigate('/dashboard')} 
+      />
       
-      <div className="container mx-auto px-8 py-6">
-        <div className="max-w-lg mx-auto">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <div className="max-w-4xl mx-auto">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold mb-2 font-cairo">قائمة GrowUp</h1>
-            <p className="text-gray-600 font-cairo">اختر من القائمة الجانبية أو عد للصفحة الرئيسية</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 font-cairo">مرحباً بك في GrowUp</h1>
+            <p className="text-sm sm:text-base text-gray-600 font-cairo">اختر القسم الذي تريد الوصول إليه</p>
           </div>
           
-          {/* Main Dashboard Button */}
-          <Button
-            className={`w-full h-16 mb-6 text-lg font-bold ${menuItems[0].color}`}
-            onClick={() => navigate(menuItems[0].path)}
-          >
-            <div className="flex items-center gap-3">
-              {menuItems[0].icon}
-              <span>{menuItems[0].title}</span>
-            </div>
-          </Button>
-          
-          {/* Other Menu Items */}
-          <div className="space-y-3">
-            {menuItems.slice(1).map((item) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+            {menuItems.map((item, index) => (
               <Card 
-                key={item.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => navigate(item.path)}
+                key={index} 
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 ${item.color} border-0`}
+                onClick={() => navigate(item.route)}
               >
-                <CardContent className="p-4 flex items-center">
-                  <div className={`h-12 w-12 rounded-full ${item.color} flex items-center justify-center ml-4`}>
-                    {item.icon}
-                  </div>
-                  <div className="text-right flex-1">
-                    <h3 className="font-bold font-cairo">{item.title}</h3>
-                    {item.description && (
-                      <p className="text-gray-600 text-sm font-cairo">{item.description}</p>
-                    )}
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm sm:text-base lg:text-lg font-cairo mb-1 sm:mb-2">{item.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 font-cairo leading-relaxed">{item.description}</p>
+                    </div>
+                    <div className="flex items-center text-growup text-xs sm:text-sm font-medium">
+                      <span className="font-cairo">اذهب</span>
+                      <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-          
-          {/* Premium Subscription Button */}
-          <Button
-            className="w-full h-16 mt-6 bg-growup hover:bg-growup-dark text-lg font-bold"
-            onClick={() => navigate('/subscription')}
-          >
-            <div className="flex items-center gap-3">
-              <Star className="h-6 w-6" />
-              <span>اشترك في العضوية المميزة</span>
-            </div>
-          </Button>
         </div>
       </div>
     </div>

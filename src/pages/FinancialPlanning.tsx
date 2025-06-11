@@ -13,13 +13,18 @@ import { MonthlyObligations } from "@/components/financial/MonthlyObligations";
 import { SavingsGoal } from "@/components/financial/SavingsGoal";
 import { EmergencyFund } from "@/components/financial/EmergencyFund";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { IncomeService } from "@/services/incomeService";
+import { ExpenseService } from "@/services/expenseService";
+import { EmergencyService } from "@/services/emergencyService";
+import { SavingsGoalsService } from "@/services/savingsGoalsService";
+import { MajorGoalsService } from "@/services/majorGoalsService";
 
 export default function FinancialPlanning() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [income, setIncome] = useState<number>(0);
 
   // Redirect to login if not authenticated
@@ -34,6 +39,53 @@ export default function FinancialPlanning() {
     queryKey: ['incomes'],
     queryFn: IncomeService.getUserIncomes,
     enabled: isAuthenticated,
+  });
+
+  // Get expenses
+  const { data: expenses = [] } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: ExpenseService.getExpenses,
+    enabled: isAuthenticated,
+  });
+
+  // Get emergency fund
+  const { data: emergencyFund } = useQuery({
+    queryKey: ['emergency'],
+    queryFn: EmergencyService.getEmergencyFunds,
+    enabled: isAuthenticated,
+  });
+
+  // Get savings goals
+  const { data: savingsGoals = [] } = useQuery({
+    queryKey: ['savingsGoals'],
+    queryFn: SavingsGoalsService.getUserSavingsGoals,
+    enabled: isAuthenticated,
+  });
+
+  // Get major goals
+  const { data: majorGoals = [] } = useQuery({
+    queryKey: ['majorGoals'],
+    queryFn: MajorGoalsService.getUserMajorGoals,
+    enabled: isAuthenticated,
+  });
+
+  // Add income mutation
+  const addIncomeMutation = useMutation({
+    mutationFn: IncomeService.addIncome,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      toast({
+        title: "تم إضافة الدخل",
+        description: "تم إضافة الدخل بنجاح"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في إضافة الدخل",
+        variant: "destructive"
+      });
+    }
   });
 
   // Calculate total monthly income
@@ -53,25 +105,35 @@ export default function FinancialPlanning() {
     }
   }, [incomes]);
 
+  const handleUpdateIncome = () => {
+    if (income > 0) {
+      addIncomeMutation.mutate({
+        amount: income,
+        source: "راتب شهري",
+        description: "تحديث الدخل الشهري"
+      });
+    }
+  };
+
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 w-screen">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showMenu title="التخطيط المالي" onMenuClick={() => navigate('/main-menu')} />
       
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* قسم إعداد الدخل الشهري */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-right font-cairo">الدخل الشهري</CardTitle>
+            <CardTitle className="text-right font-cairo text-lg sm:text-xl">الدخل الشهري</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label className="text-right block font-cairo" htmlFor="monthly-income">
+                <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="monthly-income">
                   الدخل الشهري (ر.س)
                 </Label>
                 <Input
@@ -79,21 +141,17 @@ export default function FinancialPlanning() {
                   type="number"
                   value={income || ''}
                   onChange={e => setIncome(Number(e.target.value))}
-                  className="text-right"
+                  className="text-right text-sm sm:text-base"
                   placeholder="مثال: 15000"
                 />
               </div>
-              <div className="flex items-end">
+              <div className="w-full">
                 <Button
-                  className="bg-growup hover:bg-growup-dark w-full"
-                  onClick={() => {
-                    toast({
-                      title: "تم التحديث",
-                      description: "تم تحديث الدخل الشهري بنجاح"
-                    });
-                  }}
+                  className="bg-growup hover:bg-growup-dark w-full text-sm sm:text-base py-2 sm:py-3"
+                  onClick={handleUpdateIncome}
+                  disabled={addIncomeMutation.isPending}
                 >
-                  تحديث الدخل
+                  {addIncomeMutation.isPending ? "جاري التحديث..." : "تحديث الدخل"}
                 </Button>
               </div>
             </div>
