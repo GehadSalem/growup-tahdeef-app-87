@@ -50,7 +50,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showMenu title="لوحة التحكم" onMenuClick={() => navigate('/menu')} />
+      <AppHeader showMenu title="لوحة التحكم" onMenuClick={() => navigate('/main-menu')} />
       
       <div className="container mx-auto px-4 py-6">
         {/* قسم تقدم الإنجاز اليومي */}

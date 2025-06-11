@@ -3,48 +3,48 @@
 import { CategoryItem } from "./types";
 
 // تحديد فئات التطبيق الرئيسية
-export const APP_CATEGORIES: CategoryItem[] = [
-  {
-    id: "self-development",
-    name: "تطوير الذات",
-    description: "طور مهاراتك وعاداتك الإيجابية",
-    icon: "📚",
-    route: "/self-development",
-    color: "bg-purple-100"
-  },
-  {
-    id: "break-habits",
-    name: "كسر العادات السيئة",
-    description: "تخلص من العادات السيئة خطوة بخطوة",
-    icon: "🎯",
-    route: "/break-habits",
-    color: "bg-red-100"
-  },
-  {
-    id: "dashboard",
-    name: "لوحة التحكم",
-    description: "نظرة عامة على تقدمك اليومي",
-    icon: "📊",
-    route: "/dashboard",
-    color: "bg-blue-100"
-  },
-  {
-    id: "financial-planning",
-    name: "التخطيط المالي",
-    description: "إدارة ميزانيتك ومصاريفك الشهرية",
-    icon: "💰",
-    route: "/financial-planning",
-    color: "bg-green-100"
-  },
-  {
-    id: "major-goals",
-    name: "الأهداف الكبرى",
-    description: "حدد وتابع أهدافك الرئيسية",
-    icon: "🎯",
-    route: "/major-goals", 
-    color: "bg-orange-100"
-  }
-];
+// export const APP_CATEGORIES: CategoryItem[] = [
+//   {
+//     id: "self-development",
+//     name: "تطوير الذات",
+//     description: "طور مهاراتك وعاداتك الإيجابية",
+//     icon: "📚",
+//     route: "/self-development",
+//     color: "bg-purple-100"
+//   },
+//   {
+//     id: "break-habits",
+//     name: "كسر العادات السيئة",
+//     description: "تخلص من العادات السيئة خطوة بخطوة",
+//     icon: "🎯",
+//     route: "/break-habits",
+//     color: "bg-red-100"
+//   },
+//   {
+//     id: "dashboard",
+//     name: "لوحة التحكم",
+//     description: "نظرة عامة على تقدمك اليومي",
+//     icon: "📊",
+//     route: "/dashboard",
+//     color: "bg-blue-100"
+//   },
+//   {
+//     id: "financial-planning",
+//     name: "التخطيط المالي",
+//     description: "إدارة ميزانيتك ومصاريفك الشهرية",
+//     icon: "💰",
+//     route: "/financial-planning",
+//     color: "bg-green-100"
+//   },
+//   {
+//     id: "major-goals",
+//     name: "الأهداف الكبرى",
+//     description: "حدد وتابع أهدافك الرئيسية",
+//     icon: "🎯",
+//     route: "/major-goals", 
+//     color: "bg-orange-100"
+//   }
+// ];
 
 // بيانات نموذجية للعادات اليومية
 export const SAMPLE_HABITS = [

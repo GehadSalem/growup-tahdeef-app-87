@@ -1,4 +1,3 @@
-
 import { 
   Table, 
   TableBody, 
@@ -10,7 +9,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const refunds = [
+interface Refund {
+  id: string;
+  user: string;
+  email: string;
+  amount: number;
+  status: string;
+  date: string;
+  plan: string;
+  reason: string;
+}
+
+interface RefundsTableProps {
+  searchQuery?: string;
+  filterStatus?: string[];
+}
+
+const refunds: Refund[] = [
   {
     id: "ref1",
     user: "نورا كريم",
@@ -43,7 +58,26 @@ const refunds = [
   },
 ];
 
-export function RefundsTable() {
+export function RefundsTable({ searchQuery = "", filterStatus = ["الكل"] }: RefundsTableProps) {
+  // تصفية البيانات حسب searchQuery و filterStatus
+  const filteredRefunds = refunds.filter(refund => {
+    // تطبيق البحث
+    const matchesSearch = 
+      refund.user.includes(searchQuery) ||
+      refund.email.includes(searchQuery) ||
+      refund.plan.includes(searchQuery) ||
+      refund.reason.includes(searchQuery);
+    
+    // تطبيق التصفية
+    const matchesFilter = 
+      filterStatus.includes("الكل") || 
+      (filterStatus.includes("نشط") && refund.status === "موافق") ||
+      (filterStatus.includes("قيد المراجعة") && refund.status === "قيد المراجعة") ||
+      (filterStatus.includes("مرفوض") && refund.status === "مرفوض");
+    
+    return matchesSearch && matchesFilter;
+  });
+
   return (
     <div>
       <div className="mb-4">
@@ -63,7 +97,7 @@ export function RefundsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {refunds.map((refund) => (
+            {filteredRefunds.map((refund) => (
               <TableRow key={refund.id}>
                 <TableCell className="font-medium">
                   <div>

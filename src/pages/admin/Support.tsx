@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,20 +9,53 @@ import { SupportTicketsTable } from "@/components/admin/SupportTicketsTable";
 import { FeedbackAnalytics } from "@/components/admin/FeedbackAnalytics";
 import { CustomerSatisfactionChart } from "@/components/admin/CustomerSatisfactionChart";
 import { ContactTickets } from "@/components/admin/ContactTickets";
+import { Drawer, DrawerTrigger, DrawerContent } from "@/components/ui/drawer";
+import { MenuIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SupportPage() {
   const [activeTab, setActiveTab] = useState("tickets");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleExportData = () => {
+    toast({
+      title: "تم تصدير البيانات",
+      description: "تم تصدير بيانات الاتصال بنجاح",
+    });
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminNav />
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <AdminHeader 
-          heading="خدمة العملاء والدعم" 
-          text="إدارة تذاكر الدعم والمساعدة" 
-        />
-        
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <div className="flex flex-col md:flex-row min-h-screen bg-background">
+      {/* Desktop Navigation */}
+      <div className="hidden md:block">
+        <AdminNav />
+      </div>
+
+      {/* Mobile Header */}
+      <header className="md:hidden sticky top-0 z-10 bg-background border-b p-4 flex items-center w-[350px]">
+        <Drawer open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <DrawerTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MenuIcon className="h-5 w-5" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent side="right" className="w-[280px]">
+            <AdminNav isMobile onItemClick={() => setMobileNavOpen(false)} />
+          </DrawerContent>
+        </Drawer>
+        <div className="mr-3">
+          <AdminHeader 
+            heading="خدمة العملاء والدعم" 
+            text="إدارة تذاكر الدعم والمساعدة" 
+          />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 w-[350px]">
+        {/* Stats Cards */}
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
@@ -67,8 +99,9 @@ export default function SupportPage() {
           </Card>
         </div>
 
+        {/* Tabs Section */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
+          <TabsList className="w-full md:w-auto">
             <TabsTrigger value="tickets">تذاكر الدعم</TabsTrigger>
             <TabsTrigger value="contact">رسائل الاتصال</TabsTrigger>
             <TabsTrigger value="analytics">تحليلات الملاحظات</TabsTrigger>
@@ -76,17 +109,23 @@ export default function SupportPage() {
           </TabsList>
           
           <TabsContent value="tickets" className="space-y-4">
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
               <h3 className="text-lg font-medium">جميع التذاكر</h3>
-              <Button size="sm">تذكرة جديدة</Button>
+              <Button size="sm" className="w-full sm:w-auto">تذكرة جديدة</Button>
             </div>
             <SupportTicketsTable />
           </TabsContent>
           
           <TabsContent value="contact" className="space-y-4">
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3">
               <h3 className="text-lg font-medium">رسائل نموذج الاتصال</h3>
-              <Button size="sm">تصدير البيانات</Button>
+              <Button 
+                size="sm" 
+                className="w-full sm:w-auto"
+                onClick={handleExportData}
+              >
+                تصدير البيانات
+              </Button>
             </div>
             <ContactTickets />
           </TabsContent>
@@ -113,7 +152,7 @@ export default function SupportPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 }

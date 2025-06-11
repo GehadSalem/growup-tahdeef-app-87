@@ -1,4 +1,3 @@
-
 import { 
   Table, 
   TableBody, 
@@ -9,7 +8,23 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-const payments = [
+interface Payment {
+  id: string;
+  user: string;
+  email: string;
+  amount: number;
+  status: string;
+  date: string;
+  plan: string;
+  method: string;
+}
+
+interface PaymentsTableProps {
+  searchQuery?: string;
+  filterStatus?: string[];
+}
+
+const initialPayments: Payment[] = [
   {
     id: "pay1",
     user: "أحمد محمد",
@@ -62,7 +77,28 @@ const payments = [
   },
 ];
 
-export function PaymentsTable() {
+export function PaymentsTable({ 
+  searchQuery = "", 
+  filterStatus = ["الكل"] 
+}: PaymentsTableProps) {
+  // تصفية المدفوعات حسب searchQuery و filterStatus
+  const filteredPayments = initialPayments.filter(payment => {
+    // تطبيق البحث
+    const matchesSearch = 
+      payment.user.includes(searchQuery) ||
+      payment.email.includes(searchQuery) ||
+      payment.plan.includes(searchQuery) ||
+      payment.method.includes(searchQuery);
+    
+    // تطبيق التصفية
+    const matchesFilter = 
+      filterStatus.includes("الكل") || 
+      (filterStatus.includes("ناجح") && payment.status === "ناجح") ||
+      (filterStatus.includes("فاشل") && payment.status === "فاشل");
+    
+    return matchesSearch && matchesFilter;
+  });
+
   return (
     <div>
       <div className="mb-4">
@@ -81,7 +117,7 @@ export function PaymentsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.map((payment) => (
+            {filteredPayments.map((payment) => (
               <TableRow key={payment.id}>
                 <TableCell className="font-medium">
                   <div>

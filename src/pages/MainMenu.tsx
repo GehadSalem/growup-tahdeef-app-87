@@ -88,7 +88,7 @@ export default function MainMenu() {
     <div className="min-h-screen bg-gray-50">
       <AppHeader title="قائمة GrowUp" showBackButton />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-8 py-6">
         <div className="max-w-lg mx-auto">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold mb-2 font-cairo">قائمة GrowUp</h1>

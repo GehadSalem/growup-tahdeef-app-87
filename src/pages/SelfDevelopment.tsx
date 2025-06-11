@@ -57,9 +57,9 @@ export default function SelfDevelopment() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showMenu title="تطوير الذات" onMenuClick={() => navigate('/menu')} />
+      <AppHeader showMenu title="تطوير الذات" onMenuClick={() => navigate('/main-menu')} />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-8 py-6">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold mb-2 font-cairo">عادات تطوير الذات</h1>
           <p className="text-gray-600 font-cairo">ابني عادات إيجابية لتطوير نفسك</p>
@@ -81,8 +81,10 @@ export default function SelfDevelopment() {
           habits={habits}
           onHabitComplete={toggleHabitComplete}
           onHabitDelete={deleteHabit}
-          onAddHabit={handleAddHabit}
-          onHabitEdit={handleEditHabit}
+          onAddHabit={addHabit}
+          onHabitEdit={async (id, habitData) => {
+            await editHabit({ id, habitData });
+          }}
         />
 
         {/* Add Habit Dialog */}

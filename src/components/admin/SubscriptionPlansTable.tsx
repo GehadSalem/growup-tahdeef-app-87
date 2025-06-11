@@ -1,4 +1,3 @@
-
 import { 
   Table, 
   TableBody, 
@@ -12,7 +11,22 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 
-const plans = [
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  interval: string;
+  features: string[];
+  isActive: boolean;
+  isPopular: boolean;
+}
+
+interface SubscriptionPlansTableProps {
+  searchQuery?: string;
+  filterStatus?: string[];
+}
+
+const initialPlans: Plan[] = [
   {
     id: "plan1",
     name: "الباقة الشهرية الأساسية",
@@ -51,13 +65,34 @@ const plans = [
   },
 ];
 
-export function SubscriptionPlansTable() {
-  const [subscriptionPlans, setSubscriptionPlans] = useState(plans);
+export function SubscriptionPlansTable({ 
+  searchQuery = "", 
+  filterStatus = ["الكل"] 
+}: SubscriptionPlansTableProps) {
+  const [subscriptionPlans, setSubscriptionPlans] = useState<Plan[]>(initialPlans);
   
+  // تصفية الخطط حسب searchQuery و filterStatus
+  const filteredPlans = subscriptionPlans.filter(plan => {
+    // تطبيق البحث
+    const matchesSearch = 
+      plan.name.includes(searchQuery) ||
+      plan.features.some(feature => feature.includes(searchQuery));
+    
+    // تطبيق التصفية
+    const matchesFilter = 
+      filterStatus.includes("الكل") || 
+      (filterStatus.includes("نشط") && plan.isActive) ||
+      (filterStatus.includes("غير نشط") && !plan.isActive);
+    
+    return matchesSearch && matchesFilter;
+  });
+
   const togglePlanStatus = (planId: string) => {
-    setSubscriptionPlans(plans.map(plan => 
-      plan.id === planId ? { ...plan, isActive: !plan.isActive } : plan
-    ));
+    setSubscriptionPlans(prevPlans => 
+      prevPlans.map(plan => 
+        plan.id === planId ? { ...plan, isActive: !plan.isActive } : plan
+      )
+    );
   };
   
   return (
@@ -78,7 +113,7 @@ export function SubscriptionPlansTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {subscriptionPlans.map((plan) => (
+            {filteredPlans.map((plan) => (
               <TableRow key={plan.id}>
                 <TableCell className="font-medium">
                   {plan.name}

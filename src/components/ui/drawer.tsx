@@ -32,21 +32,36 @@ const DrawerOverlay = React.forwardRef<
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+interface DrawerContentProps
+  extends React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> {
+  side?: "top" | "right" | "bottom" | "left"
+}
+
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  DrawerContentProps
+>(({ className, children, side = "bottom", ...props }, ref) => (
   <DrawerPortal>
     <DrawerOverlay />
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        "fixed z-50 flex h-auto border bg-background",
+        side === "top" && "inset-x-0 top-0 rounded-b-[10px]",
+        side === "right" && "inset-y-0 right-0 h-full w-3/4 rounded-l-[10px] sm:max-w-sm",
+        side === "bottom" && "inset-x-0 bottom-0 rounded-t-[10px]",
+        side === "left" && "inset-y-0 left-0 h-full w-3/4 rounded-r-[10px] sm:max-w-sm",
         className
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      <div
+        className={cn(
+          "mx-auto bg-muted",
+          (side === "top" || side === "bottom") && "mt-4 h-2 w-[100px] rounded-full",
+          (side === "left" || side === "right") && "my-4 h-[100px] w-2 rounded-full"
+        )}
+      />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
