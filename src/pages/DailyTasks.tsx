@@ -113,7 +113,7 @@ export default function DailyTasks() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen w-full">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
@@ -123,7 +123,7 @@ export default function DailyTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showMenu title="المهام اليومية" onMenuClick={() => navigate('/main-menu')} />
       
       <div className="container mx-auto py-6">

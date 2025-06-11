@@ -56,10 +56,10 @@ export default function SelfDevelopment() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showMenu title="تطوير الذات" onMenuClick={() => navigate('/main-menu')} />
       
-      <div className="container mx-auto px-8 py-6">
+      <div className="container mx-auto py-6">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold mb-2 font-cairo">عادات تطوير الذات</h1>
           <p className="text-gray-600 font-cairo">ابني عادات إيجابية لتطوير نفسك</p>

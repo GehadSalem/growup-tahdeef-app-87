@@ -67,7 +67,7 @@ export default function Subscription() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showBackButton title="اشترك الآن" />
       
       {showPaymentForm && (
@@ -77,7 +77,7 @@ export default function Subscription() {
         />
       )}
       
-      <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
+      <div className="container mx-auto py-4 ">
         <div className="max-w-3xl mx-auto">
           {/* عنوان الصفحة والوصف */}
           <div className="text-center mb-6">
@@ -185,7 +185,7 @@ export default function Subscription() {
           {/* زر الاشتراك النهائي */}
           <div className="text-center mb-4">
             <Button
-              className="bg-growup hover:bg-growup-dark text-white px-6 py-5 rounded-xl text-base md:text-xl"
+              className="bg-growup hover:bg-growup-dark text-white px-6 py-10 rounded-xl text-base md:text-xl text-wrap"
               onClick={handleSubscribe}
               disabled={isLoading}
             >

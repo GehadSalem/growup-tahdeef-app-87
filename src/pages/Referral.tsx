@@ -70,10 +70,10 @@ export default function Referral() {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader title="نظام الإحالة" showBackButton />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto py-6">
         <div className="max-w-3xl mx-auto">
           {/* بطاقة نظام الإحالة الرئيسية */}
           <Card className="mb-6 shadow-md border-0 overflow-hidden">

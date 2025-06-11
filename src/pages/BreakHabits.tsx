@@ -7,10 +7,12 @@ import { useBadHabits } from "@/hooks/useBadHabits";
 import { BadHabitForm } from "@/components/bad-habits/BadHabitForm";
 import { BadHabitCard } from "@/components/bad-habits/BadHabitCard";
 import { MotivationalTips } from "@/components/bad-habits/MotivationalTips";
+import { useNavigate } from "react-router-dom";
 
 export default function BreakHabits() {
   const { badHabits, addBadHabit, incrementDayCount, calculateProgress } = useBadHabits();
   const [showAddForm, setShowAddForm] = useState(false);
+    const navigate = useNavigate();
   
   const handleAddHabit = (habit: { name: string; goal: string; alternativeAction: string }) => {
     const result = addBadHabit(habit);
@@ -20,10 +22,9 @@ export default function BreakHabits() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader showBackButton title="كسر العادات السيئة" />
-      
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50 w-full">
+      <AppHeader showMenu title="كسر العادات السيئة" onMenuClick={() => navigate('/main-menu')} />
+      <div className="container mx-auto py-6">
         {/* قسم العنوان */}
         <section className="mb-6">
           <div className="bg-white rounded-xl p-6 shadow-md text-center border border-gray-100">

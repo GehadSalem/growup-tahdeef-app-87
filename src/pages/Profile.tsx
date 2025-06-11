@@ -203,10 +203,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader title="الملف الشخصي" showBackButton />
-
-      <div className="container mx-auto pr-4 py-6">
+    <div className="min-h-screen bg-gray-50 w-full">
+<AppHeader showMenu title="الملف الشخصي" onMenuClick={() => navigate('/main-menu')} />
+      <div className="container mx-auto py-6">
         <div className="max-w-xs mx-auto">
           {/* بطاقة الملف الشخصي */}
           <Card className="mb-6 border-0 shadow-md">

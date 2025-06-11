@@ -67,14 +67,6 @@ export default function MainMenu() {
       color: 'bg-gray-100 hover:bg-gray-200'
     },
     {
-      id: 'dashboard-control',
-      title: 'لوحة التحكم',
-      description: 'إدارة الحساب والإعدادات',
-      icon: <LayoutGrid className="h-6 w-6" />,
-      path: '/menu',
-      color: 'bg-gray-100 hover:bg-gray-200'
-    },
-    {
       id: 'legal',
       title: 'المستندات القانونية',
       description: 'الشروط والسياسات',

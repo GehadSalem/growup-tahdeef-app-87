@@ -13,6 +13,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 // أنواع الأهداف الكبرى
 const GOAL_TYPES = [
@@ -65,6 +66,7 @@ interface Goal {
 }
 
 export default function MajorGoals() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
@@ -339,8 +341,7 @@ export default function MajorGoals() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showBackButton title="الأهداف الكبرى" />
-      
+      <AppHeader showMenu title="الأهداف الكبرى" onMenuClick={() => navigate('/main-menu')} />
       <div className="container mx-auto py-6 px-4">
         <div className="space-y-6">
           {/* نموذج إضافة هدف جديد */}
