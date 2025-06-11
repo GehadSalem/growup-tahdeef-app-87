@@ -370,7 +370,6 @@ const Profile = () => {
                 </CardFooter>
               </Card>
             </TabsContent>
-
             {/* بيانات الاشتراك */}
             <TabsContent value="subscription">
               <Card>
