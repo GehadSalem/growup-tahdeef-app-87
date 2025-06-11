@@ -69,7 +69,7 @@ export default function FinancialPlanning() {
     enabled: isAuthenticated,
   });
 
-  // Add income mutation with proper required fields
+  // Add income mutation with all required fields
   const addIncomeMutation = useMutation({
     mutationFn: IncomeService.addIncome,
     onSuccess: () => {
@@ -108,10 +108,10 @@ export default function FinancialPlanning() {
 
   const handleUpdateIncome = () => {
     if (income > 0) {
-      // Include all required fields: amount, description, and date
+      // Include ALL required fields: amount, source, description, and date
       addIncomeMutation.mutate({
         amount: income,
-        source: "راتب شهري",
+        source: "راتب شهري", // Required field
         description: "تحديث الدخل الشهري", // Required field
         date: new Date().toISOString() // Required field
       });
