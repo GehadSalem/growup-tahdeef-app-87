@@ -1,255 +1,129 @@
+import { createBrowserRouter } from "react-router-dom";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
+import Subscription from "@/pages/Subscription";
+import MainMenu from "@/pages/MainMenu";
+import MajorGoals from "@/pages/MajorGoals";
+import DailyTasks from "@/pages/DailyTasks";
+import FinancialPlanning from "@/pages/FinancialPlanning";
+import SelfDevelopment from "@/pages/SelfDevelopment";
+import BreakHabits from "@/pages/BreakHabits";
+import Notifications from "@/pages/Notifications";
+import Referral from "@/pages/Referral";
+import Contact from "@/pages/Contact";
+import Logout from "@/pages/Logout";
+import NotFound from "@/pages/NotFound";
+import OnboardingScreen from "@/pages/OnboardingScreen";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminGoals from "@/pages/admin/AdminGoals";
 
-import { lazy, Suspense } from 'react';
-import { RouteObject, Navigate } from 'react-router-dom';
-import { AppSidebar } from '@/components/sidebar/AppSidebar';
-import { Loading } from '@/components/shared/Loading';
-
-// Core Pages
-import OnboardingScreen from '@/pages/OnboardingScreen';
-import Login from '@/pages/Login';
-import Menu from '@/pages/Menu';
-import MainMenu from '@/pages/MainMenu';
-import NotFound from '@/pages/NotFound';
-import Subscription from '@/pages/Subscription';
-import Notifications from '@/pages/Notifications';
-import Profile from '@/pages/Profile';
-import Referral from '@/pages/Referral';
-import Logout from '@/pages/Logout';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
-import Contact from '@/pages/Contact';
-import DailyTasks from '@/pages/DailyTasks';
-
-// Legal Pages
-import LegalMenu from '@/pages/legal/LegalMenu';
-import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
-import TermsOfService from '@/pages/legal/TermsOfService';
-import RefundPolicy from '@/pages/legal/RefundPolicy';
-
-// Lazy Pages
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
-const SelfDevelopment = lazy(() => import('@/pages/SelfDevelopment'));
-const BreakHabits = lazy(() => import('@/pages/BreakHabits'));
-const FinancialPlanning = lazy(() => import('@/pages/FinancialPlanning'));
-const MajorGoals = lazy(() => import('@/pages/MajorGoals'));
-
-// Admin Lazy Pages
-const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const AdminUsers = lazy(() => import('@/pages/admin/Users'));
-const AdminSubscriptions = lazy(() => import('@/pages/admin/Subscriptions'));
-const AdminContent = lazy(() => import('@/pages/admin/Content'));
-const AdminSupport = lazy(() => import('@/pages/admin/Support'));
-const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: 'user' | 'admin';
-}
-
-const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  const userRole = user ? JSON.parse(user).role : null;
-
-  if (!token) return <Navigate to="/login" replace />;
-  
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'admin' ? '/admin' : '/not-authorized'} replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const withSidebar = (Component: React.ComponentType) => (
-  <>
-    <AppSidebar />
-    <div className="flex-1">
-      <Suspense fallback={<Loading />}>
-        <Component />
-      </Suspense>
-    </div>
-  </>
-);
-
-export const appRoutes: RouteObject[] = [
-  // Public Routes
-  { path: '/', element: <OnboardingScreen /> },
+export const router = createBrowserRouter([
   {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Login />
-    ),
+    path: "/",
+    element: <Index />,
   },
   {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/main-menu" replace />
-    ) : (
-      <Login />
-    ),
-  },
-  { path: '/forgot-password', element: <ForgotPassword /> },
-  { path: '/reset-password', element: <ResetPassword /> },
-  { path: '/legal', element: <LegalMenu /> },
-  { path: '/privacy-policy', element: <PrivacyPolicy /> },
-  { path: '/terms-of-service', element: <TermsOfService /> },
-  { path: '/refund-policy', element: <RefundPolicy /> },
-  { path: '/contact', element: <Contact /> },
-  { path: '/not-authorized', element: <div className="p-4 text-center">ليس لديك صلاحية الوصول إلى هذه الصفحة</div> },
-
-  // Main Menu Route
-  {
-    path: '/main-menu',
-    element: (
-      <ProtectedRoute>
-        <MainMenu />
-      </ProtectedRoute>
-    ),
-  },
-
-  // Protected Routes - User
-  {
-    path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(Dashboard)}
-      </ProtectedRoute>
-    ),
+    path: "/onboarding",
+    element: <OnboardingScreen />,
   },
   {
-    path: '/self-development',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(SelfDevelopment)}
-      </ProtectedRoute>
-    ),
+    path: "/login",
+    element: <Login />,
   },
   {
-    path: '/break-habits',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(BreakHabits)}
-      </ProtectedRoute>
-    ),
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
   {
-    path: '/financial-planning',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(FinancialPlanning)}
-      </ProtectedRoute>
-    ),
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
-    path: '/major-goals',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(MajorGoals)}
-      </ProtectedRoute>
-    ),
+    path: "/dashboard",
+    element: <Dashboard />,
   },
   {
-    path: '/daily-tasks',
-    element: (
-      <ProtectedRoute>
-        <DailyTasks />
-      </ProtectedRoute>
-    ),
+    path: "/main-menu",
+    element: <MainMenu />,
   },
   {
-    path: '/subscription',
-    element: (
-      <ProtectedRoute>
-        <Subscription />
-      </ProtectedRoute>
-    ),
-  },
-  // {
-  //   path: '/menu',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Menu />
-  //     </ProtectedRoute>
-  //   ),
-  // },
-  {
-    path: '/profile',
-    element: (
-      <ProtectedRoute>
-        <Profile />
-      </ProtectedRoute>
-    ),
+    path: "/major-goals",
+    element: <MajorGoals />,
   },
   {
-    path: '/notifications',
-    element: (
-      <ProtectedRoute>
-        <Notifications />
-      </ProtectedRoute>
-    ),
+    path: "/daily-tasks",
+    element: <DailyTasks />,
   },
   {
-    path: '/referral',
-    element: (
-      <ProtectedRoute>
-        <Referral />
-      </ProtectedRoute>
-    ),
-  },
-  { path: '/logout', element: <Logout /> },
-
-  // Protected Routes - Admin
-  {
-    path: '/admin',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminDashboard)}
-      </ProtectedRoute>
-    ),
+    path: "/financial-planning",
+    element: <FinancialPlanning />,
   },
   {
-    path: '/admin/users',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminUsers)}
-      </ProtectedRoute>
-    ),
+    path: "/self-development",
+    element: <SelfDevelopment />,
   },
   {
-    path: '/admin/subscriptions',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminSubscriptions)}
-      </ProtectedRoute>
-    ),
+    path: "/break-habits",
+    element: <BreakHabits />,
   },
   {
-    path: '/admin/content',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminContent)}
-      </ProtectedRoute>
-    ),
+    path: "/notifications",
+    element: <Notifications />,
   },
   {
-    path: '/admin/support',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminSupport)}
-      </ProtectedRoute>
-    ),
+    path: "/profile",
+    element: <Profile />,
   },
   {
-    path: '/admin/settings',
-    element: (
-      <ProtectedRoute requiredRole="admin">
-        {withSidebar(AdminSettings)}
-      </ProtectedRoute>
-    ),
+    path: "/subscription",
+    element: <Subscription />,
   },
-
-  // 404 Fallback
-  { path: '*', element: <NotFound /> },
-];
+  {
+    path: "/referral",
+    element: <Referral />,
+  },
+  {
+    path: "/contact",
+    element: <Contact />,
+  },
+  {
+    path: "/logout",
+    element: <Logout />,
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfService />,
+  },
+  {
+    path: "/privacy-policy",
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: "/admin",
+    children: [
+      {
+        path: "dashboard",
+        element: <AdminDashboard />,
+      },
+      {
+        path: "users",
+        element: <AdminUsers />,
+      },
+      {
+        path: "goals",
+        element: <AdminGoals />,
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);

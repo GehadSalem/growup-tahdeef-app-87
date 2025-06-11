@@ -69,7 +69,7 @@ export default function FinancialPlanning() {
     enabled: isAuthenticated,
   });
 
-  // Add income mutation
+  // Add income mutation with proper required fields
   const addIncomeMutation = useMutation({
     mutationFn: IncomeService.addIncome,
     onSuccess: () => {
@@ -79,10 +79,11 @@ export default function FinancialPlanning() {
         description: "تم إضافة الدخل بنجاح"
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Income API Error:', error);
       toast({
         title: "خطأ",
-        description: "فشل في إضافة الدخل",
+        description: error.message || "فشل في إضافة الدخل",
         variant: "destructive"
       });
     }
@@ -107,10 +108,18 @@ export default function FinancialPlanning() {
 
   const handleUpdateIncome = () => {
     if (income > 0) {
+      // Include all required fields: amount, description, and date
       addIncomeMutation.mutate({
         amount: income,
         source: "راتب شهري",
-        description: "تحديث الدخل الشهري"
+        description: "تحديث الدخل الشهري", // Required field
+        date: new Date().toISOString() // Required field
+      });
+    } else {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال قيمة صحيحة للدخل",
+        variant: "destructive"
       });
     }
   };

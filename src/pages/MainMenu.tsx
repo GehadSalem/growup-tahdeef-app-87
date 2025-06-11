@@ -93,7 +93,7 @@ export default function MainMenu() {
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader 
-        showBackButton 
+        showMenu 
         title="القائمة الرئيسية" 
         onBackClick={() => navigate('/dashboard')} 
       />
