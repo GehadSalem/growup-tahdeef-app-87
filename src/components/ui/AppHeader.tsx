@@ -10,7 +10,7 @@ interface AppHeaderProps {
   title?: string;
   showBackButton?: boolean;
   showMenu?: boolean;
-  onMenuClick?: () => void;
+  onBackClick?: () => void;
   className?: string;
   hideNotifications?: boolean;
   hideProfile?: boolean;
@@ -20,7 +20,7 @@ export function AppHeader({
   title, 
   showBackButton = false,
   showMenu = false, 
-  onMenuClick,
+  onBackClick,
   className,
   hideNotifications = false,
   hideProfile = false
@@ -59,7 +59,7 @@ export function AppHeader({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onMenuClick}
+            onClick={onBackClick}
             className="rounded-full"
           >
             <MenuIcon className="h-5 w-5" />

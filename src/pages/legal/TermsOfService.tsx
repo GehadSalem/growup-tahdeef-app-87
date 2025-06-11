@@ -9,7 +9,7 @@ export default function TermsOfService() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showMenu title="شروط الاستخدام" onMenuClick={() => navigate('/main-menu')} />
+      <AppHeader showMenu title="شروط الاستخدام" onBackClick={() => navigate('/main-menu')} />
       <div className="container mx-auto px-4 py-6 max-w-3xl">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-center mb-6">

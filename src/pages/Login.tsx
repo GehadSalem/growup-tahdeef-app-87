@@ -39,7 +39,7 @@ export default function Login() {
   }, []);
 
   const redirectBasedOnRole = (role: 'user' | 'admin') => {
-    navigate(role === 'admin' ? '/admin' : '/dashboard-app');
+    navigate(role === 'admin' ? '/admin' : '/dashboard');
   };
 
   const toggleAuthMode = () => {
@@ -48,33 +48,64 @@ export default function Login() {
   };
 
   const signInWithGoogle = async () => {
-    setIsLoading(true);
-    setAuthError(null);
-    const provider = new GoogleAuthProvider();
+  setIsLoading(true);
+  setAuthError(null);
+  const provider = new GoogleAuthProvider();
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-
-      const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
-
-      const { user: userData, token } = res;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      toast({ title: "تم تسجيل الدخول بنجاح", description: "مرحباً بك في GrowUp!" });
-      redirectBasedOnRole(userData.role);
-    } catch (error: any) {
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: error.response?.data?.message || error.message || "حدث خطأ غير متوقع",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    
+    // تأكيد أن المستخدم قد سجل الدخول بالفعل
+    if (!result.user) {
+      throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
     }
-  };
+
+    const idToken = await result.user.getIdToken();
+    
+    // إضافة تحقق إضافي للـ token
+    if (!idToken) {
+      throw new Error("فشل في إنشاء رمز المصادقة");
+    }
+
+    const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
+
+    if (!res.user || !res.token) {
+      throw new Error("استجابة غير صالحة من الخادم");
+    }
+
+    localStorage.setItem("token", res.token);
+    localStorage.setItem("user", JSON.stringify(res.user));
+
+    toast({ 
+      title: "تم تسجيل الدخول بنجاح", 
+      description: "مرحباً بك في GrowUp!",
+      duration: 2000 
+    });
+    
+    redirectBasedOnRole(res.user.role);
+  } catch (error: any) {
+    console.error("Google Sign-In Error:", error);
+    
+    let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      errorMessage = "تم إلغاء طلب التسجيل";
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
+    }
+
+    toast({
+      title: "خطأ في تسجيل الدخول",
+      description: error.response?.data?.message || errorMessage,
+      variant: "destructive",
+      duration: 3000
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

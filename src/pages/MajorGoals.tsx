@@ -341,7 +341,7 @@ export default function MajorGoals() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showMenu title="الأهداف الكبرى" onMenuClick={() => navigate('/main-menu')} />
+      <AppHeader showMenu title="الأهداف الكبرى" onBackClick={() => navigate('/main-menu')} />
       <div className="container mx-auto py-6 px-4">
         <div className="space-y-6">
           {/* نموذج إضافة هدف جديد */}

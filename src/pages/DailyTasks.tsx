@@ -150,7 +150,7 @@ export default function DailyTasks() {
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="المهام اليومية" onMenuClick={() => navigate('/main-menu')} />
+      <AppHeader showMenu title="المهام اليومية" onBackClick={() => navigate('/main-menu')} />
       
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
         <div className="mb-6 text-center">

@@ -23,7 +23,7 @@ export default function BreakHabits() {
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="كسر العادات السيئة" onMenuClick={() => navigate('/main-menu')} />
+      <AppHeader showMenu title="كسر العادات السيئة" onBackClick={() => navigate('/main-menu')} />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
         {/* قسم العنوان */}
         <section className="mb-6">

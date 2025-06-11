@@ -121,7 +121,7 @@ export default function FinancialPlanning() {
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="التخطيط المالي" onMenuClick={() => navigate('/main-menu')} />
+      <AppHeader showMenu title="التخطيط المالي" onBackClick={() => navigate('/main-menu')} />
       
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
