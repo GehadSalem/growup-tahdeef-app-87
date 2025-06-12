@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InstallmentCalculator } from "./InstallmentCalculator";
-import { AddObligationDialog, Obligation } from "./obligations/AddObligationDialog";
+import { AddObligationDialog } from "./obligations/AddObligationDialog";
 import { ObligationsSummary } from "./obligations/ObligationsSummary";
 import { ObligationsList } from "./obligations/ObligationsList";
 import { ObligationsCharts } from "./obligations/ObligationsCharts";
@@ -14,6 +14,19 @@ import { checkUpcomingObligations } from "./utils/dateUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { InstallmentService } from "@/services/installmentService";
 import { CustomInstallmentPlanService } from "@/services/customInstallmentPlanService";
+
+export interface Obligation {
+  id: string;
+  name: string;
+  type: "loan" | "subscription" | "purchase" | "other";
+  amount: number;
+  dueDate: string;
+  recurrence: "monthly" | "quarterly" | "yearly" | "one-time";
+  notes?: string;
+  isPaid: boolean;
+  enableNotifications?: boolean;
+  salaryImpactPercentage?: number;
+}
 
 export function MonthlyObligations() {
   const { toast } = useToast();
@@ -106,10 +119,10 @@ export function MonthlyObligations() {
           convertedObligations.push({
             id: installment.id || Math.random().toString(),
             name: installment.name || 'قسط غير محدد',
-            type: "loan" as const,
+            type: "loan" as Obligation["type"],
             amount: installment.monthlyAmount || 0,
             dueDate: installment.dueDate || new Date().toISOString(),
-            frequency: "monthly" as const,
+            recurrence: "monthly" as Obligation["recurrence"],
             isPaid: installment.isPaid || false,
             salaryImpactPercentage: income > 0 ? ((installment.monthlyAmount || 0) / income) * 100 : 0,
             notes: `المبلغ الإجمالي: ${installment.totalAmount || 0} ر.س - المتبقي: ${installment.remainingAmount || 0} ر.س`
@@ -125,10 +138,10 @@ export function MonthlyObligations() {
           convertedObligations.push({
             id: plan.id || Math.random().toString(),
             name: plan.name || 'خطة غير محددة',
-            type: "subscription" as const,
+            type: "subscription" as Obligation["type"],
             amount: plan.monthlyAmount || 0,
             dueDate: plan.endDate || new Date().toISOString(),
-            frequency: "monthly" as const,
+            recurrence: "monthly" as Obligation["recurrence"],
             isPaid: false,
             salaryImpactPercentage: income > 0 ? ((plan.monthlyAmount || 0) / income) * 100 : 0,
             notes: plan.description || ''
@@ -156,7 +169,7 @@ export function MonthlyObligations() {
   const handleAddObligation = (newObligation: Obligation) => {
     console.log('Adding new obligation:', newObligation);
     
-    if (newObligation.type === "loan") {
+    if (newObligation.type === 'loan' as Obligation['type']) {
       // Add to installments API
       addInstallmentMutation.mutate({
         name: newObligation.name,
@@ -164,7 +177,7 @@ export function MonthlyObligations() {
         monthlyAmount: newObligation.amount || 0,
         dueDate: newObligation.dueDate
       });
-    } else if (newObligation.type === "subscription") {
+    } else if (newObligation.type === 'subscription' as Obligation['type']) {
       // Add to custom plans API
       addCustomPlanMutation.mutate({
         name: newObligation.name,

@@ -160,7 +160,12 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
 
               <Progress value={Math.min(fundProgress, 100)} className="h-3 bg-amber-200" />
               <div className="text-sm text-gray-600 text-right">الهدف: 6 أشهر من الدخل</div>
-
+<div className="flex justify-between mb-2">
+                  <div className="text-lg font-bold">
+                    {totalEmergencyFund.toFixed(0)} ريال
+                  </div>
+                  <div className="text-sm text-gray-500">الرصيد الحالي</div>
+                </div>
               {totalEmergencyFund > 0 && (
                 <Alert className="bg-green-50 border-green-200">
                   <Bell className="h-4 w-4 text-green-600" />
@@ -252,12 +257,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                   </DialogContent>
                 </Dialog>
 
-                <div className="flex flex-col items-end mb-2">
-                  <div className="text-lg font-bold">
-                    {totalEmergencyFund.toFixed(0)} ريال
-                  </div>
-                  <div className="text-sm text-gray-500">الرصيد الحالي</div>
-                </div>
+                
               </div>
 
               <div className="bg-white p-3 rounded-lg">
@@ -302,7 +302,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                           {t.type === "deposit" ? "إيداع" : "سحب"}
                         </TableCell>
                         <TableCell className={`text-right ${t.type === "deposit" ? "text-green-600" : "text-red-600"}`}>
-                          {t.amount.toFixed(0)} ريال
+                          {t.amount ? Number(t.amount).toFixed(0) : "—"} ريال
                         </TableCell>
                         <TableCell className="text-right">{t.description}</TableCell>
                         <TableCell className="text-right">{formatDate(t.date)}</TableCell>

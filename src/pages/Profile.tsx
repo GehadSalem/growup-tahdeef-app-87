@@ -45,7 +45,7 @@ const Profile = () => {
         }
 
         // جلب البيانات المحدثة من الخادم
-        const data = await apiClient.get<ProfileData>("/profile");
+        const data = await apiClient.get<ProfileData>("/user");
         
         // إذا كان هناك صورة محفوظة محلياً ولم يتم تحديثها من الخادم
         if (profileData?.avatarUrl && !data.avatarUrl) {
@@ -116,13 +116,12 @@ const Profile = () => {
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
+  function getInitials(name: string | undefined | null): string {
+  if (!name) return '';
+  const words = name.trim().split(' ');
+  return words.map(word => word[0]?.toUpperCase() || '').join('');
+}
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "غير محدد";

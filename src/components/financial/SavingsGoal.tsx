@@ -254,7 +254,7 @@ export function SavingsGoal({ income }: SavingsGoalProps) {
                         </Button>
                       </div>
                       <div className="text-right">
-                        <h3 className="font-bold font-cairo text-sm sm:text-base">{goal.name}</h3>
+                        <h3 className="font-bold font-cairo text-sm sm:text-base">{goal.goalName}</h3>
                         {goal.description && (
                           <p className="text-xs sm:text-sm text-gray-600 font-cairo">{goal.description}</p>
                         )}

@@ -23,11 +23,18 @@ const Notifications = () => {
   }, [isAuthenticated, navigate]);
 
   // Get notifications
-  const { data: notifications = [], isLoading, error } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: NotificationService.getNotifications,
-    enabled: isAuthenticated,
-  });
+  const {
+  data,
+  isLoading,
+  error
+} = useQuery({
+  queryKey: ['notifications'],
+  queryFn: NotificationService.getNotifications,
+  enabled: isAuthenticated,
+});
+
+const notifications = Array.isArray(data) ? data : [];
+
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
@@ -109,7 +116,7 @@ const Notifications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader title="الإشعارات" onBackClick={() => navigate('/main-menu')} />
 
       <div className="container mx-auto px-4 py-6">
