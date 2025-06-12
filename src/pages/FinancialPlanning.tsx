@@ -109,11 +109,12 @@ export default function FinancialPlanning() {
   const handleUpdateIncome = () => {
     if (income > 0) {
       // Include ALL required fields: amount, source, description, and date
+      
       addIncomeMutation.mutate({
         amount: income,
         source: "راتب شهري", // Required field
         description: "تحديث الدخل الشهري", // Required field
-        date: new Date().toISOString() // Required field
+        incomeDate: new Date().toISOString() // Required field
       });
     } else {
       toast({

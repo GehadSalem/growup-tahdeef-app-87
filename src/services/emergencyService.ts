@@ -1,4 +1,3 @@
-
 import { apiClient } from '@/lib/api';
 
 export interface EmergencyFund {

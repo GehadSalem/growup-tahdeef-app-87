@@ -107,7 +107,7 @@ export function SavingsGoal({ income }: SavingsGoalProps) {
     }
 
     createGoalMutation.mutate({
-      name: newGoalName,
+      goalName: newGoalName,
       targetAmount: newGoalAmount,
       description: newGoalDescription
     });
