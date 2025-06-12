@@ -6,13 +6,13 @@ import { TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react";
 import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { ExpenseService } from "@/services/expenseService";
+import { IncomeService } from "@/services/incomeService";
 
 interface MonthlySummaryProps {
   income: number;
 }
 
 export function MonthlySummary({ income }: MonthlySummaryProps) {
-  const [expenses, setExpenses] = useState([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
 
   // Get expenses from API
@@ -21,48 +21,66 @@ export function MonthlySummary({ income }: MonthlySummaryProps) {
     queryFn: ExpenseService.getExpenses,
   });
 
+  // Get incomes from API
+  const { data: incomesData = [] } = useQuery({
+    queryKey: ['incomes'],
+    queryFn: IncomeService.getUserIncomes,
+  });
+
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  // Filter current month expenses
+  const monthlyExpenses = expensesData.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate.getMonth() + 1 === currentMonth && 
+           expenseDate.getFullYear() === currentYear;
+  });
+
+  // Filter current month incomes
+  const monthlyIncomes = incomesData.filter(income => {
+    const incomeDate = new Date(income.date);
+    return incomeDate.getMonth() + 1 === currentMonth && 
+           incomeDate.getFullYear() === currentYear;
+  });
+
+  // Calculate totals
+  const totalExpenses = monthlyExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+  const totalMonthlyIncome = monthlyIncomes.reduce((sum, income) => sum + (income.amount || 0), 0);
+  const actualIncome = totalMonthlyIncome || income || 0;
+  
+  // Calculate percentage and remaining amount
+  const expensePercentage = actualIncome > 0 ? (totalExpenses / actualIncome) * 100 : 0;
+  const remainingAmount = actualIncome - totalExpenses;
+
   useEffect(() => {
-    if (expensesData.length > 0) {
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
-      
-      // Filter current month expenses
-      const monthlyExpenses = expensesData.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return expenseDate.getMonth() + 1 === currentMonth && 
-               expenseDate.getFullYear() === currentYear;
-      });
-      
-      setExpenses(monthlyExpenses);
-      
+    if (monthlyExpenses.length > 0) {
       // Group expenses by category for chart
       const categoryData = monthlyExpenses.reduce((acc, expense) => {
-        const existingCategory = acc.find(item => item.name === expense.category);
+        const category = expense.category || 'غير محدد';
+        const amount = expense.amount || 0;
+        
+        const existingCategory = acc.find(item => item.name === category);
         if (existingCategory) {
-          existingCategory.value += expense.amount;
+          existingCategory.value += amount;
         } else {
-          acc.push({ name: expense.category, value: expense.amount });
+          acc.push({ name: category, value: amount });
         }
         return acc;
       }, []);
       
       setMonthlyData(categoryData);
+    } else {
+      setMonthlyData([]);
     }
-  }, [expensesData]);
+  }, [monthlyExpenses]);
 
-  // حساب إجمالي المصروفات
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  
-  // حساب النسبة المئوية للمصروفات من الدخل
-  const expensePercentage = income > 0 ? (totalExpenses / income) * 100 : 0;
-  
-  // حساب المبلغ المتبقي
-  const remainingAmount = income - totalExpenses;
-  
-  // ألوان المخطط الدائري
+  // Colors for pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   const formatCurrency = (value: number) => {
+    if (isNaN(value) || !isFinite(value)) return '0 ر.س';
+    
     return new Intl.NumberFormat('ar-SA', {
       style: 'currency',
       currency: 'SAR',
@@ -84,7 +102,7 @@ export function MonthlySummary({ income }: MonthlySummaryProps) {
               <div className="flex justify-between items-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                 <div className="flex items-center">
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 ml-2" />
-                  <span className="text-lg sm:text-xl font-bold text-blue-600">{formatCurrency(income)}</span>
+                  <span className="text-lg sm:text-xl font-bold text-blue-600">{formatCurrency(actualIncome)}</span>
                 </div>
                 <span className="text-gray-700 font-cairo text-sm sm:text-base">الدخل الشهري</span>
               </div>
@@ -111,14 +129,14 @@ export function MonthlySummary({ income }: MonthlySummaryProps) {
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="font-cairo">{expensePercentage.toFixed(1)}%</span>
+                  <span className="font-cairo">{isNaN(expensePercentage) ? '0' : expensePercentage.toFixed(1)}%</span>
                   <span className="text-gray-600 font-cairo">نسبة المصروفات من الدخل</span>
                 </div>
                 <Progress 
-                  value={expensePercentage > 100 ? 100 : expensePercentage} 
+                  value={isNaN(expensePercentage) ? 0 : (expensePercentage > 100 ? 100 : expensePercentage)} 
                   className="h-2"
                 />
-                {expensePercentage > 80 && (
+                {expensePercentage > 80 && !isNaN(expensePercentage) && (
                   <p className="text-xs sm:text-sm text-orange-600 text-right font-cairo">
                     تحذير: نسبة المصروفات مرتفعة! حاول تقليل المصروفات غير الضرورية.
                   </p>

@@ -24,13 +24,13 @@ export function MonthlyObligations() {
   const [activeTab, setActiveTab] = useState<string>("obligations");
 
   // Get installments from API
-  const { data: installments = [], isLoading: installmentsLoading } = useQuery({
+  const { data: installments = [], isLoading: installmentsLoading, error: installmentsError } = useQuery({
     queryKey: ['installments'],
     queryFn: InstallmentService.getUserInstallments,
   });
 
   // Get custom installment plans from API
-  const { data: customPlans = [], isLoading: customPlansLoading } = useQuery({
+  const { data: customPlans = [], isLoading: customPlansLoading, error: customPlansError } = useQuery({
     queryKey: ['custom-installment-plans'],
     queryFn: CustomInstallmentPlanService.getPlans,
   });
@@ -46,6 +46,7 @@ export function MonthlyObligations() {
       });
     },
     onError: (error: any) => {
+      console.error('Add installment error:', error);
       toast({
         title: "خطأ",
         description: error.message || "فشل في إضافة القسط",
@@ -65,6 +66,7 @@ export function MonthlyObligations() {
       });
     },
     onError: (error: any) => {
+      console.error('Mark paid error:', error);
       toast({
         title: "خطأ",
         description: error.message || "فشل في تحديث حالة القسط",
@@ -73,27 +75,73 @@ export function MonthlyObligations() {
     }
   });
 
+  // Add custom plan mutation
+  const addCustomPlanMutation = useMutation({
+    mutationFn: CustomInstallmentPlanService.addPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['custom-installment-plans'] });
+      toast({
+        title: "تم إضافة الخطة",
+        description: "تم إضافة خطة التقسيط بنجاح"
+      });
+    },
+    onError: (error: any) => {
+      console.error('Add custom plan error:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إضافة خطة التقسيط",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Convert API installments to obligations format
   useEffect(() => {
-    if (installments.length > 0) {
-      const convertedObligations: Obligation[] = installments.map(installment => ({
-        id: installment.id,
-        name: installment.name,
-        type: "loan" as const,
-        amount: installment.monthlyAmount,
-        dueDate: installment.dueDate,
-        frequency: "monthly" as const,
-        isPaid: installment.isPaid,
-        salaryImpactPercentage: income > 0 ? (installment.monthlyAmount / income) * 100 : 0,
-        notes: `المبلغ الإجمالي: ${installment.totalAmount} ر.س - المتبقي: ${installment.remainingAmount} ر.س`
-      }));
-      
-      setObligations(convertedObligations);
+    const convertedObligations: Obligation[] = [];
+    
+    // Convert installments
+    if (installments && Array.isArray(installments)) {
+      installments.forEach(installment => {
+        if (installment && typeof installment === 'object') {
+          convertedObligations.push({
+            id: installment.id || Math.random().toString(),
+            name: installment.name || 'قسط غير محدد',
+            type: "loan" as const,
+            amount: installment.monthlyAmount || 0,
+            dueDate: installment.dueDate || new Date().toISOString(),
+            frequency: "monthly" as const,
+            isPaid: installment.isPaid || false,
+            salaryImpactPercentage: income > 0 ? ((installment.monthlyAmount || 0) / income) * 100 : 0,
+            notes: `المبلغ الإجمالي: ${installment.totalAmount || 0} ر.س - المتبقي: ${installment.remainingAmount || 0} ر.س`
+          });
+        }
+      });
     }
-  }, [installments, income]);
+
+    // Convert custom plans
+    if (customPlans && Array.isArray(customPlans)) {
+      customPlans.forEach(plan => {
+        if (plan && typeof plan === 'object' && plan.isActive) {
+          convertedObligations.push({
+            id: plan.id || Math.random().toString(),
+            name: plan.name || 'خطة غير محددة',
+            type: "subscription" as const,
+            amount: plan.monthlyAmount || 0,
+            dueDate: plan.endDate || new Date().toISOString(),
+            frequency: "monthly" as const,
+            isPaid: false,
+            salaryImpactPercentage: income > 0 ? ((plan.monthlyAmount || 0) / income) * 100 : 0,
+            notes: plan.description || ''
+          });
+        }
+      });
+    }
+
+    setObligations(convertedObligations);
+  }, [installments, customPlans, income]);
 
   // حساب إجمالي الالتزامات
-  const totalObligations = obligations.reduce((sum, obligation) => sum + obligation.amount, 0);
+  const totalObligations = obligations.reduce((sum, obligation) => sum + (obligation.amount || 0), 0);
   
   // حساب المتبقي من الراتب بعد الالتزامات
   const remainingIncome = income - totalObligations;
@@ -102,33 +150,45 @@ export function MonthlyObligations() {
   const savingsRemaining = remainingIncome - savingsGoal;
   
   // حساب نسبة الالتزامات من الراتب
-  const obligationPercentage = (totalObligations / income) * 100;
+  const obligationPercentage = income > 0 ? (totalObligations / income) * 100 : 0;
 
   // إضافة التزام جديد
   const handleAddObligation = (newObligation: Obligation) => {
-    // Add to API if it's a new installment
+    console.log('Adding new obligation:', newObligation);
+    
     if (newObligation.type === "loan") {
+      // Add to installments API
       addInstallmentMutation.mutate({
         name: newObligation.name,
-        totalAmount: newObligation.amount * 12, // Assume 12 months for now
-        monthlyAmount: newObligation.amount,
+        totalAmount: (newObligation.amount || 0) * 12, // Assume 12 months for now
+        monthlyAmount: newObligation.amount || 0,
         dueDate: newObligation.dueDate
+      });
+    } else if (newObligation.type === "subscription") {
+      // Add to custom plans API
+      addCustomPlanMutation.mutate({
+        name: newObligation.name,
+        description: newObligation.notes || '',
+        totalAmount: (newObligation.amount || 0) * 12,
+        monthlyAmount: newObligation.amount || 0,
+        duration: 12,
+        startDate: new Date().toISOString()
       });
     } else {
       // For other types, just add locally for now
-      setObligations([...obligations, newObligation]);
+      setObligations(prev => [...prev, newObligation]);
     }
   };
 
   // تعديل حالة الدفع
   const togglePaymentStatus = (id: string) => {
-    const installment = installments.find(inst => inst.id === id);
+    const installment = installments.find(inst => inst && inst.id === id);
     if (installment) {
       // Update via API
       markPaidMutation.mutate(id);
     } else {
       // Update locally for non-API obligations
-      setObligations(obligations.map(obligation => 
+      setObligations(prev => prev.map(obligation => 
         obligation.id === id ? { ...obligation, isPaid: !obligation.isPaid } : obligation
       ));
     }
@@ -136,26 +196,23 @@ export function MonthlyObligations() {
 
   // فحص الالتزامات القريبة وإرسال إشعارات
   useEffect(() => {
+    if (obligations.length === 0) return;
+    
     const notify = (title: string, description: string) => {
       toast({ title, description });
     };
     
-    const updatedObligations = checkUpcomingObligations(obligations, notify);
-    
-    // تحديث حالة الإشعارات إذا تغيرت
-    if (JSON.stringify(updatedObligations) !== JSON.stringify(obligations)) {
-      setObligations(updatedObligations);
+    try {
+      const updatedObligations = checkUpcomingObligations(obligations, notify);
+      
+      // تحديث حالة الإشعارات إذا تغيرت
+      if (JSON.stringify(updatedObligations) !== JSON.stringify(obligations)) {
+        setObligations(updatedObligations);
+      }
+    } catch (error) {
+      console.error('Error checking upcoming obligations:', error);
     }
-    
-    // إعادة تعيين حالة الإشعارات كل يوم
-    const resetNotifications = () => {
-      setObligations(prev => prev.map(item => ({ ...item, notificationSent: false })));
-    };
-    
-    const midnightReset = setInterval(resetNotifications, 86400000); // 24 ساعة
-    
-    return () => clearInterval(midnightReset);
-  }, [obligations, toast]);
+  }, [obligations.length, toast]);
 
   if (installmentsLoading || customPlansLoading) {
     return (
@@ -166,6 +223,11 @@ export function MonthlyObligations() {
         </div>
       </div>
     );
+  }
+
+  if (installmentsError || customPlansError) {
+    console.error('Installments error:', installmentsError);
+    console.error('Custom plans error:', customPlansError);
   }
 
   return (

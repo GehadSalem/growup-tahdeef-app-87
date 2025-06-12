@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -11,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Bell, LightbulbIcon, ShieldAlert, Wallet } from "lucide-react";
-import { EmergencyService } from "@/services/emergencyService.ts";
+import { Bell, LightbulbIcon, ShieldAlert, Wallet, Plus } from "lucide-react";
+import { EmergencyService } from "@/services/emergencyService";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface EmergencyFundProps {
   income: number;
@@ -21,55 +23,83 @@ interface EmergencyFundProps {
 
 export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [emergencyPercentage, setEmergencyPercentage] = useState(10);
   const [withdrawalAmount, setWithdrawalAmount] = useState(0);
   const [withdrawalReason, setWithdrawalReason] = useState("");
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [depositReason, setDepositReason] = useState("");
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
-
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [totalEmergencyFund, setTotalEmergencyFund] = useState(0);
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
 
   const targetEmergencyFund = income * 6;
+
+  // Get emergency fund data
+  const { data: emergencyData, isLoading } = useQuery({
+    queryKey: ['emergency'],
+    queryFn: EmergencyService.getEmergencyFunds,
+  });
+
+  const totalEmergencyFund = emergencyData?.totalAmount || 0;
+  const transactions = emergencyData?.transactions || [];
   const fundProgress = targetEmergencyFund > 0 ? (totalEmergencyFund / targetEmergencyFund) * 100 : 0;
+
+  // Add deposit mutation
+  const addDepositMutation = useMutation({
+    mutationFn: EmergencyService.addToEmergencyFund,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency'] });
+      toast({
+        title: "تم إضافة المبلغ",
+        description: `تمت إضافة ${depositAmount} ريال لصندوق الطوارئ`,
+      });
+      setDepositAmount(0);
+      setDepositReason("");
+      setShowDepositDialog(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في إضافة المبلغ", variant: "destructive" });
+    }
+  });
+
+  // Withdraw mutation
+  const withdrawMutation = useMutation({
+    mutationFn: EmergencyService.withdrawFromEmergencyFund,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency'] });
+      toast({
+        title: "تم السحب",
+        description: `تم سحب ${withdrawalAmount} ريال من صندوق الطوارئ`,
+      });
+      setWithdrawalAmount(0);
+      setWithdrawalReason("");
+      setShowWithdrawDialog(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل عملية السحب", variant: "destructive" });
+    }
+  });
 
   const formatDate = (dateString: string): string => {
     return format(new Date(dateString), "d MMMM yyyy", { locale: ar });
   };
 
-  const fetchEmergencyData = async () => {
-    try {
-      const data = await EmergencyService.getEmergencyFunds();
-      setTransactions(data.transactions || []);
-      setTotalEmergencyFund(data.totalAmount || 0);
-    } catch (error) {
-      console.error("Error fetching emergency fund:", error);
-      toast({ title: "خطأ", description: "تعذر تحميل البيانات", variant: "destructive" });
+  const handleDeposit = () => {
+    if (depositAmount <= 0 || depositReason.trim() === "") {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال قيمة وسبب صالحين",
+        variant: "destructive"
+      });
+      return;
     }
+
+    addDepositMutation.mutate({
+      amount: depositAmount,
+      description: depositReason,
+      type: "deposit"
+    });
   };
-
-  useEffect(() => {
-    fetchEmergencyData();
-  }, []);
-
-  // useEffect(() => {
-  //   if (income > 0) {
-  //     const monthlyContribution = (income * emergencyPercentage) / 100;
-
-  //     EmergencyService.addToEmergencyFund({
-  //       amount: monthlyContribution,
-  //       description: "المساهمة الشهرية التلقائية",
-  //       type: "deposit",
-  //     }).then(() => {
-  //       toast({
-  //         title: "تم إضافة المساهمة الشهرية",
-  //         description: `تمت إضافة ${monthlyContribution.toFixed(0)} ريال لصندوق الطوارئ`,
-  //       });
-  //       fetchEmergencyData();
-  //     }).catch(() => {
-  //       toast({ title: "خطأ", description: "فشل الإضافة", variant: "destructive" });
-  //     });
-  //   }
-  // }, [income, emergencyPercentage]);
 
   const handleWithdrawal = () => {
     if (withdrawalAmount <= 0 || withdrawalAmount > totalEmergencyFund || withdrawalReason.trim() === "") {
@@ -81,21 +111,9 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
       return;
     }
 
-    EmergencyService.addToEmergencyFund({
+    withdrawMutation.mutate({
       amount: withdrawalAmount,
-      description: withdrawalReason,
-      type: "withdrawal"
-    }).then(() => {
-      toast({
-        title: "تم السحب",
-        description: `تم سحب ${withdrawalAmount.toFixed(0)} ريال من صندوق الطوارئ`,
-      });
-      setWithdrawalAmount(0);
-      setWithdrawalReason("");
-      setShowWithdrawDialog(false);
-      fetchEmergencyData();
-    }).catch(() => {
-      toast({ title: "خطأ", description: "فشل عملية السحب", variant: "destructive" });
+      description: withdrawalReason
     });
   };
 
@@ -107,6 +125,17 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
       description: `تم تعديل النسبة إلى ${newPercentage}%`,
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm font-cairo text-gray-600">جاري تحميل صندوق الطوارئ...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -122,11 +151,10 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="text-sm text-gray-500">
-                  {typeof fundProgress === "number" ? fundProgress.toFixed(1) : "0"}% من الهدف
+                  {fundProgress.toFixed(1)}% من الهدف
                 </div>
                 <div className="font-bold">
-                  {typeof totalEmergencyFund === "number" ? totalEmergencyFund.toFixed(0) : "0"} /{" "}
-                  {typeof targetEmergencyFund === "number" ? targetEmergencyFund.toFixed(0) : "0"} ريال
+                  {totalEmergencyFund.toFixed(0)} / {targetEmergencyFund.toFixed(0)} ريال
                 </div>
               </div>
 
@@ -145,7 +173,47 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-2">
+                {/* Add to Emergency Fund Dialog */}
+                <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-1 bg-green-600 hover:bg-green-700">
+                      <Plus className="h-4 w-4 ml-1" />
+                      إضافة للصندوق
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>إضافة مبلغ لصندوق الطوارئ</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>المبلغ (ريال)</Label>
+                        <Input
+                          type="number"
+                          value={depositAmount || ""}
+                          onChange={e => setDepositAmount(Number(e.target.value))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>سبب الإضافة</Label>
+                        <Input
+                          value={depositReason}
+                          onChange={e => setDepositReason(e.target.value)}
+                          placeholder="مثال: مكافأة شهرية"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => setShowDepositDialog(false)}>إلغاء</Button>
+                        <Button onClick={handleDeposit} disabled={addDepositMutation.isPending}>
+                          {addDepositMutation.isPending ? "جاري الإضافة..." : "إضافة"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Withdraw from Emergency Fund Dialog */}
                 <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="gap-1">
@@ -171,11 +239,14 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                         <Input
                           value={withdrawalReason}
                           onChange={e => setWithdrawalReason(e.target.value)}
+                          placeholder="مثال: طارئ طبي"
                         />
                       </div>
                       <div className="flex justify-end gap-2 mt-4">
                         <Button variant="outline" onClick={() => setShowWithdrawDialog(false)}>إلغاء</Button>
-                        <Button onClick={handleWithdrawal}>سحب</Button>
+                        <Button onClick={handleWithdrawal} disabled={withdrawMutation.isPending}>
+                          {withdrawMutation.isPending ? "جاري السحب..." : "سحب"}
+                        </Button>
                       </div>
                     </div>
                   </DialogContent>
@@ -183,7 +254,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
 
                 <div className="flex flex-col items-end mb-2">
                   <div className="text-lg font-bold">
-                    {typeof totalEmergencyFund === "number" ? totalEmergencyFund.toFixed(0) : "0"} ريال
+                    {totalEmergencyFund.toFixed(0)} ريال
                   </div>
                   <div className="text-sm text-gray-500">الرصيد الحالي</div>
                 </div>
@@ -205,9 +276,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                 </RadioGroup>
                 <p className="text-sm text-right mt-2 text-gray-600">
                   سيتم تخصيص {emergencyPercentage}% من الدخل (
-                  {typeof income === "number"
-                    ? ((income * emergencyPercentage) / 100).toFixed(0)
-                    : "0"} ريال)
+                  {((income * emergencyPercentage) / 100).toFixed(0)} ريال)
                 </p>
               </div>
             </div>
@@ -233,7 +302,7 @@ export function EmergencyFund({ income, setIncome }: EmergencyFundProps) {
                           {t.type === "deposit" ? "إيداع" : "سحب"}
                         </TableCell>
                         <TableCell className={`text-right ${t.type === "deposit" ? "text-green-600" : "text-red-600"}`}>
-                          {typeof t.amount === "number" ? t.amount.toFixed(0) : "—"} ريال
+                          {t.amount.toFixed(0)} ريال
                         </TableCell>
                         <TableCell className="text-right">{t.description}</TableCell>
                         <TableCell className="text-right">{formatDate(t.date)}</TableCell>
