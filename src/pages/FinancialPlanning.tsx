@@ -1,200 +1,178 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { PiggyBank, TrendingUp, Calculator, Shield, Target, CreditCard } from "lucide-react";
+import { EmergencyFund } from "@/components/financial/EmergencyFund";
 import { ExpenseTracker } from "@/components/financial/ExpenseTracker";
+import { MonthlyReport } from "@/components/financial/MonthlyReport";
+import { SavingsGoal } from "@/components/financial/SavingsGoal";
+import { InstallmentCalculator } from "@/components/financial/InstallmentCalculator";
 import { MonthlySummary } from "@/components/financial/MonthlySummary";
 import { MonthlyObligations } from "@/components/financial/MonthlyObligations";
-import { SavingsGoal } from "@/components/financial/SavingsGoal";
-import { EmergencyFund } from "@/components/financial/EmergencyFund";
-import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { IncomeService } from "@/services/incomeService";
-import { ExpenseService } from "@/services/expenseService";
-import { EmergencyService } from "@/services/emergencyService";
-import { SavingsGoalsService } from "@/services/savingsGoalsService";
-import { MajorGoalsService } from "@/services/majorGoalsService";
 
-export default function FinancialPlanning() {
+const FinancialPlanning = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
-  const [income, setIncome] = useState<number>(0);
-  const [incomeDescription, setIncomeDescription] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("summary");
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Get user's incomes
-  const { data: incomes = [] } = useQuery({
-    queryKey: ['incomes'],
-    queryFn: IncomeService.getUserIncomes,
-    enabled: isAuthenticated,
-  });
-
-  // Get expenses
-  const { data: expenses = [] } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: ExpenseService.getExpenses,
-    enabled: isAuthenticated,
-  });
-
-  // Get emergency fund
-  const { data: emergencyFund } = useQuery({
-    queryKey: ['emergency'],
-    queryFn: EmergencyService.getEmergencyFunds,
-    enabled: isAuthenticated,
-  });
-
-  // Get savings goals
-  const { data: savingsGoals = [] } = useQuery({
-    queryKey: ['savingsGoals'],
-    queryFn: SavingsGoalsService.getUserSavingsGoals,
-    enabled: isAuthenticated,
-  });
-
-  // Get major goals
-  const { data: majorGoals = [] } = useQuery({
-    queryKey: ['majorGoals'],
-    queryFn: MajorGoalsService.getUserMajorGoals,
-    enabled: isAuthenticated,
-  });
-
-  // Add income mutation with all required fields
-  const addIncomeMutation = useMutation({
-    mutationFn: IncomeService.addIncome,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['incomes'] });
-      setIncomeDescription(""); // Clear description after success
-      toast({
-        title: "تم إضافة الدخل",
-        description: "تم إضافة الدخل بنجاح"
-      });
+  const financialCards = [
+    {
+      id: "emergency",
+      title: "صندوق الطوارئ",
+      description: "احتياطي مالي للظروف الطارئة",
+      icon: Shield,
+      color: "text-red-500",
+      bgColor: "bg-red-50"
     },
-    onError: (error: any) => {
-      console.error('Income API Error:', error);
-      toast({
-        title: "خطأ",
-        description: error.message || "فشل في إضافة الدخل",
-        variant: "destructive"
-      });
+    {
+      id: "expenses",
+      title: "تتبع المصروفات",
+      description: "راقب وحلل مصروفاتك اليومية",
+      icon: TrendingUp,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50"
+    },
+    {
+      id: "savings",
+      title: "أهداف الادخار",
+      description: "حدد أهدافك المالية وحققها",
+      icon: Target,
+      color: "text-green-500",
+      bgColor: "bg-green-50"
+    },
+    {
+      id: "calculator",
+      title: "حاسبة الأقساط",
+      description: "احسب أقساطك والفوائد",
+      icon: Calculator,
+      color: "text-purple-500",
+      bgColor: "bg-purple-50"
+    },
+    {
+      id: "obligations",
+      title: "الالتزامات الشهرية",
+      description: "إدارة الأقساط والالتزامات",
+      icon: CreditCard,
+      color: "text-orange-500",
+      bgColor: "bg-orange-50"
+    },
+    {
+      id: "report",
+      title: "التقرير الشهري",
+      description: "ملخص شامل للوضع المالي",
+      icon: PiggyBank,
+      color: "text-growup",
+      bgColor: "bg-growup/10"
     }
-  });
-
-  // Calculate total monthly income
-  useEffect(() => {
-    if (incomes.length > 0) {
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
-      
-      const monthlyIncomes = incomes.filter(income => {
-        const incomeDate = new Date(income.date);
-        return incomeDate.getMonth() + 1 === currentMonth && 
-               incomeDate.getFullYear() === currentYear;
-      });
-      
-      const totalIncome = monthlyIncomes.reduce((sum, income) => sum + income.amount, 0);
-      setIncome(totalIncome);
-    }
-  }, [incomes]);
-
-  const handleUpdateIncome = () => {
-    if (income > 0 && incomeDescription.trim()) {
-      addIncomeMutation.mutate({
-        amount: income,
-        source: "راتب شهري",
-        description: incomeDescription,
-        incomeDate: new Date().toISOString()
-      });
-    } else {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال قيمة صحيحة للدخل ووصف",
-        variant: "destructive"
-      });
-    }
-  };
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="التخطيط المالي" onBackClick={() => navigate('/main-menu')} />
+      <AppHeader 
+        showMenu 
+        title="التخطيط المالي" 
+        onBackClick={() => navigate('/main-menu')} 
+      />
       
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        
-        {/* قسم إعداد الدخل الشهري */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-right font-cairo text-lg sm:text-xl">الدخل الشهري</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="monthly-income">
-                  الدخل الشهري (ر.س)
-                </Label>
-                <Input
-                  id="monthly-income"
-                  type="number"
-                  value={income || ''}
-                  onChange={e => setIncome(Number(e.target.value))}
-                  className="text-right text-sm sm:text-base"
-                  placeholder="مثال: 15000"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="income-description">
-                  وصف الدخل
-                </Label>
-                <Input
-                  id="income-description"
-                  type="text"
-                  value={incomeDescription}
-                  onChange={e => setIncomeDescription(e.target.value)}
-                  className="text-right text-sm sm:text-base"
-                  placeholder="مثال: راتب شهر ديسمبر"
-                />
-              </div>
-              <div className="w-full">
-                <Button
-                  className="bg-growup hover:bg-growup-dark w-full text-sm sm:text-base py-2 sm:py-3"
-                  onClick={handleUpdateIncome}
-                  disabled={addIncomeMutation.isPending}
-                >
-                  {addIncomeMutation.isPending ? "جاري الإضافة..." : "إضافة الدخل"}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 h-auto p-1">
+              <TabsTrigger 
+                value="summary" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                الملخص
+              </TabsTrigger>
+              <TabsTrigger 
+                value="emergency" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                الطوارئ
+              </TabsTrigger>
+              <TabsTrigger 
+                value="expenses" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                المصروفات
+              </TabsTrigger>
+              <TabsTrigger 
+                value="savings" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                الادخار
+              </TabsTrigger>
+              <TabsTrigger 
+                value="obligations" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                الالتزامات
+              </TabsTrigger>
+              <TabsTrigger 
+                value="report" 
+                className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
+              >
+                التقرير
+              </TabsTrigger>
+            </TabsList>
 
-        {/* صندوق الطوارئ */}
-        <EmergencyFund income={income} setIncome={setIncome} />
-        
-        {/* ملخص الشهر */}
-        <MonthlySummary income={income} />
-        
-        {/* تتبع المصروفات */}
-        <ExpenseTracker />
-        
-        {/* الالتزامات الشهرية */}
-        <MonthlyObligations />
-        
-        {/* هدف التوفير */}
-        <SavingsGoal income={income} />
+            <TabsContent value="summary" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {financialCards.map((card) => (
+                  <Card 
+                    key={card.id}
+                    className="cursor-pointer hover:shadow-lg transition-all duration-300 border-0 shadow-md"
+                    onClick={() => setActiveTab(card.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${card.bgColor}`}>
+                          <card.icon className={`h-5 w-5 md:h-6 md:w-6 ${card.color}`} />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm md:text-base">{card.title}</CardTitle>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-xs md:text-sm text-gray-600">{card.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <MonthlySummary />
+            </TabsContent>
+
+            <TabsContent value="emergency">
+              <EmergencyFund />
+            </TabsContent>
+
+            <TabsContent value="expenses">
+              <ExpenseTracker />
+            </TabsContent>
+
+            <TabsContent value="savings">
+              <SavingsGoal />
+            </TabsContent>
+
+            <TabsContent value="calculator">
+              <InstallmentCalculator />
+            </TabsContent>
+
+            <TabsContent value="obligations">
+              <MonthlyObligations />
+            </TabsContent>
+
+            <TabsContent value="report">
+              <MonthlyReport />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default FinancialPlanning;
