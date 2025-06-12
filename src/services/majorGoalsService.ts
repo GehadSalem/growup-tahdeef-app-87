@@ -1,53 +1,126 @@
-
 import { apiClient } from '@/lib/api';
+import { NotificationHelper } from './notificationHelper';
 
-export interface MajorGoal {
+// أنواع البيانات
+interface BackendGoal {
   id: string;
   title: string;
-  description?: string;
-  targetAmount?: number;
-  currentAmount?: number;
-  targetDate?: string;
-  category: string;
+  description: string;
+  estimatedCost: number;
+  targetDate: string;
+  category: 'financial' | 'personal' | 'health' | 'education';
+  status: 'planned' | 'in-progress' | 'completed' | 'postponed';
   progress: number;
-  userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CreateMajorGoalRequest {
+interface FrontendGoal {
+  id: string;
   title: string;
-  description?: string;
+  description: string;
   targetAmount: number;
-  currentAmount?: number;
-  targetDate?: string;
+  currentAmount: number;
+  targetDate: string;
   category: string;
 }
 
-export interface UpdateProgressRequest {
-  currentAmount: number;
+// دالة لتحويل الفئات من Frontend إلى Backend
+function mapCategoryToBackend(frontendCategory: string): 'financial' | 'personal' | 'health' | 'education' {
+  const categoryMap: Record<string, 'financial' | 'personal' | 'health' | 'education'> = {
+    'marriage': 'personal',
+    'car': 'financial',
+    'house': 'financial',
+    'business': 'financial',
+    'education': 'education',
+    'other': 'personal'
+  };
+  return categoryMap[frontendCategory] || 'personal';
 }
 
-export class MajorGoalsService {
-  static async createMajorGoal(goal: CreateMajorGoalRequest): Promise<MajorGoal> {
-    return apiClient.post<MajorGoal>('/majorGoals', goal);
-  }
-
-  static async getUserMajorGoals(): Promise<MajorGoal[]> {
-    return apiClient.get<MajorGoal[]>('/majorGoals');
-  }
-
-  static async getMajorGoalById(id: string): Promise<MajorGoal> {
-    return apiClient.get<MajorGoal>(`/majorGoals/${id}`);
-  }
-
-  static async updateMajorGoal(id: string, goal: Partial<CreateMajorGoalRequest>): Promise<MajorGoal> {
-    return apiClient.put<MajorGoal>(`/majorGoals/${id}`, goal);
-  }
-
-  static async deleteMajorGoal(id: string): Promise<void> {
-    return apiClient.delete(`/majorGoals/${id}`);
-  }
-
-  static async updateProgress(id: string, progress: UpdateProgressRequest): Promise<MajorGoal> {
-    return apiClient.patch<MajorGoal>(`/majorGoals/${id}`, progress);
-  }
+// دالة لتحويل الفئات من Backend إلى Frontend
+function mapCategoryToFrontend(backendCategory: string): string {
+  const reverseCategoryMap: Record<string, string> = {
+    'financial': 'car',
+    'personal': 'marriage',
+    'health': 'other',
+    'education': 'education'
+  };
+  return reverseCategoryMap[backendCategory] || 'other';
 }
+
+export const MajorGoalsService = {
+  // إنشاء هدف جديد
+  async createMajorGoal(goalData: Omit<FrontendGoal, 'id'>): Promise<FrontendGoal> {
+    try {
+      const backendGoal = {
+        title: goalData.title,
+        description: goalData.description,
+        estimatedCost: goalData.targetAmount,
+        targetDate: goalData.targetDate,
+        category: mapCategoryToBackend(goalData.category),
+        progress: (goalData.currentAmount / goalData.targetAmount) * 100 || 0
+      };
+
+      const response = await apiClient.post<BackendGoal>('/majorGoals', backendGoal);
+      
+      // تحويل الرد إلى نموذج Frontend
+      return this.mapToFrontendModel(response);
+    } catch (error) {
+      console.error('Create goal error:', error);
+      throw new Error('فشل في إضافة الهدف');
+    }
+  },
+
+  // الحصول على أهداف المستخدم
+  async getUserMajorGoals(): Promise<FrontendGoal[]> {
+    try {
+      const response = await apiClient.get<BackendGoal[]>('/majorGoals');
+      return response.map(this.mapToFrontendModel);
+    } catch (error) {
+      console.error('Get goals error:', error);
+      throw new Error('فشل في جلب الأهداف');
+    }
+  },
+
+  // تحديث تقدم الهدف
+  async updateProgress(goalId: string, { currentAmount }: { currentAmount: number }): Promise<FrontendGoal> {
+    try {
+      // نحتاج أولاً للحصول على الهدف لمعرفة targetAmount
+      const goal = await apiClient.get<BackendGoal>(`/majorGoals/${goalId}`);
+      const newProgress = (currentAmount / goal.estimatedCost) * 100;
+
+      const response = await apiClient.patch<BackendGoal>(`/majorGoals/${goalId}`, {
+        progress: newProgress
+      });
+
+      return this.mapToFrontendModel(response);
+    } catch (error) {
+      console.error('Update progress error:', error);
+      throw new Error('فشل في تحديث التقدم');
+    }
+  },
+
+  // حذف الهدف
+  async deleteMajorGoal(goalId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/majorGoals/${goalId}`);
+    } catch (error) {
+      console.error('Delete goal error:', error);
+      throw new Error('فشل في حذف الهدف');
+    }
+  },
+
+  // تحويل من نموذج Backend إلى Frontend
+  mapToFrontendModel(backendGoal: BackendGoal): FrontendGoal {
+    return {
+      id: backendGoal.id,
+      title: backendGoal.title,
+      description: backendGoal.description,
+      targetAmount: backendGoal.estimatedCost,
+      currentAmount: (backendGoal.progress / 100) * backendGoal.estimatedCost,
+      targetDate: backendGoal.targetDate,
+      category: mapCategoryToFrontend(backendGoal.category)
+    };
+  }
+};

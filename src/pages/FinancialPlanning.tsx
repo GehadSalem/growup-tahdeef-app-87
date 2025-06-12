@@ -157,11 +157,11 @@ const FinancialPlanning = () => {
                   </Card>
                 ))}
               </div>
-              <MonthlySummary income={monthlyIncome} income={0} />
+              <MonthlySummary income={monthlyIncome} />
             </TabsContent>
 
             <TabsContent value="emergency">
-              <EmergencyFund />
+              <EmergencyFund income={monthlyIncome} setIncome={setMonthlyIncome} />
             </TabsContent>
 
             <TabsContent value="expenses">
@@ -169,7 +169,7 @@ const FinancialPlanning = () => {
             </TabsContent>
 
             <TabsContent value="savings">
-              <SavingsGoal />
+              <SavingsGoal income={monthlyIncome} />
             </TabsContent>
 
             <TabsContent value="calculator">
@@ -181,7 +181,14 @@ const FinancialPlanning = () => {
             </TabsContent>
 
             <TabsContent value="report">
-              <MonthlyReport />
+              <MonthlyReport
+                income={monthlyIncome}
+                expenses={expensesData.map((expense: any, idx: number) => ({
+                  name: expense.name ?? expense.title ?? `مصروف ${idx + 1}`,
+                  value: expense.amount ?? expense.value ?? 0,
+                  color: expense.color ?? "#8884d8"
+                }))}
+              />
             </TabsContent>
           </Tabs>
         </div>
