@@ -142,19 +142,19 @@ const FinancialPlanning = () => {
                   </Card>
                 ))}
               </div>
-              <MonthlySummary />
+              <MonthlySummary income={0} />
             </TabsContent>
 
             <TabsContent value="emergency">
-              <EmergencyFund />
+              <EmergencyFund income={0} setIncome={() => {}} />
             </TabsContent>
 
             <TabsContent value="expenses">
               <ExpenseTracker />
             </TabsContent>
 
-            <TabsContent value="savings">
-              <SavingsGoal />
+              <TabsContent value="savings">
+              <SavingsGoal income={0} />
             </TabsContent>
 
             <TabsContent value="calculator">
@@ -166,7 +166,7 @@ const FinancialPlanning = () => {
             </TabsContent>
 
             <TabsContent value="report">
-              <MonthlyReport />
+              <MonthlyReport income={0} expenses={[]} />
             </TabsContent>
           </Tabs>
         </div>

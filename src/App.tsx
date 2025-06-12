@@ -38,19 +38,22 @@ const AppRoutes = () => {
 // المكون الرئيسي للتطبيق
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <BrowserRouter>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              <AppRoutes />
-            </div>
-          </SidebarProvider>
-        </TooltipProvider>
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+  <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            <AppRoutes />
+          </div>
+        </SidebarProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </AuthProvider>
+</BrowserRouter>
+
   </QueryClientProvider>
 );
 
