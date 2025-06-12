@@ -16,7 +16,8 @@ export interface MajorGoal {
 export interface CreateMajorGoalRequest {
   title: string;
   description?: string;
-  targetAmount?: number;
+  targetAmount: number;
+  currentAmount?: number;
   targetDate?: string;
   category: string;
 }

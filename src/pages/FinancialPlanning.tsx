@@ -12,10 +12,25 @@ import { SavingsGoal } from "@/components/financial/SavingsGoal";
 import { InstallmentCalculator } from "@/components/financial/InstallmentCalculator";
 import { MonthlySummary } from "@/components/financial/MonthlySummary";
 import { MonthlyObligations } from "@/components/financial/MonthlyObligations";
+import { useQuery } from "@tanstack/react-query";
+import { IncomeService } from "@/services/incomeService";
+import { ExpenseService } from "@/services/expenseService";
 
 const FinancialPlanning = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("summary");
+  const [monthlyIncome, setMonthlyIncome] = useState(12000);
+
+  // Get incomes and expenses for calculations
+  const { data: incomesData = [] } = useQuery({
+    queryKey: ['incomes'],
+    queryFn: IncomeService.getUserIncomes,
+  });
+
+  const { data: expensesData = [] } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: ExpenseService.getExpenses,
+  });
 
   const financialCards = [
     {
@@ -76,10 +91,10 @@ const FinancialPlanning = () => {
         onBackClick={() => navigate('/main-menu')} 
       />
       
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-2 sm:px-4 py-4">
         <div className="max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4 sm:mb-6 h-auto p-1">
               <TabsTrigger 
                 value="summary" 
                 className="text-xs md:text-sm py-2 px-1 data-[state=active]:bg-growup data-[state=active]:text-white"
@@ -119,20 +134,20 @@ const FinancialPlanning = () => {
             </TabsList>
 
             <TabsContent value="summary" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                 {financialCards.map((card) => (
                   <Card 
                     key={card.id}
                     className="cursor-pointer hover:shadow-lg transition-all duration-300 border-0 shadow-md"
                     onClick={() => setActiveTab(card.id)}
                   >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${card.bgColor}`}>
-                          <card.icon className={`h-5 w-5 md:h-6 md:w-6 ${card.color}`} />
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`p-1.5 sm:p-2 rounded-lg ${card.bgColor}`}>
+                          <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${card.color}`} />
                         </div>
                         <div>
-                          <CardTitle className="text-sm md:text-base">{card.title}</CardTitle>
+                          <CardTitle className="text-xs sm:text-sm md:text-base">{card.title}</CardTitle>
                         </div>
                       </div>
                     </CardHeader>
@@ -142,11 +157,11 @@ const FinancialPlanning = () => {
                   </Card>
                 ))}
               </div>
-              <MonthlySummary />
+              <MonthlySummary income={monthlyIncome} />
             </TabsContent>
 
             <TabsContent value="emergency">
-              <EmergencyFund />
+              <EmergencyFund income={monthlyIncome} setIncome={setMonthlyIncome} />
             </TabsContent>
 
             <TabsContent value="expenses">
@@ -154,7 +169,7 @@ const FinancialPlanning = () => {
             </TabsContent>
 
             <TabsContent value="savings">
-              <SavingsGoal />
+              <SavingsGoal income={monthlyIncome} />
             </TabsContent>
 
             <TabsContent value="calculator">
@@ -166,7 +181,7 @@ const FinancialPlanning = () => {
             </TabsContent>
 
             <TabsContent value="report">
-              <MonthlyReport />
+              <MonthlyReport income={monthlyIncome} expenses={expensesData} />
             </TabsContent>
           </Tabs>
         </div>

@@ -14,6 +14,7 @@ import { checkUpcomingObligations } from "./utils/dateUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { InstallmentService } from "@/services/installmentService";
 import { CustomInstallmentPlanService } from "@/services/customInstallmentPlanService";
+import { NotificationHelper } from "@/services/notificationHelper";
 
 export interface Obligation {
   id: string;
@@ -26,6 +27,7 @@ export interface Obligation {
   isPaid: boolean;
   enableNotifications?: boolean;
   salaryImpactPercentage?: number;
+  notificationSent?: boolean;
 }
 
 export function MonthlyObligations() {
@@ -48,11 +50,12 @@ export function MonthlyObligations() {
     queryFn: CustomInstallmentPlanService.getPlans,
   });
 
-  // Add installment mutation
+  // Add installment mutation with notification
   const addInstallmentMutation = useMutation({
     mutationFn: InstallmentService.addInstallment,
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['installments'] });
+      await NotificationHelper.sendInstallmentNotification('added', data.name, data.monthlyAmount);
       toast({
         title: "تم إضافة القسط",
         description: "تم إضافة القسط بنجاح"
@@ -68,11 +71,12 @@ export function MonthlyObligations() {
     }
   });
 
-  // Mark installment as paid mutation
+  // Mark installment as paid mutation with notification
   const markPaidMutation = useMutation({
     mutationFn: InstallmentService.markInstallmentPaid,
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['installments'] });
+      await NotificationHelper.sendInstallmentNotification('paid', data.name);
       toast({
         title: "تم تحديث حالة القسط",
         description: "تم تحديث حالة السداد بنجاح"
@@ -125,7 +129,8 @@ export function MonthlyObligations() {
             recurrence: "monthly" as Obligation["recurrence"],
             isPaid: installment.isPaid || false,
             salaryImpactPercentage: income > 0 ? ((installment.monthlyAmount || 0) / income) * 100 : 0,
-            notes: `المبلغ الإجمالي: ${installment.totalAmount || 0} ر.س - المتبقي: ${installment.remainingAmount || 0} ر.س`
+            notes: `المبلغ الإجمالي: ${installment.totalAmount || 0} ر.س - المتبقي: ${installment.remainingAmount || 0} ر.س`,
+            notificationSent: false
           });
         }
       });
@@ -144,7 +149,8 @@ export function MonthlyObligations() {
             recurrence: "monthly" as Obligation["recurrence"],
             isPaid: false,
             salaryImpactPercentage: income > 0 ? ((plan.monthlyAmount || 0) / income) * 100 : 0,
-            notes: plan.description || ''
+            notes: plan.description || '',
+            notificationSent: false
           });
         }
       });
@@ -170,15 +176,15 @@ export function MonthlyObligations() {
     console.log('Adding new obligation:', newObligation);
     
     if (newObligation.type === 'loan' as Obligation['type']) {
-      // Add to installments API
+      // Add to installments API with proper fields
       addInstallmentMutation.mutate({
         name: newObligation.name,
-        totalAmount: (newObligation.amount || 0) * 12, // Assume 12 months for now
+        totalAmount: (newObligation.amount || 0) * 12,
         monthlyAmount: newObligation.amount || 0,
         dueDate: newObligation.dueDate
       });
     } else if (newObligation.type === 'subscription' as Obligation['type']) {
-      // Add to custom plans API
+      // Add to custom plans API with proper fields
       addCustomPlanMutation.mutate({
         name: newObligation.name,
         description: newObligation.notes || '',
@@ -244,26 +250,26 @@ export function MonthlyObligations() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
-            <PiggyBank className="h-5 w-5" />
+          <CardTitle className="text-right font-cairo flex items-center justify-end gap-2 text-base sm:text-lg">
+            <PiggyBank className="h-4 w-4 sm:h-5 sm:w-5" />
             الالتزامات الشهرية
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="obligations" className="font-cairo">الالتزامات</TabsTrigger>
-              <TabsTrigger value="calculator" className="font-cairo">حاسبة الأقساط</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 sm:mb-6">
+            <TabsList className="grid grid-cols-2 mb-4 w-full">
+              <TabsTrigger value="obligations" className="font-cairo text-xs sm:text-sm">الالتزامات</TabsTrigger>
+              <TabsTrigger value="calculator" className="font-cairo text-xs sm:text-sm">حاسبة الأقساط</TabsTrigger>
             </TabsList>
             
             <TabsContent value="obligations">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
                 <AddObligationDialog onAddObligation={handleAddObligation} />
                 
-                <div className="text-right text-lg font-bold font-cairo">
+                <div className="text-right text-base sm:text-lg font-bold font-cairo">
                   إدارة الالتزامات المالية
                 </div>
               </div>

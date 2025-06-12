@@ -18,6 +18,7 @@ export class NotificationHelper {
       };
       
       await apiClient.post('/notification', notification);
+      console.log('Emergency notification sent:', notification);
     } catch (error) {
       console.error('Error sending emergency notification:', error);
     }
@@ -55,6 +56,7 @@ export class NotificationHelper {
 
       const notification: CreateNotificationRequest = { title, message, type };
       await apiClient.post('/notification', notification);
+      console.log('Savings goal notification sent:', notification);
     } catch (error) {
       console.error('Error sending savings goal notification:', error);
     }
@@ -84,6 +86,7 @@ export class NotificationHelper {
 
       const notification: CreateNotificationRequest = { title, message, type };
       await apiClient.post('/notification', notification);
+      console.log('Income notification sent:', notification);
     } catch (error) {
       console.error('Error sending income notification:', error);
     }
@@ -113,6 +116,7 @@ export class NotificationHelper {
 
       const notification: CreateNotificationRequest = { title, message, type };
       await apiClient.post('/notification', notification);
+      console.log('Expense notification sent:', notification);
     } catch (error) {
       console.error('Error sending expense notification:', error);
     }
@@ -145,6 +149,7 @@ export class NotificationHelper {
 
       const notification: CreateNotificationRequest = { title, message, type };
       await apiClient.post('/notification', notification);
+      console.log('Installment notification sent:', notification);
     } catch (error) {
       console.error('Error sending installment notification:', error);
     }
@@ -168,13 +173,14 @@ export class NotificationHelper {
           break;
         case 'milestone':
           title = 'تقدم ممتاز في الهدف';
-          message = `تم الوصول إلى ${progress}% من الهدف "${goalName}"`;
+          message = `تم الوصول إلى ${progress?.toFixed(1)}% من الهدف "${goalName}"`;
           type = 'info';
           break;
       }
 
       const notification: CreateNotificationRequest = { title, message, type };
       await apiClient.post('/notification', notification);
+      console.log('Goal notification sent:', notification);
     } catch (error) {
       console.error('Error sending goal notification:', error);
     }
