@@ -14,7 +14,6 @@ import { checkUpcomingObligations } from "./utils/dateUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { InstallmentService } from "@/services/installmentService";
 import { CustomInstallmentPlanService } from "@/services/customInstallmentPlanService";
-import { NotificationHelper } from "@/services/notificationHelper";
 
 export interface Obligation {
   id: string;
@@ -50,12 +49,11 @@ export function MonthlyObligations() {
     queryFn: CustomInstallmentPlanService.getPlans,
   });
 
-  // Add installment mutation with notification
+  // Add installment mutation
   const addInstallmentMutation = useMutation({
     mutationFn: InstallmentService.addInstallment,
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['installments'] });
-      await NotificationHelper.sendInstallmentNotification('added', data.name, data.monthlyAmount);
       toast({
         title: "تم إضافة القسط",
         description: "تم إضافة القسط بنجاح"
@@ -71,12 +69,11 @@ export function MonthlyObligations() {
     }
   });
 
-  // Mark installment as paid mutation with notification
+  // Mark installment as paid mutation
   const markPaidMutation = useMutation({
     mutationFn: InstallmentService.markInstallmentPaid,
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['installments'] });
-      await NotificationHelper.sendInstallmentNotification('paid', data.name);
       toast({
         title: "تم تحديث حالة القسط",
         description: "تم تحديث حالة السداد بنجاح"
@@ -116,40 +113,40 @@ export function MonthlyObligations() {
   useEffect(() => {
     const convertedObligations: Obligation[] = [];
     
-    // Convert installments
+    // Convert installments using correct property names
     if (installments && Array.isArray(installments)) {
       installments.forEach(installment => {
         if (installment && typeof installment === 'object') {
           convertedObligations.push({
             id: installment.id || Math.random().toString(),
-            name: installment.name || 'قسط غير محدد',
+            name: `قسط - ${installment.paymentMethod || 'غير محدد'}`,
             type: "loan" as Obligation["type"],
-            amount: installment.monthlyAmount || 0,
-            dueDate: installment.dueDate || new Date().toISOString(),
+            amount: installment.amount || 0,
+            dueDate: installment.paymentDate || new Date().toISOString(),
             recurrence: "monthly" as Obligation["recurrence"],
-            isPaid: installment.isPaid || false,
-            salaryImpactPercentage: income > 0 ? ((installment.monthlyAmount || 0) / income) * 100 : 0,
-            notes: `المبلغ الإجمالي: ${installment.totalAmount || 0} ر.س - المتبقي: ${installment.remainingAmount || 0} ر.س`,
+            isPaid: installment.status === 'paid',
+            salaryImpactPercentage: income > 0 ? ((installment.amount || 0) / income) * 100 : 0,
+            notes: `حالة الدفع: ${installment.status || 'غير محدد'}`,
             notificationSent: false
           });
         }
       });
     }
 
-    // Convert custom plans
+    // Convert custom plans using correct property names
     if (customPlans && Array.isArray(customPlans)) {
       customPlans.forEach(plan => {
-        if (plan && typeof plan === 'object' && plan.isActive) {
+        if (plan && typeof plan === 'object') {
           convertedObligations.push({
             id: plan.id || Math.random().toString(),
-            name: plan.name || 'خطة غير محددة',
+            name: plan.productName || 'خطة غير محددة',
             type: "subscription" as Obligation["type"],
-            amount: plan.monthlyAmount || 0,
-            dueDate: plan.endDate || new Date().toISOString(),
+            amount: plan.monthlyInstallment || 0,
+            dueDate: plan.createdAt || new Date().toISOString(),
             recurrence: "monthly" as Obligation["recurrence"],
             isPaid: false,
-            salaryImpactPercentage: income > 0 ? ((plan.monthlyAmount || 0) / income) * 100 : 0,
-            notes: plan.description || '',
+            salaryImpactPercentage: income > 0 ? ((plan.monthlyInstallment || 0) / income) * 100 : 0,
+            notes: `إجمالي التكلفة: ${plan.totalCost || 0} ر.س - عدد الأشهر: ${plan.monthsCount || 0}`,
             notificationSent: false
           });
         }
@@ -178,20 +175,9 @@ export function MonthlyObligations() {
     if (newObligation.type === 'loan' as Obligation['type']) {
       // Add to installments API with proper fields
       addInstallmentMutation.mutate({
-        name: newObligation.name,
-        totalAmount: (newObligation.amount || 0) * 12,
-        monthlyAmount: newObligation.amount || 0,
-        dueDate: newObligation.dueDate
-      });
-    } else if (newObligation.type === 'subscription' as Obligation['type']) {
-      // Add to custom plans API with proper fields
-      addCustomPlanMutation.mutate({
-        name: newObligation.name,
-        description: newObligation.notes || '',
-        totalAmount: (newObligation.amount || 0) * 12,
-        monthlyAmount: newObligation.amount || 0,
-        duration: 12,
-        startDate: new Date().toISOString()
+        amount: newObligation.amount || 0,
+        paymentDate: newObligation.dueDate,
+        installmentPlanId: 'temp-plan-id' // This would need to be selected from existing plans
       });
     } else {
       // For other types, just add locally for now
