@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -7,39 +8,33 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { apiClient } from "@/lib/api";
-
-interface UserData {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-  avatar?: string;
-}
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
+  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<{ type: string; message: string } | null>(null);
+  const submitInProgress = useRef(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (token && userData) {
-      const user: UserData = JSON.parse(userData);
-      redirectBasedOnRole(user.role);
+    if (isAuthenticated && !authLoading) {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        redirectBasedOnRole(user.role || 'user');
+      }
     }
-  }, []);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const redirectBasedOnRole = (role: 'user' | 'admin') => {
-    navigate(role === 'admin' ? '/admin' : '/dashboard');
+    navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
   };
 
   const toggleAuthMode = () => {
@@ -48,112 +43,130 @@ export default function Login() {
   };
 
   const signInWithGoogle = async () => {
-  setIsLoading(true);
-  setAuthError(null);
-  const provider = new GoogleAuthProvider();
-
-  try {
-    const result = await signInWithPopup(auth, provider);
+    if (isLoading || submitInProgress.current) return;
     
-    // تأكيد أن المستخدم قد سجل الدخول بالفعل
-    if (!result.user) {
-      throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
+    setIsLoading(true);
+    setAuthError(null);
+    submitInProgress.current = true;
+    
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      
+      if (!result.user) {
+        throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
+      }
+
+      const idToken = await result.user.getIdToken();
+      
+      if (!idToken) {
+        throw new Error("فشل في إنشاء رمز المصادقة");
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "فشل في المصادقة مع الخادم");
+      }
+
+      const res = await response.json();
+
+      if (!res.user || !res.token) {
+        throw new Error("استجابة غير صالحة من الخادم");
+      }
+
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+
+      toast({ 
+        title: "تم تسجيل الدخول بنجاح", 
+        description: "مرحباً بك في GrowUp!",
+        duration: 5000 
+      });
+      
+      redirectBasedOnRole(res.user.role || 'user');
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+      
+      let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "تم إلغاء طلب التسجيل";
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
+      });
+    } finally {
+      setIsLoading(false);
+      submitInProgress.current = false;
     }
-
-    const idToken = await result.user.getIdToken();
-    
-    // إضافة تحقق إضافي للـ token
-    if (!idToken) {
-      throw new Error("فشل في إنشاء رمز المصادقة");
-    }
-
-    const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
-
-    if (!res.user || !res.token) {
-      throw new Error("استجابة غير صالحة من الخادم");
-    }
-
-    localStorage.setItem("token", res.token);
-    localStorage.setItem("user", JSON.stringify(res.user));
-
-    toast({ 
-      title: "تم تسجيل الدخول بنجاح", 
-      description: "مرحباً بك في GrowUp!",
-      duration: 2000 
-    });
-    
-    redirectBasedOnRole(res.user.role);
-  } catch (error: any) {
-    console.error("Google Sign-In Error:", error);
-    
-    let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
-    
-    if (error.code === 'auth/popup-closed-by-user') {
-      errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
-    } else if (error.code === 'auth/cancelled-popup-request') {
-      errorMessage = "تم إلغاء طلب التسجيل";
-    } else if (error.code === 'auth/account-exists-with-different-credential') {
-      errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
-    }
-
-    toast({
-      title: "خطأ في تسجيل الدخول",
-      description: error.response?.data?.message || errorMessage,
-      variant: "destructive",
-      duration: 3000
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading || submitInProgress.current) return;
+    
     setIsLoading(true);
     setAuthError(null);
+    submitInProgress.current = true;
 
     if (!email || !password || (!isLogin && !name)) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى إدخال جميع الحقول المطلوبة",
         variant: "destructive",
+        duration: 5000
       });
       setIsLoading(false);
+      submitInProgress.current = false;
       return;
     }
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/register";
-      const body = isLogin ? { email, password } : { email, password, name };
-
-      const res = await apiClient.post<{ user: UserData; token: string }>(endpoint, body);
-      const { user: userData, token } = res;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      toast({
-        title: isLogin ? "تم تسجيل الدخول بنجاح" : "تم إنشاء الحساب بنجاح",
-        description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
-      });
-
-      redirectBasedOnRole(userData.role);
-    } catch (error: any) {
-      const errData = error.response?.data;
-
-      if (errData) {
-        handleAuthErrors(errData);
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(email, password, name);
       }
-
-      if (!authError) {
-        toast({
-          title: "خطأ",
-          description: errData?.message || error.message || "حدث خطأ غير متوقع",
-          variant: "destructive",
+      
+      // Navigation will be handled by the useEffect that watches isAuthenticated
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      
+      const errorData = error.response?.data;
+      
+      if (errorData?.errorType) {
+        handleAuthErrors(errorData);
+      } else {
+        // Show a persistent error message
+        const errorMessage = errorData?.message || error.message || "حدث خطأ غير متوقع";
+        setAuthError({
+          type: "general_error",
+          message: errorMessage
         });
       }
     } finally {
       setIsLoading(false);
+      submitInProgress.current = false;
     }
   };
 
@@ -162,6 +175,7 @@ export default function Login() {
       user_not_found: "لا يوجد حساب مرتبط بهذا البريد الإلكتروني. هل ترغب في إنشاء حساب جديد؟",
       invalid_password: "كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.",
       email_exists: "البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول بدلاً من ذلك.",
+      validation_error: "البيانات المدخلة غير صحيحة. يرجى التحقق من صحة البيانات.",
     };
 
     setAuthError({
@@ -169,6 +183,17 @@ export default function Login() {
       message: messages[errorData.errorType] || errorData.message || "حدث خطأ أثناء المصادقة",
     });
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen w-full bg-growup-light flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-growup-light">
@@ -202,21 +227,22 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {authError && (
                 <div
-                  className={`p-3 rounded-md font-cairo text-sm ${
+                  className={`p-4 rounded-md font-cairo text-sm border ${
                     authError.type === "user_not_found"
-                      ? "bg-blue-50 text-blue-800"
+                      ? "bg-blue-50 text-blue-800 border-blue-200"
                       : authError.type === "email_exists"
-                      ? "bg-yellow-50 text-yellow-800"
-                      : "bg-red-50 text-red-800"
+                      ? "bg-yellow-50 text-yellow-800 border-yellow-200"
+                      : "bg-red-50 text-red-800 border-red-200"
                   }`}
                 >
-                  {authError.message}
+                  <p className="mb-2">{authError.message}</p>
 
                   {authError.type === "user_not_found" && (
-                    <div className="text-center mt-2">
+                    <div className="text-center">
                       <button
+                        type="button"
                         onClick={toggleAuthMode}
-                        className="text-growup hover:underline"
+                        className="text-growup hover:underline font-medium"
                         disabled={isLoading}
                       >
                         إنشاء حساب جديد
@@ -224,10 +250,11 @@ export default function Login() {
                     </div>
                   )}
                   {authError.type === "email_exists" && (
-                    <div className="text-center mt-2">
+                    <div className="text-center">
                       <button
+                        type="button"
                         onClick={() => setIsLogin(true)}
-                        className="text-growup hover:underline"
+                        className="text-growup hover:underline font-medium"
                         disabled={isLoading}
                       >
                         تسجيل الدخول
@@ -235,10 +262,10 @@ export default function Login() {
                     </div>
                   )}
                   {authError.type === "invalid_password" && (
-                    <div className="text-left mt-2">
+                    <div className="text-center">
                       <Link
                         to="/forgot-password"
-                        className="text-sm text-growup hover:underline"
+                        className="text-sm text-growup hover:underline font-medium"
                       >
                         نسيت كلمة المرور؟
                       </Link>
@@ -259,6 +286,7 @@ export default function Login() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="أدخل اسمك"
                     dir="rtl"
+                    disabled={isLoading}
                   />
                 </div>
               )}
@@ -274,6 +302,7 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   className="text-right"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -287,6 +316,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  disabled={isLoading}
                 />
               </div>
 

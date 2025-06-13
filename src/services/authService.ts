@@ -23,33 +23,33 @@ export interface AuthResponse {
 
 export class AuthService {
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/login', credentials);
-    localStorage.setItem('authToken', response.token);
+    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
     return response;
   }
 
   static async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/register', userData);
-    localStorage.setItem('authToken', response.token);
+    const response = await apiClient.post<AuthResponse>('/auth/register', userData);
+    localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
     return response;
   }
 
   static async googleAuth(token: string): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/google', { token });
-    localStorage.setItem('authToken', response.token);
+    const response = await apiClient.post<AuthResponse>('/auth/google', { idToken: token });
+    localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
     return response;
   }
 
   static logout(): void {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
   }
 
   static isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    return !!localStorage.getItem('token');
   }
 
   static getCurrentUser() {
