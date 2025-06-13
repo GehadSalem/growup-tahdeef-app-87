@@ -57,10 +57,11 @@ export function InstallmentCalculator() {
     queryFn: CustomInstallmentPlanService.getPlans,
   });
 
-  // استعلام الأقساط
+  // استعلام الأقساط للخطة المحددة
   const { data: installments = [], isLoading: installmentsLoading } = useQuery({
-    queryKey: ['installments'],
-    queryFn: InstallmentService.getUserInstallments,
+    queryKey: ['installments', selectedPlanId],
+    queryFn: () => selectedPlanId ? InstallmentService.getInstallmentsByPlanId(selectedPlanId) : InstallmentService.getUserInstallments(),
+    enabled: !!selectedPlanId,
   });
 
   // نموذج إنشاء خطة جديدة
@@ -114,7 +115,7 @@ export function InstallmentCalculator() {
   const createInstallmentMutation = useMutation({
     mutationFn: InstallmentService.addInstallment,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['installments'] });
+      queryClient.invalidateQueries({ queryKey: ['installments', selectedPlanId] });
       toast({
         title: "تم إضافة القسط",
         description: "تم إضافة القسط للخطة بنجاح",
@@ -158,6 +159,7 @@ export function InstallmentCalculator() {
       startDate: startDate.toISOString(),
     };
 
+    console.log('Creating plan with data:', planData);
     createPlanMutation.mutate(planData);
   };
 
@@ -177,8 +179,10 @@ export function InstallmentCalculator() {
       totalAmount: values.totalAmount,
       monthlyAmount: values.monthlyAmount,
       dueDate: values.dueDate,
+      planId: selectedPlanId, // ربط القسط بالخطة المحددة
     };
 
+    console.log('Creating installment with data:', installmentData);
     createInstallmentMutation.mutate(installmentData);
   };
 
@@ -197,7 +201,7 @@ export function InstallmentCalculator() {
     return () => subscription.unsubscribe();
   }, [planForm]);
 
-  if (plansLoading || installmentsLoading) {
+  if (plansLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
@@ -512,7 +516,11 @@ export function InstallmentCalculator() {
                 {/* عرض الأقساط المرتبطة بالخطة */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-right">أقساط الخطة المحددة</h3>
-                  {installments.length === 0 ? (
+                  {installmentsLoading ? (
+                    <div className="text-center p-4">
+                      <div className="w-6 h-6 border-4 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+                    </div>
+                  ) : installments.length === 0 ? (
                     <Card className="p-8 text-center">
                       <p className="text-gray-500">لا توجد أقساط لهذه الخطة بعد</p>
                     </Card>
@@ -583,3 +591,4 @@ export function InstallmentCalculator() {
     </Card>
   );
 }
+
