@@ -3,22 +3,21 @@ import { apiClient } from '@/lib/api';
 
 export interface Installment {
   id: string;
-  name: string;
-  totalAmount: number;
-  monthlyAmount: number;
-  remainingAmount: number;
-  dueDate: string;
-  isPaid: boolean;
-  userId: string;
-  planId?: string; // Add this to link installments to custom plans
+  amount: number;
+  paymentDate: string;
+  status: 'pending' | 'paid' | 'overdue';
+  paymentMethod: string;
+  installmentPlanId: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateInstallmentRequest {
-  name: string;
-  totalAmount: number;
-  monthlyAmount: number;
-  dueDate: string;
-  planId?: string; // Add this to link installments to custom plans
+  amount: number;
+  paymentDate: string;
+  status?: 'pending' | 'paid' | 'overdue';
+  paymentMethod?: string;
+  installmentPlanId: string;
 }
 
 export class InstallmentService {
@@ -54,7 +53,6 @@ export class InstallmentService {
 
   static async getInstallmentsByPlanId(planId: string): Promise<Installment[]> {
     console.log('Getting installments by plan id:', planId);
-    return apiClient.get<Installment[]>(`/installments?planId=${planId}`);
+    return apiClient.get<Installment[]>(`/installments?installmentPlanId=${planId}`);
   }
 }
-

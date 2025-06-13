@@ -1,3 +1,4 @@
+
 import { 
   Target, 
   PiggyBank, 
@@ -64,6 +65,44 @@ export const APP_CATEGORIES = [
     icon: "UserCheck",
     route: "/break-habits",
     color: "red"
+  }
+];
+
+// Sample habits for development
+export const SAMPLE_HABITS = [
+  {
+    id: "1",
+    name: "قراءة 15 دقيقة",
+    title: "قراءة 15 دقيقة",
+    category: "تطوير شخصي",
+    completed: false,
+    streak: 0
+  },
+  {
+    id: "2", 
+    name: "شرب 8 أكواب ماء",
+    title: "شرب 8 أكواب ماء",
+    category: "صحة",
+    completed: true,
+    streak: 5
+  }
+];
+
+// Sample bad habits for development
+export const SAMPLE_BAD_HABITS = [
+  {
+    id: "1",
+    name: "التدخين",
+    goal: "الإقلاع عن التدخين نهائياً",
+    dayCount: 0,
+    alternativeAction: "مضغ العلكة أو شرب الماء"
+  },
+  {
+    id: "2",
+    name: "السهر المفرط",
+    goal: "النوم قبل الساعة 11 مساءً",
+    dayCount: 2,
+    alternativeAction: "قراءة كتاب أو ممارسة التأمل"
   }
 ];
 
