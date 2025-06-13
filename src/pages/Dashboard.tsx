@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExpenseService } from "@/services/expenseService";
 import { IncomeService } from "@/services/incomeService";
 import { WeeklyChart } from "@/components/stats/WeeklyChart";
+import { QuoteSection } from "@/components/dashboard/QuoteSection";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -160,53 +161,7 @@ export default function Dashboard() {
       <AppHeader showMenu title="لوحة التحكم" onBackClick={() => navigate('/main-menu')} />
       
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        {/* قسم الإحصائيات المالية */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                الدخل الشهري
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-blue-600">
-                {monthlyIncome.toLocaleString()} ر.س
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-                المصروفات الشهرية
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-red-600">
-                {monthlyExpenses.toLocaleString()} ر.س
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <PiggyBank className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                الادخار الشهري
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-2xl font-bold text-green-600">
-                {monthlySavings.toLocaleString()} ر.س
-              </div>
-              <div className="text-xs sm:text-sm text-gray-500">
-                {savingsPercentage.toFixed(1)}% من الدخل
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        
 
         {/* مخطط الادخار الأسبوعي */}
         <Card className="mb-4 sm:mb-6">
@@ -247,6 +202,8 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+        {/* اقتباس تحفيزي */}
+        <QuoteSection />
       </div>
     </div>
   );

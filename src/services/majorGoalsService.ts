@@ -50,7 +50,6 @@ function mapCategoryToFrontend(backendCategory: string): string {
 }
 
 export const MajorGoalsService = {
-  // إنشاء هدف جديد
   async createMajorGoal(goalData: Omit<FrontendGoal, 'id'>): Promise<FrontendGoal> {
     try {
       const backendGoal = {
@@ -63,45 +62,49 @@ export const MajorGoalsService = {
       };
 
       const response = await apiClient.post<BackendGoal>('/majorGoals', backendGoal);
-      
-      // تحويل الرد إلى نموذج Frontend
-      return this.mapToFrontendModel(response);
+      return MajorGoalsService.mapToFrontendModel(response);
     } catch (error) {
       console.error('Create goal error:', error);
       throw new Error('فشل في إضافة الهدف');
     }
   },
 
-  // الحصول على أهداف المستخدم
   async getUserMajorGoals(): Promise<FrontendGoal[]> {
     try {
       const response = await apiClient.get<BackendGoal[]>('/majorGoals');
-      return response.map(this.mapToFrontendModel);
+      return response.map(MajorGoalsService.mapToFrontendModel);
     } catch (error) {
       console.error('Get goals error:', error);
       throw new Error('فشل في جلب الأهداف');
     }
   },
 
-  // تحديث تقدم الهدف
+  async getMajorGoalById(goalId: string): Promise<BackendGoal> {
+    try {
+      const response = await apiClient.put<BackendGoal>(`/majorGoals/${goalId}`);
+      return response;
+    } catch (error) {
+      console.error('Get single goal error:', error);
+      throw new Error('فشل في جلب الهدف');
+    }
+  },
+
   async updateProgress(goalId: string, { currentAmount }: { currentAmount: number }): Promise<FrontendGoal> {
     try {
-      // نحتاج أولاً للحصول على الهدف لمعرفة targetAmount
-      const goal = await apiClient.get<BackendGoal>(`/majorGoals/${goalId}`);
+      const goal = await MajorGoalsService.getMajorGoalById(goalId);
       const newProgress = (currentAmount / goal.estimatedCost) * 100;
 
-      const response = await apiClient.patch<BackendGoal>(`/majorGoals/${goalId}`, {
+      const response = await apiClient.put<BackendGoal>(`/majorGoals/${goalId}`, {
         progress: newProgress
       });
 
-      return this.mapToFrontendModel(response);
+      return MajorGoalsService.mapToFrontendModel(response);
     } catch (error) {
       console.error('Update progress error:', error);
       throw new Error('فشل في تحديث التقدم');
     }
   },
 
-  // حذف الهدف
   async deleteMajorGoal(goalId: string): Promise<void> {
     try {
       await apiClient.delete(`/majorGoals/${goalId}`);
@@ -111,7 +114,6 @@ export const MajorGoalsService = {
     }
   },
 
-  // تحويل من نموذج Backend إلى Frontend
   mapToFrontendModel(backendGoal: BackendGoal): FrontendGoal {
     return {
       id: backendGoal.id,
