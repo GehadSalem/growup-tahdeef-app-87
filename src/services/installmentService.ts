@@ -24,7 +24,7 @@ export interface CreateInstallmentRequest {
 export class InstallmentService {
   static async addInstallment(installment: CreateInstallmentRequest): Promise<Installment> {
     console.log('Adding installment:', installment);
-    return apiClient.post<Installment>('/installments', installment);
+    return apiClient.post<Installment>('/custom-installment-plans', installment);
   }
 
   static async getUserInstallments(): Promise<Installment[]> {

@@ -66,6 +66,48 @@ export const APP_CATEGORIES = [
     color: "red"
   }
 ];
+// بيانات نموذجية للعادات اليومية
+export const SAMPLE_HABITS = [
+  { id: "1", name: "قرأت 10 صفحات من كتاب", category: "تعلم", completed: false, icon: "📚" },
+  { id: "2", name: "استمعت لبودكاست", category: "تطوير", completed: false, icon: "🎧" },
+  { id: "3", name: "ممارسة التأمل", category: "صحة", completed: true, icon: "🧘‍♂️" },
+  { id: "4", name: "متابعة أخبار مهنية", category: "تطوير", completed: false, icon: "🌐" },
+  { id: "5", name: "تواصل مع العائلة", category: "اجتماعي", completed: false, icon: "👨‍👩‍👧" },
+];
 
-// Other existing constants can go here
-export const DEFAULT_CATEGORIES = APP_CATEGORIES;
+// بيانات نموذجية للعادات السيئة
+export const SAMPLE_BAD_HABITS = [
+  {
+    id: "1",
+    name: "الإقلاع عن التدخين",
+    goal: "30 يوم بدون تدخين",
+    dayCount: 7,
+    alternativeAction: "امشِ 5 دقائق عندما تشعر برغبة في التدخين"
+  }
+];
+
+// فئات العادات
+export const HABIT_CATEGORIES = {
+  learning: { name: "تعلم", icon: "📚" },
+  health: { name: "صحة", icon: "🧘‍♂️" },
+  productivity: { name: "إنتاجية", icon: "⏱️" },
+  finance: { name: "مالي", icon: "💰" },
+  social: { name: "اجتماعي", icon: "👥" },
+  other: { name: "أخرى", icon: "✨" }
+};
+
+// أنواع الالتزامات المالية
+export const OBLIGATION_TYPES = [
+  { value: "loan", label: "قسط" },
+  { value: "occasion", label: "مناسبة" },
+  { value: "purchase", label: "شراء" },
+  { value: "other", label: "آخر" }
+];
+
+// تكرار الالتزامات
+export const OBLIGATION_FREQUENCIES = [
+  { value: "monthly", label: "شهري" },
+  { value: "quarterly", label: "ربع سنوي" },
+  { value: "yearly", label: "سنوي" },
+  { value: "once", label: "مرة واحدة" }
+];
