@@ -67,9 +67,9 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
   const [webhookUrl, setWebhookUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Helper functions
+  // Helper functions with better error handling
   const safeNumber = (value: unknown, defaultValue = 0): number => {
-    if (typeof value === 'number') return value;
+    if (typeof value === 'number' && !isNaN(value)) return value;
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
       return isNaN(parsed) ? defaultValue : parsed;
@@ -86,20 +86,27 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
   const currentMonth = format(new Date(), "MMMM yyyy", { locale: ar });
   const previousMonth = format(new Date(new Date().setMonth(new Date().getMonth() - 1)), "MMMM yyyy", { locale: ar });
   
-  // Calculate totals with safe number conversions
+  // Calculate totals with safe number conversions and better data validation
   const safeIncome = safeNumber(income);
-  const totalExpenses = expenses.reduce((sum, expense) => sum + safeNumber(expense.value), 0);
+  const validExpenses = expenses.filter(expense => expense && typeof expense === 'object');
+  const totalExpenses = validExpenses.reduce((sum, expense) => {
+    const expenseAmount = safeNumber(expense.value);
+    return sum + expenseAmount;
+  }, 0);
+  
   const expensePercentage = safeIncome > 0 ? (totalExpenses / safeIncome) * 100 : 0;
   const remaining = safeIncome - totalExpenses;
   
-  // Find highest expense category with safeguards
-  let highestExpense = { name: "", value: 0 };
-  if (expenses.length > 0) {
-    highestExpense = expenses.reduce((prev, current) => {
-      const prevValue = safeNumber(prev.value);
-      const currentValue = safeNumber(current.value);
-      return prevValue > currentValue ? prev : current;
-    }, { name: "", value: 0 });
+  // Find highest expense category with better safeguards
+  let highestExpense = { name: "لا توجد مصروفات", amount: 0 };
+  if (validExpenses.length > 0) {
+    const expenseWithAmounts = validExpenses.map(expense => ({
+      name: expense.name || "مصروف غير محدد",
+      amount: safeNumber(expense.value)
+    }));
+    highestExpense = expenseWithAmounts.reduce((prev, current) => {
+      return prev.amount > current.amount ? prev : current;
+    }, { name: "", amount: 0 });
   }
   
   // Calculate emergency fund withdrawal if available
@@ -126,21 +133,21 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
         .join(", ")
     : "";
   
-  // Prepare report data with type safety
+  // Prepare report data with better type safety
   const reportData: FinancialReport = {
     month: previousMonth,
     income: safeIncome,
     totalExpenses: totalExpenses,
     expensePercentage: expensePercentage,
     remainingAmount: remaining,
-    categories: expenses.map(expense => ({
-      name: expense.name,
+    categories: validExpenses.map(expense => ({
+      name: expense.name || "مصروف غير محدد",
       amount: safeNumber(expense.value),
       percentage: safeIncome > 0 ? (safeNumber(expense.value) / safeIncome) * 100 : 0
     })),
     highestExpense: {
       category: highestExpense.name,
-      amount: safeNumber(highestExpense.value)
+      amount: highestExpense.amount
     },
     emergencyFundWithdrawal: emergencyWithdrawal,
     emergencyFundWithdrawalReason: emergencyWithdrawalReason,
@@ -148,7 +155,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
       remaining > 0 
         ? `لقد وفرت هذا الشهر ${safeToFixed(remaining)} ريال — استمر على هذا النهج!` 
         : "حاول أن توفر جزءًا من دخلك الشهر القادم!",
-      highestExpense.name 
+      highestExpense.name && highestExpense.name !== "لا توجد مصروفات"
         ? `الإنفاق على ${highestExpense.name} كان مرتفعًا — حاول تقليله في الشهر القادم.`
         : "تتبع مصاريفك باستمرار لمعرفة أنماط الإنفاق الخاصة بك.",
       "استثمر المتبقي من راتبك في أهدافك الكبرى (تعليم، مشروع، صحة...)."
@@ -517,20 +524,29 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
               </div>
               
               <div className="mt-3">
-                {highestExpense.name && (
+                {highestExpense.name && highestExpense.name !== "لا توجد مصروفات" && (
                   <div className="bg-purple-50 p-2 rounded-md text-right mb-2">
                     <span className="block text-sm text-gray-600">أكثر بند تم الصرف عليه:</span>
-                    <span className="font-bold">{highestExpense.name} - {highestExpense.value.toFixed(0)} ريال</span>
+                    <span className="font-bold">{highestExpense.name} - {highestExpense.amount.toFixed(0)} ريال</span>
                   </div>
                 )}
                 
                 <div className="max-h-36 overflow-y-auto">
-                  {expenses.map((expense, index) => (
-                    <div key={index} className="flex justify-between py-1 border-b border-gray-100">
-                      <span>{safeNumber(expense.value).toFixed(0)} ريال</span>
-                      <span>{expense.name}</span>
+                  {validExpenses.length > 0 ? (
+                    validExpenses.map((expense, index) => {
+                      const amount = safeNumber(expense.value);
+                      return (
+                        <div key={index} className="flex justify-between py-1 border-b border-gray-100">
+                          <span>{amount.toFixed(0)} ريال</span>
+                          <span>{expense.name || "مصروف غير محدد"}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-gray-500 py-4">
+                      لا توجد مصروفات مسجلة
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -555,7 +571,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
                 </li>
               )}
               
-              {highestExpense.name && (
+              {highestExpense.name && highestExpense.name !== "لا توجد مصروفات" && (
                 <li className="flex items-center justify-end gap-2">
                   <span>الإنفاق على {highestExpense.name} كان مرتفعًا — حاول تقليله في الشهر القادم.</span>
                   <Wallet className="h-4 w-4 text-amber-500" />
