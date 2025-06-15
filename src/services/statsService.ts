@@ -2,24 +2,32 @@
 import { apiClient } from '@/lib/api';
 
 export interface DashboardStats {
-  completedHabits: number;
-  totalHabits: number;
-  dailyProgress: number;
-  weeklyData: {
-    day: string;
-    value: number;
-  }[];
-  streakData: {
-    currentStreak: number;
-    longestStreak: number;
-  };
+  totalUsers: number;
+  activeUsers: number;
+  totalRevenue: number;
+  monthlyGrowth: number;
+  userRegistrations: Array<{
+    date: string;
+    count: number;
+  }>;
+  revenueData: Array<{
+    month: string;
+    revenue: number;
+  }>;
 }
 
-export interface WeeklyProgress {
-  week: string;
-  habits: number;
-  completed: number;
-  progress: number;
+export interface WeeklyStats {
+  weekData: Array<{
+    day: string;
+    value: number;
+  }>;
+}
+
+export interface MonthlyStats {
+  monthlyData: Array<{
+    month: string;
+    value: number;
+  }>;
 }
 
 export class StatsService {
@@ -30,17 +38,17 @@ export class StatsService {
     return result;
   }
 
-  static async getWeeklyProgress(): Promise<WeeklyProgress[]> {
-    console.log('Fetching weekly progress...');
-    const result = await apiClient.get<WeeklyProgress[]>('/stats/weekly');
-    console.log('Weekly progress fetched:', result);
+  static async getWeeklyStats(): Promise<WeeklyStats> {
+    console.log('Fetching weekly stats...');
+    const result = await apiClient.get<WeeklyStats>('/stats/weekly');
+    console.log('Weekly stats fetched:', result);
     return result;
   }
 
-  static async getMonthlyReport(month: string, year: string) {
-    console.log('Fetching monthly report for:', month, year);
-    const result = await apiClient.get(`/stats/monthly?month=${month}&year=${year}`);
-    console.log('Monthly report fetched:', result);
+  static async getMonthlyStats(): Promise<MonthlyStats> {
+    console.log('Fetching monthly stats...');
+    const result = await apiClient.get<MonthlyStats>('/stats/monthly');
+    console.log('Monthly stats fetched:', result);
     return result;
   }
 }

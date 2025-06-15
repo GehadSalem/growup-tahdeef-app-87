@@ -6,7 +6,7 @@ export interface Installment {
   amount: number;
   paymentDate: string;
   status: 'pending' | 'paid' | 'overdue';
-  paymentMethod: string;
+  paymentMethod?: string;
   installmentPlanId: string;
   createdAt?: string;
   updatedAt?: string;
@@ -23,7 +23,7 @@ export interface CreateInstallmentRequest {
 export class InstallmentService {
   static async addInstallment(installment: CreateInstallmentRequest): Promise<Installment> {
     console.log('Adding installment:', installment);
-    return apiClient.post<Installment>('/custom-installment-plans', installment);
+    return apiClient.post<Installment>('/installments', installment);
   }
 
   static async getUserInstallments(): Promise<Installment[]> {
@@ -49,10 +49,5 @@ export class InstallmentService {
   static async deleteInstallment(id: string): Promise<void> {
     console.log('Deleting installment:', id);
     return apiClient.delete(`/installments/${id}`);
-  }
-
-  static async getInstallmentsByPlanId(planId: string): Promise<Installment[]> {
-    console.log('Getting installments by plan id:', planId);
-    return apiClient.get<Installment[]>(`/installments?installmentPlanId=${planId}`);
   }
 }

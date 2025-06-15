@@ -1,3 +1,4 @@
+
 import { apiClient } from '@/lib/api';
 import { NotificationHelper } from './notificationHelper';
 
@@ -61,7 +62,9 @@ export const MajorGoalsService = {
         progress: (goalData.currentAmount / goalData.targetAmount) * 100 || 0
       };
 
-      const response = await apiClient.post<BackendGoal>('/majorGoals', backendGoal);
+      console.log('Creating major goal:', backendGoal);
+      const response = await apiClient.post<BackendGoal>('/majorgoals', backendGoal);
+      console.log('Major goal created:', response);
       return MajorGoalsService.mapToFrontendModel(response);
     } catch (error) {
       console.error('Create goal error:', error);
@@ -71,7 +74,9 @@ export const MajorGoalsService = {
 
   async getUserMajorGoals(): Promise<FrontendGoal[]> {
     try {
-      const response = await apiClient.get<BackendGoal[]>('/majorGoals');
+      console.log('Fetching major goals...');
+      const response = await apiClient.get<BackendGoal[]>('/majorgoals');
+      console.log('Major goals fetched:', response);
       return response.map(MajorGoalsService.mapToFrontendModel);
     } catch (error) {
       console.error('Get goals error:', error);
@@ -81,7 +86,9 @@ export const MajorGoalsService = {
 
   async getMajorGoalById(goalId: string): Promise<BackendGoal> {
     try {
-      const response = await apiClient.put<BackendGoal>(`/majorGoals/${goalId}`);
+      console.log('Fetching major goal by id:', goalId);
+      const response = await apiClient.get<BackendGoal>(`/majorgoals/${goalId}`);
+      console.log('Major goal fetched:', response);
       return response;
     } catch (error) {
       console.error('Get single goal error:', error);
@@ -94,9 +101,11 @@ export const MajorGoalsService = {
       const goal = await MajorGoalsService.getMajorGoalById(goalId);
       const newProgress = (currentAmount / goal.estimatedCost) * 100;
 
-      const response = await apiClient.put<BackendGoal>(`/majorGoals/${goalId}`, {
+      console.log('Updating major goal progress:', goalId, { progress: newProgress });
+      const response = await apiClient.put<BackendGoal>(`/majorgoals/${goalId}`, {
         progress: newProgress
       });
+      console.log('Major goal progress updated:', response);
 
       return MajorGoalsService.mapToFrontendModel(response);
     } catch (error) {
@@ -107,7 +116,9 @@ export const MajorGoalsService = {
 
   async deleteMajorGoal(goalId: string): Promise<void> {
     try {
-      await apiClient.delete(`/majorGoals/${goalId}`);
+      console.log('Deleting major goal:', goalId);
+      await apiClient.delete(`/majorgoals/${goalId}`);
+      console.log('Major goal deleted successfully');
     } catch (error) {
       console.error('Delete goal error:', error);
       throw new Error('فشل في حذف الهدف');
