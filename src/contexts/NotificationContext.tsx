@@ -30,7 +30,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: NotificationService.getNotifications,
-    enabled: isAuthenticated,
+    enabled: !!isAuthenticated,
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 

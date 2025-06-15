@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +18,8 @@ import {
   PiggyBank,
   Settings,
   ShoppingBag,
-  Bell
+  Bell,
+  Target
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from '@/contexts/NotificationContext';
@@ -34,7 +36,7 @@ interface MenuItem {
 
 const MainMenu = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const { toast } = useToast();
   
   const { unreadCount } = useNotifications();
@@ -46,12 +48,7 @@ const MainMenu = () => {
   }, [isAuthenticated, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
-    });
+    logout();
     navigate('/login');
   };
 
@@ -153,7 +150,7 @@ const MainMenu = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showMenu title="القائمة الرئيسية" onLogout={handleLogout} />
+      <AppHeader title="القائمة الرئيسية" onBackClick={handleLogout} />
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {menuItems.map((item, index) => (
