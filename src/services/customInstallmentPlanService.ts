@@ -3,31 +3,45 @@ import { apiClient } from '@/lib/api';
 
 export interface CustomInstallmentPlan {
   id: string;
-  productName: string;
-  totalCost: number;
+  name: string; // Changed from productName
+  totalAmount: number; // Changed from totalCost
   downPayment?: number;
-  monthsCount: number;
-  interestRate?: number;
+  monthlyAmount: number; // This is the number of months
   monthlyInstallment: number;
+  interestRate?: number;
+  startDate: string; // Added required field
+  dueDate?: string; // Added optional field
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
   linkedGoalId?: string;
   userId: string;
+  notes?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateCustomInstallmentPlanRequest {
-  productName: string;
-  totalCost: number;
+  name: string; // Changed from productName
+  totalAmount: number; // Changed from totalCost
   downPayment?: number;
-  monthsCount: number;
+  monthlyAmount: number; // This is the number of months
   interestRate?: number;
+  startDate?: string; // Added optional field (will default to today)
+  dueDate?: string; // Added optional field
   linkedGoalId?: string;
+  notes?: string;
 }
 
 export class CustomInstallmentPlanService {
   static async addPlan(plan: CreateCustomInstallmentPlanRequest): Promise<CustomInstallmentPlan> {
     console.log('Adding custom installment plan:', plan);
-    return apiClient.post<CustomInstallmentPlan>('/custom-installment-plans', plan);
+    
+    // Ensure we have a start date
+    const planData = {
+      ...plan,
+      startDate: plan.startDate || new Date().toISOString().split('T')[0]
+    };
+    
+    return apiClient.post<CustomInstallmentPlan>('/custom-installment-plans', planData);
   }
 
   static async getPlans(): Promise<CustomInstallmentPlan[]> {
@@ -48,5 +62,10 @@ export class CustomInstallmentPlanService {
   static async deletePlan(id: string): Promise<void> {
     console.log('Deleting custom installment plan:', id);
     return apiClient.delete(`/custom-installment-plans/${id}`);
+  }
+
+  static async getPlansForGoal(goalId: string): Promise<CustomInstallmentPlan[]> {
+    console.log('Getting custom installment plans for goal:', goalId);
+    return apiClient.get<CustomInstallmentPlan[]>(`/custom-installment-plans?linkedGoalId=${goalId}`);
   }
 }

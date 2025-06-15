@@ -5,9 +5,11 @@ export interface Installment {
   id: string;
   amount: number;
   paymentDate: string;
-  status: 'pending' | 'paid' | 'overdue';
-  paymentMethod?: string;
+  status: 'pending' | 'paid' | 'late' | 'missed'; // Updated to match backend enum
+  paymentMethod?: 'credit_card' | 'bank_transfer' | 'cash' | 'other'; // Updated to match backend enum
   installmentPlanId: string;
+  isOnTime?: boolean; // Added from backend
+  notes?: string; // Added from backend
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,9 +17,11 @@ export interface Installment {
 export interface CreateInstallmentRequest {
   amount: number;
   paymentDate: string;
-  status?: 'pending' | 'paid' | 'overdue';
-  paymentMethod?: string;
+  status?: 'pending' | 'paid' | 'late' | 'missed';
+  paymentMethod?: 'credit_card' | 'bank_transfer' | 'cash' | 'other';
   installmentPlanId: string;
+  isOnTime?: boolean;
+  notes?: string;
 }
 
 export class InstallmentService {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,20 +24,24 @@ import { CustomInstallmentPlanService, CreateCustomInstallmentPlanRequest } from
 import { InstallmentService, CreateInstallmentRequest } from "@/services/installmentService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// تعريف نموذج إنشاء خطة مخصصة
+// Update schema to match backend field names
 const planFormSchema = z.object({
-  productName: z.string().min(1, { message: "يجب إدخال اسم المنتج" }),
-  totalCost: z.coerce.number().positive({ message: "يجب أن يكون التكلفة الإجمالية أكبر من صفر" }),
+  name: z.string().min(1, { message: "يجب إدخال اسم المنتج" }), // Changed from productName
+  totalAmount: z.coerce.number().positive({ message: "يجب أن يكون التكلفة الإجمالية أكبر من صفر" }), // Changed from totalCost
   downPayment: z.coerce.number().min(0).optional(),
-  monthsCount: z.coerce.number().int().min(1, { message: "يجب أن تكون عدد الأشهر أكبر من صفر" }),
+  monthlyAmount: z.coerce.number().int().min(1, { message: "يجب أن تكون عدد الأشهر أكبر من صفر" }), // Changed from monthsCount
   interestRate: z.coerce.number().min(0).optional(),
+  startDate: z.string().optional(),
+  dueDate: z.string().optional(),
+  notes: z.string().optional(),
 });
 
-// تعريف نموذج إضافة قسط لخطة موجودة
+// Update installment form schema to match backend
 const installmentFormSchema = z.object({
   amount: z.coerce.number().positive({ message: "يجب أن يكون المبلغ أكبر من صفر" }),
   paymentDate: z.string().min(1, { message: "يجب تحديد تاريخ الدفع" }),
-  paymentMethod: z.string().optional(),
+  paymentMethod: z.enum(['credit_card', 'bank_transfer', 'cash', 'other']).optional(),
+  notes: z.string().optional(),
 });
 
 export function InstallmentCalculator() {
@@ -60,25 +63,29 @@ export function InstallmentCalculator() {
     enabled: !!selectedPlanId,
   });
 
-  // نموذج إنشاء خطة جديدة
+  // Update form with new field names
   const planForm = useForm<z.infer<typeof planFormSchema>>({
     resolver: zodResolver(planFormSchema),
     defaultValues: {
-      productName: "",
-      totalCost: 0,
+      name: "", // Changed from productName
+      totalAmount: 0, // Changed from totalCost
       downPayment: 0,
-      monthsCount: 12,
+      monthlyAmount: 12, // Changed from monthsCount
       interestRate: 0,
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      dueDate: "",
+      notes: "",
     },
   });
 
-  // نموذج إضافة قسط
+  // Update installment form
   const installmentForm = useForm<z.infer<typeof installmentFormSchema>>({
     resolver: zodResolver(installmentFormSchema),
     defaultValues: {
       amount: 0,
       paymentDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
       paymentMethod: "bank_transfer",
+      notes: "",
     },
   });
 
@@ -126,36 +133,38 @@ export function InstallmentCalculator() {
     }
   });
 
-  // حساب القسط الشهري المقترح
-  const calculateMonthlyAmount = (totalCost: number, monthsCount: number, interestRate: number = 0, downPayment: number = 0) => {
-    if (totalCost <= 0 || monthsCount <= 0) return 0;
+  // Update calculation function to use new field names
+  const calculateMonthlyAmount = (totalAmount: number, monthlyAmount: number, interestRate: number = 0, downPayment: number = 0) => {
+    if (totalAmount <= 0 || monthlyAmount <= 0) return 0;
     
-    const loanAmount = totalCost - downPayment;
+    const loanAmount = totalAmount - downPayment;
     
     if (interestRate > 0) {
       const monthlyRate = interestRate / 100 / 12;
-      const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, monthsCount)) / (Math.pow(1 + monthlyRate, monthsCount) - 1);
+      const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, monthlyAmount)) / (Math.pow(1 + monthlyRate, monthlyAmount) - 1);
       return monthlyPayment;
     }
     
-    return loanAmount / monthsCount;
+    return loanAmount / monthlyAmount;
   };
 
-  // معالج إرسال نموذج الخطة
+  // Update form submission handlers
   const onSubmitPlan = (values: z.infer<typeof planFormSchema>) => {
     const planData: CreateCustomInstallmentPlanRequest = {
-      productName: values.productName,
-      totalCost: values.totalCost,
+      name: values.name, // Changed from productName
+      totalAmount: values.totalAmount, // Changed from totalCost
       downPayment: values.downPayment || 0,
-      monthsCount: values.monthsCount,
+      monthlyAmount: values.monthlyAmount, // Changed from monthsCount
       interestRate: values.interestRate || 0,
+      startDate: values.startDate,
+      dueDate: values.dueDate || undefined,
+      notes: values.notes,
     };
 
     console.log('Creating plan with data:', planData);
     createPlanMutation.mutate(planData);
   };
 
-  // معالج إرسال نموذج القسط
   const onSubmitInstallment = (values: z.infer<typeof installmentFormSchema>) => {
     if (!selectedPlanId) {
       toast({
@@ -172,6 +181,7 @@ export function InstallmentCalculator() {
       paymentMethod: values.paymentMethod || "bank_transfer",
       installmentPlanId: selectedPlanId,
       status: "pending",
+      notes: values.notes,
     };
 
     console.log('Creating installment with data:', installmentData);
@@ -205,7 +215,7 @@ export function InstallmentCalculator() {
           </TabsList>
 
           <TabsContent value="plans" className="space-y-6">
-            {/* نموذج إنشاء خطة جديدة */}
+            {/* Updated form with new field names */}
             <Card className="bg-gray-50">
               <CardHeader>
                 <CardTitle className="text-right text-lg">إنشاء خطة تقسيط مخصصة</CardTitle>
@@ -216,7 +226,7 @@ export function InstallmentCalculator() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={planForm.control}
-                        name="productName"
+                        name="name"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-right block">اسم المنتج</FormLabel>
@@ -234,7 +244,7 @@ export function InstallmentCalculator() {
                       
                       <FormField
                         control={planForm.control}
-                        name="totalCost"
+                        name="totalAmount"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-right block">التكلفة الإجمالية (ر.س)</FormLabel>
@@ -272,7 +282,7 @@ export function InstallmentCalculator() {
                       
                       <FormField
                         control={planForm.control}
-                        name="monthsCount"
+                        name="monthlyAmount"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-right block">عدد الأشهر</FormLabel>
@@ -310,16 +320,34 @@ export function InstallmentCalculator() {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={planForm.control}
+                        name="startDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-right block">تاريخ البداية</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                className="text-right"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-right" />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
-                    {/* عرض القسط المحسوب */}
-                    {planForm.watch('totalCost') > 0 && planForm.watch('monthsCount') > 0 && (
+                    {/* Updated calculation display */}
+                    {planForm.watch('totalAmount') > 0 && planForm.watch('monthlyAmount') > 0 && (
                       <div className="bg-blue-50 p-4 rounded-lg text-right">
                         <p className="text-sm text-gray-600 mb-1">القسط الشهري المحسوب:</p>
                         <p className="text-2xl font-bold text-blue-600">
                           {calculateMonthlyAmount(
-                            planForm.watch('totalCost') || 0,
-                            planForm.watch('monthsCount') || 1,
+                            planForm.watch('totalAmount') || 0,
+                            planForm.watch('monthlyAmount') || 1,
                             planForm.watch('interestRate') || 0,
                             planForm.watch('downPayment') || 0
                           ).toFixed(2)} ر.س
@@ -339,7 +367,7 @@ export function InstallmentCalculator() {
               </CardContent>
             </Card>
 
-            {/* عرض الخطط الموجودة */}
+            {/* Updated plans display */}
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-right">الخطط المخصصة الموجودة</h3>
               {customPlans.length === 0 ? (
@@ -369,13 +397,13 @@ export function InstallmentCalculator() {
                             </Button>
                           </div>
                           <div className="text-right">
-                            <h4 className="font-bold text-lg">{plan.productName}</h4>
+                            <h4 className="font-bold text-lg">{plan.name}</h4>
                             <div className="flex gap-4 text-sm text-gray-600 justify-end mt-2">
                               <span>{plan.monthlyInstallment.toFixed(2)} ر.س/شهرياً</span>
                               <span>•</span>
-                              <span>{plan.monthsCount} شهر</span>
+                              <span>{plan.monthlyAmount} شهر</span>
                               <span>•</span>
-                              <span>{plan.totalCost.toFixed(2)} ر.س إجمالي</span>
+                              <span>{plan.totalAmount.toFixed(2)} ر.س إجمالي</span>
                             </div>
                           </div>
                         </div>
@@ -399,7 +427,7 @@ export function InstallmentCalculator() {
               </Card>
             ) : (
               <>
-                {/* نموذج إضافة قسط جديد */}
+                {/* Updated installment form */}
                 <Card className="bg-gray-50">
                   <CardHeader>
                     <CardTitle className="text-right text-lg">إضافة قسط جديد</CardTitle>
@@ -452,8 +480,27 @@ export function InstallmentCalculator() {
                               <FormItem>
                                 <FormLabel className="text-right block">طريقة الدفع</FormLabel>
                                 <FormControl>
+                                  <select className="w-full p-2 border rounded text-right" {...field}>
+                                    <option value="bank_transfer">تحويل بنكي</option>
+                                    <option value="credit_card">بطاقة ائتمان</option>
+                                    <option value="cash">نقداً</option>
+                                    <option value="other">أخرى</option>
+                                  </select>
+                                </FormControl>
+                                <FormMessage className="text-right" />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={installmentForm.control}
+                            name="notes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-right block">ملاحظات</FormLabel>
+                                <FormControl>
                                   <Input
-                                    placeholder="تحويل بنكي"
+                                    placeholder="ملاحظات إضافية..."
                                     className="text-right"
                                     {...field}
                                   />
@@ -476,7 +523,7 @@ export function InstallmentCalculator() {
                   </CardContent>
                 </Card>
 
-                {/* عرض الأقساط المرتبطة بالخطة */}
+                {/* Updated installments display */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-right">أقساط الخطة المحددة</h3>
                   {installmentsLoading ? (
@@ -499,7 +546,9 @@ export function InstallmentCalculator() {
                                   variant={installment.status === 'paid' ? "default" : "outline"}
                                   className={installment.status === 'paid' ? "bg-green-500 hover:bg-green-600" : ""}
                                 >
-                                  {installment.status === 'paid' ? "مدفوع" : "غير مدفوع"}
+                                  {installment.status === 'paid' ? "مدفوع" : 
+                                   installment.status === 'late' ? "متأخر" :
+                                   installment.status === 'missed' ? "مفقود" : "غير مدفوع"}
                                 </Button>
                                 
                                 <div className="text-xs text-gray-500 flex items-center">
