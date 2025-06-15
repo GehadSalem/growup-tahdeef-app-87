@@ -1,60 +1,51 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './hooks/useAuth';
+import Login from './pages/Login';
+import MainMenu from './pages/MainMenu';
+import FinancialPlanning from './pages/FinancialPlanning';
+import MajorGoals from './pages/MajorGoals';
+import BreakHabits from './pages/BreakHabits';
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
+import LegalMenu from './pages/legal/LegalMenu';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+import RefundPolicy from './pages/legal/RefundPolicy';
+import { Toaster } from "@/components/ui/toaster"
+import AdminPanel from './pages/AdminPanel';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, useRoutes } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { appRoutes } from "@/lib/routes";
-import { Suspense } from "react";
-import { AuthProvider } from "@/hooks/useAuth";
+const queryClient = new QueryClient();
 
-// إنشاء عميل للاستعلامات
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
-// مكون التحميل
-const Loading = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="text-center">
-      <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
-    </div>
-  </div>
-);
-
-// مكون المسارات لاستخدام useRoutes
-const AppRoutes = () => {
-  const routes = useRoutes(appRoutes);
-  return <Suspense fallback={<Loading />}>{routes}</Suspense>;
-};
-
-// المكون الرئيسي للتطبيق
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-  <AuthProvider>
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <Router>
+        <NotificationProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/main-menu" element={<MainMenu />} />
+              <Route path="/financial-planning" element={<FinancialPlanning />} />
+              <Route path="/major-goals" element={<MajorGoals />} />
+              <Route path="/break-habits" element={<BreakHabits />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/legal-menu" element={<LegalMenu />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/admin-panel" element={<AdminPanel />} />
+              <Route path="/" element={<Login />} />
+            </Routes>
+          </AuthProvider>
+        </NotificationProvider>
         <Toaster />
-        <Sonner />
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full">
-            <AppRoutes />
-          </div>
-        </SidebarProvider>
-      </TooltipProvider>
+      </Router>
     </QueryClientProvider>
-  </AuthProvider>
-</BrowserRouter>
-
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;

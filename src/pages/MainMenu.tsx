@@ -1,130 +1,186 @@
-
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  PiggyBank, 
-  BookOpen, 
-  CheckCircle2,
+import {
+  Book,
+  Calendar,
+  CheckCircle,
   FileText,
-  ArrowLeft
+  Flame,
+  Home,
+  LayoutDashboard,
+  ListChecks,
+  LucideIcon,
+  MessageSquare,
+  PiggyBank,
+  Settings,
+  ShoppingBag,
+  Bell
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from '@/contexts/NotificationContext';
 
-export default function MainMenu() {
+interface MenuItem {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  route: string;
+  color: string;
+  bgColor: string;
+  badge?: number;
+}
+
+const MainMenu = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  
+  const { unreadCount } = useNotifications();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    toast({
+      title: "تم تسجيل الخروج",
+      description: "تم تسجيل خروجك بنجاح",
+    });
+    navigate('/login');
+  };
+
+  const menuItems: MenuItem[] = [
+    {
+      title: "الرئيسية",
+      description: "نظرة عامة على حسابك",
+      icon: Home,
+      route: "/dashboard",
+      color: "text-blue-500",
+      bgColor: "bg-blue-50"
+    },
+    {
+      title: "الأهداف الكبرى",
+      description: "خطط لأهدافك طويلة الأجل",
+      icon: Target,
+      route: "/major-goals",
+      color: "text-green-500",
+      bgColor: "bg-green-50"
+    },
+    {
+      title: "التخطيط المالي",
+      description: "إدارة المصروفات والادخار",
+      icon: PiggyBank,
+      route: "/financial-planning",
+      color: "text-orange-500",
+      bgColor: "bg-orange-50"
+    },
+    {
+      title: "تحدي العادات السيئة",
+      description: "تخلص من العادات السيئة",
+      icon: Flame,
+      route: "/break-habits",
+      color: "text-red-500",
+      bgColor: "bg-red-50"
+    },
+    {
+      title: "قائمة المهام",
+      description: "إدارة المهام اليومية",
+      icon: ListChecks,
+      route: "/todo",
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-50"
+    },
+    {
+      title: "المناسبات والفعاليات",
+      description: "تخطيط وتنظيم المناسبات",
+      icon: Calendar,
+      route: "/events",
+      color: "text-teal-500",
+      bgColor: "bg-teal-50"
+    },
+    {
+      title: "المدونة",
+      description: "مقالات ونصائح مالية",
+      icon: Book,
+      route: "/blog",
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-50"
+    },
+    {
+      title: "المجتمع",
+      description: "تواصل مع الآخرين",
+      icon: MessageSquare,
+      route: "/community",
+      color: "text-pink-500",
+      bgColor: "bg-pink-50"
+    },
+    {
+      title: "الإشعارات",
+      description: "تنبيهات وتذكيرات مهمة",
+      icon: Bell,
+      route: "/notifications",
+      color: "text-purple-500",
+      bgColor: "bg-purple-50",
+      badge: unreadCount > 0 ? unreadCount : undefined
+    },
+    {
+      title: "الإعدادات",
+      description: "تخصيص التطبيق",
+      icon: Settings,
+      route: "/settings",
+      color: "text-gray-500",
+      bgColor: "bg-gray-50"
+    },
+    {
+      title: "المستندات القانونية",
+      description: "الشروط والسياسات",
+      icon: FileText,
+      route: "/legal",
+      color: "text-gray-500",
+      bgColor: "bg-gray-50"
+    }
+  ];
+
   if (!isAuthenticated) {
     return null;
   }
 
-  const menuItems = [
-    {
-      title: "لوحة التحكم",
-      description: "عرض التقدم اليومي والإحصائيات",
-      icon: <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/dashboard",
-      color: "bg-blue-50 hover:bg-blue-100"
-    },
-    {
-      title: "الأهداف الكبيرة",
-      description: "تحديد وتتبع أهدافك طويلة المدى",
-      icon: <Target className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/major-goals", 
-      color: "bg-green-50 hover:bg-green-100"
-    },
-    {
-      title: "المهام اليومية",
-      description: "إدارة وتنظيم مهامك اليومية",
-      icon: <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/daily-tasks",
-      color: "bg-purple-50 hover:bg-purple-100"
-    },
-    {
-      title: "التخطيط المالي",
-      description: "إدارة أموالك وتخطيط ميزانيتك",
-      icon: <PiggyBank className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/financial-planning",
-      color: "bg-yellow-50 hover:bg-yellow-100"
-    },
-    {
-      title: "تطوير الذات",
-      description: "بناء عادات إيجابية للنمو الشخصي",
-      icon: <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/self-development",
-      color: "bg-indigo-50 hover:bg-indigo-100"
-    },
-    {
-      title: "كسر العادات السيئة",
-      description: "التخلص من العادات الضارة",
-      icon: <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/break-habits",
-      color: "bg-red-50 hover:bg-red-100"
-    },
-    {
-      id: 'legal',
-      title: 'المستندات القانونية',
-      description: 'الشروط والسياسات',
-      icon: <FileText className="h-6 w-6" />,
-      path: '/legal',
-      color: 'bg-gray-100 hover:bg-gray-200'
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader 
-        showMenu 
-        title="القائمة الرئيسية" 
-        onBackClick={() => navigate('/dashboard')} 
-      />
-      
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 text-center">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2 font-cairo">مرحباً بك في GrowUp</h1>
-            <p className="text-sm sm:text-base text-gray-600 font-cairo">اختر القسم الذي تريد الوصول إليه</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-            {menuItems.map((item, index) => (
-              <Card 
-                key={index} 
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 ${item.color} border-0`}
-                onClick={() => navigate(item.route)}
-              >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base lg:text-lg font-cairo mb-1 sm:mb-2">{item.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 font-cairo leading-relaxed">{item.description}</p>
-                    </div>
-                    <div className="flex items-center text-growup text-xs sm:text-sm font-medium">
-                      <span className="font-cairo">اذهب</span>
-                      <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader showMenu title="القائمة الرئيسية" onLogout={handleLogout} />
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {menuItems.map((item, index) => (
+            <Card
+              key={index}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate(item.route)}
+            >
+              <CardContent className="p-4 flex items-start">
+                <div className={`h-12 w-12 rounded-full ${item.bgColor} flex items-center justify-center ml-4`}>
+                  <item.icon className={`h-6 w-6 ${item.color}`} />
+                </div>
+                <div className="text-right flex-1">
+                  <h3 className="font-bold">{item.title} {item.badge && (
+                    <span className="bg-red-500 text-white text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-red-900">
+                      {item.badge}
+                    </span>
+                  )}</h3>
+                  <p className="text-gray-600 text-sm">{item.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default MainMenu;

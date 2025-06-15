@@ -1,3 +1,4 @@
+
 import { apiClient } from '@/lib/api';
 
 export interface Notification {
@@ -8,6 +9,16 @@ export interface Notification {
   read: boolean;
   createdAt: string;
   userId: string;
+  actionType?: string; // For directing user to specific sections
+  actionData?: any; // Additional data for navigation
+}
+
+export interface CreateNotificationRequest {
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  actionType?: string;
+  actionData?: any;
 }
 
 export class NotificationService {
@@ -15,14 +26,21 @@ export class NotificationService {
     console.log('Fetching notifications...');
     const result = await apiClient.get<Notification[]>('/notification');
     console.log('Fetched notifications:', result);
-    return result; // ✅ رجّع المصفوفة فقط بدل الكائن الكامل
+    return Array.isArray(result) ? result : [];
+  }
+
+  static async createNotification(notification: CreateNotificationRequest): Promise<Notification> {
+    console.log('Creating notification:', notification);
+    const result = await apiClient.post<Notification>('/notification', notification);
+    console.log('Created notification:', result);
+    return result;
   }
 
   static async markNotificationRead(id: string): Promise<Notification> {
     console.log('Marking notification as read:', id);
     const result = await apiClient.patch<Notification>(`/notification/${id}`);
     console.log('Mark notification read result:', result);
-    return result; // ✅ رجّع فقط result
+    return result;
   }
 
   static async deleteNotification(id: string): Promise<void> {

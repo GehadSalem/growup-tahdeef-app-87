@@ -25,7 +25,7 @@ export class BadHabitsService {
     console.log('Fetching bad habits...');
     const result = await apiClient.get<BadHabit[]>('/bad-habits');
     console.log('Bad habits fetched:', result);
-    return result;
+    return Array.isArray(result) ? result : [];
   }
 
   static async createBadHabit(habit: CreateBadHabitRequest): Promise<BadHabit> {
