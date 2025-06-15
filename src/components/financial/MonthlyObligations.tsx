@@ -139,14 +139,14 @@ export function MonthlyObligations() {
         if (plan && typeof plan === 'object') {
           convertedObligations.push({
             id: plan.id || Math.random().toString(),
-            name: plan.productName || 'خطة غير محددة',
+            name: plan.name || 'خطة غير محددة',
             type: "subscription" as Obligation["type"],
             amount: plan.monthlyInstallment || 0,
             dueDate: plan.createdAt || new Date().toISOString(),
             recurrence: "monthly" as Obligation["recurrence"],
             isPaid: false,
             salaryImpactPercentage: income > 0 ? ((plan.monthlyInstallment || 0) / income) * 100 : 0,
-            notes: `إجمالي التكلفة: ${plan.totalCost || 0} ر.س - عدد الأشهر: ${plan.monthsCount || 0}`,
+            notes: `إجمالي التكلفة: ${plan.totalAmount || 0} ر.س - عدد الأشهر: ${plan.monthlyAmount || 0}`,
             notificationSent: false
           });
         }
