@@ -91,12 +91,12 @@ export const useHabitsAPI = () => {
     }
   });
 
-  // Delete habit mutation - Fixed to handle 204 response properly
+  // Delete habit mutation
   const deleteHabitMutation = useMutation({
     mutationFn: async (id: string) => {
       console.log('Deleting habit:', id);
       await HabitService.deleteHabit(id);
-      return id; // Return the ID for optimistic updates
+      return id;
     },
     onSuccess: (deletedId) => {
       console.log('Habit deleted successfully:', deletedId);
@@ -136,7 +136,7 @@ export const useHabitsAPI = () => {
     habits: habitsData,
     isLoading,
     error,
-    addHabit: createHabitMutation.mutate,
+    createHabit: createHabitMutation.mutate,
     toggleHabitComplete: toggleHabitMutation.mutate,
     deleteHabit: deleteHabitMutation.mutate,
     editHabit: editHabitMutation.mutateAsync,

@@ -235,7 +235,7 @@ export default function DailyTasks() {
         {/* Tasks List */}
         <div className="space-y-3 sm:space-y-4">
           {tasks.map((task) => (
-            <Card key={task.id} className={`${task.completed ? 'bg-green-50 border-green-200' : 'bg-white'} transition-all duration-200`}>
+            <Card key={task.id} className={`${task.isCompleted ? 'bg-green-50 border-green-200' : 'bg-white'} transition-all duration-200`}>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1 text-right">
@@ -243,12 +243,12 @@ export default function DailyTasks() {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
                         {getPriorityText(task.priority)}
                       </span>
-                      <h3 className={`font-bold text-sm sm:text-base font-cairo ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                      <h3 className={`font-bold text-sm sm:text-base font-cairo ${task.isCompleted ? 'line-through text-gray-500' : ''}`}>
                         {task.title}
                       </h3>
                     </div>
                     {task.description && (
-                      <p className={`text-xs sm:text-sm text-gray-600 font-cairo ${task.completed ? 'line-through' : ''}`}>
+                      <p className={`text-xs sm:text-sm text-gray-600 font-cairo ${task.isCompleted ? 'line-through' : ''}`}>
                         {task.description}
                       </p>
                     )}
@@ -261,13 +261,13 @@ export default function DailyTasks() {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      variant={task.completed ? "default" : "outline"}
+                      variant={task.isCompleted ? "default" : "outline"}
                       onClick={() => completeTaskMutation.mutate(task.id)}
                       disabled={completeTaskMutation.isPending}
-                      className={`text-xs sm:text-sm ${task.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                      className={`text-xs sm:text-sm ${task.isCompleted ? 'bg-green-500 hover:bg-green-600' : ''}`}
                     >
                       <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      {task.completed ? "مكتملة" : "إنجاز"}
+                      {task.isCompleted ? "مكتملة" : "إنجاز"}
                     </Button>
                     
                     <Button

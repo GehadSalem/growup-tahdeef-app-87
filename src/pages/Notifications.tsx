@@ -69,7 +69,7 @@ const Notifications = () => {
 
   // وظيفة لتحديد كل الإشعارات كمقروءة
   const markAllAsRead = async () => {
-    const unreadNotifications = notifications.filter((n: Notification) => !n.read);
+    const unreadNotifications = notifications.filter((n: Notification) => !n.isRead);
     for (const notification of unreadNotifications) {
       await markAsReadMutation.mutateAsync(notification.id);
     }
@@ -102,7 +102,7 @@ const Notifications = () => {
               <div
                 key={notification.id}
                 className={`p-4 border rounded-lg ${
-                  notification.read ? "bg-background" : "bg-muted/30"
+                  notification.isRead ? "bg-background" : "bg-muted/30"
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
@@ -113,7 +113,7 @@ const Notifications = () => {
                       {notification.message}
                     </p>
                   </div>
-                  {!notification.read && (
+                  {!notification.isRead && (
                     <div className="h-2 w-2 rounded-full bg-growup"></div>
                   )}
                 </div>
@@ -121,7 +121,7 @@ const Notifications = () => {
                   <div className="text-xs text-muted-foreground">
                     {new Date(notification.createdAt).toLocaleDateString('ar-SA')}
                   </div>
-                  {!notification.read && (
+                  {!notification.isRead && (
                     <Button 
                       variant="ghost" 
                       size="sm" 

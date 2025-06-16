@@ -5,12 +5,12 @@ export interface BadHabit {
   id: string;
   name: string;
   description?: string;
-  goal: string;
   dayCount: number;
-  alternativeAction: string;
   createdAt: string;
   updatedAt: string;
   lastOccurrence?: string;
+  goal: string;
+  alternativeAction: string;
 }
 
 export interface CreateBadHabitRequest {

@@ -17,7 +17,7 @@ export default function SelfDevelopment() {
   const { 
     habits, 
     toggleHabitComplete, 
-    addHabit, 
+    createHabit, 
     deleteHabit,
     editHabit,
     isLoading
@@ -46,7 +46,11 @@ export default function SelfDevelopment() {
   }
 
   const handleAddHabit = async (habitData: { name: string; category: string; frequency: { type: "daily" | "weekly" | "monthly"; time?: string; days?: number[]; dayOfMonth?: number; } }) => {
-    await addHabit(habitData);
+    createHabit({
+      name: habitData.name,
+      frequency: habitData.frequency.type,
+      category: habitData.category
+    });
     setShowAddDialog(false);
   };
 
@@ -76,7 +80,7 @@ export default function SelfDevelopment() {
           habits={habits}
           onHabitComplete={toggleHabitComplete}
           onHabitDelete={deleteHabit}
-          onAddHabit={addHabit}
+          onAddHabit={createHabit}
           onHabitEdit={async (id, habitData) => {
             await editHabit({ id, habitData });
           }}

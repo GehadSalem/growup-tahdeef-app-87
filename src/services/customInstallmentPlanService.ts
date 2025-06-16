@@ -7,7 +7,7 @@ export interface CustomInstallmentPlan {
   description?: string;
   totalAmount: number;
   monthlyAmount: number;
-  duration: number; // in months
+  duration: number;
   interestRate?: number;
   startDate: string;
   endDate: string;
