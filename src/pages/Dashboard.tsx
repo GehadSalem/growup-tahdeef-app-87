@@ -14,7 +14,7 @@ export default function Dashboard() {
   const { 
     habits, 
     toggleHabitComplete, 
-    addHabit, 
+    createHabit, 
     deleteHabit,
     editHabit,
     calculateDailyProgress,
@@ -26,7 +26,7 @@ export default function Dashboard() {
     if (!isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   if (!isAuthenticated) {
     return null;
@@ -62,12 +62,34 @@ export default function Dashboard() {
         
         {/* قائمة العادات اليومية */}
         <HabitsList 
-          habits={habits}
+          habits={habits.map(habit => ({
+            ...habit,
+            frequency: typeof habit.frequency === "string"
+              ? { type: habit.frequency as "daily" | "weekly" | "monthly" }
+              : habit.frequency
+          }))}
           onHabitComplete={toggleHabitComplete}
           onHabitDelete={deleteHabit}
-          onAddHabit={addHabit}
+          onAddHabit={(habit) => {
+            // Transform frequency to match CreateHabitRequest type
+            const { name, category, frequency } = habit;
+            let frequencyValue: "daily" | "weekly" | "monthly" = frequency.type;
+            createHabit({
+              name,
+              category,
+              frequency: frequencyValue,
+            });
+          }}
           onHabitEdit={async (id, habitData) => {
-            await editHabit({ id, habitData });
+            // Transform frequency to match Partial<CreateHabitRequest>
+            const { frequency, ...rest } = habitData;
+            let frequencyValue: "daily" | "weekly" | "monthly" | undefined = undefined;
+            if (frequency && typeof frequency === "object" && "type" in frequency) {
+              frequencyValue = frequency.type;
+            } else if (typeof frequency === "string") {
+              frequencyValue = frequency;
+            }
+            await editHabit({ id, habitData: { ...rest, frequency: frequencyValue } });
           }}
         />
         

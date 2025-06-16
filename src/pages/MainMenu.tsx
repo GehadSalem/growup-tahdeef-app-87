@@ -9,8 +9,7 @@ import {
   PiggyBank, 
   BookOpen, 
   CheckCircle2,
-  Bell,
-  User,
+  FileText,
   ArrowLeft
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -75,18 +74,12 @@ export default function MainMenu() {
       color: "bg-red-50 hover:bg-red-100"
     },
     {
-      title: "الإشعارات",
-      description: "عرض التنبيهات والتذكيرات",
-      icon: <Bell className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/notifications",
-      color: "bg-orange-50 hover:bg-orange-100"
-    },
-    {
-      title: "الملف الشخصي",
-      description: "إعداداتك ومعلوماتك الشخصية",
-      icon: <User className="h-6 w-6 sm:h-8 sm:w-8 text-growup" />,
-      route: "/profile",
-      color: "bg-gray-50 hover:bg-gray-100"
+      id: 'legal',
+      title: 'المستندات القانونية',
+      description: 'الشروط والسياسات',
+      icon: <FileText className="h-6 w-6" />,
+      path: '/legal',
+      color: 'bg-gray-100 hover:bg-gray-200'
     }
   ];
 

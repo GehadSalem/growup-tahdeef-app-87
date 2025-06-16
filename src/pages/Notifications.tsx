@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Bell, Check } from "lucide-react";
@@ -8,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NotificationService, Notification } from "@/services/notificationService";
+import { initializeNotifications } from "@/hooks/firebase-notification";
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -21,12 +21,26 @@ const Notifications = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Get notifications
-  const { data: notifications = [], isLoading } = useQuery({
+  // Initialize Firebase notifications
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeNotifications();
+    }
+  }, [isAuthenticated]);
+
+  // Get notifications with proper type and fallback to empty array
+  const { data: notificationsResponse, isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: NotificationService.getNotifications,
     enabled: isAuthenticated,
   });
+
+  // Ensure notifications is always an array
+  const notifications = Array.isArray(notificationsResponse)
+    ? notificationsResponse
+    : Array.isArray((notificationsResponse as any)?.data)
+      ? (notificationsResponse as any).data
+      : [];
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
@@ -42,6 +56,18 @@ const Notifications = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success("تم حذف الإشعار");
+    },
+  });
+
+  // Create test notification mutation
+  const createTestNotification = useMutation({
+    mutationFn: () => NotificationService.createNotification({
+      title: "إشعار تجريبي",
+      message: "هذا إشعار تجريبي للتأكد من عمل النظام"
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.success("تم إنشاء إشعار تجريبي");
     },
   });
 
@@ -62,12 +88,10 @@ const Notifications = () => {
 
   const noNotifications = notifications.length === 0;
 
-  // وظيفة لتحديد الإشعار كمقروء
   const markAsRead = (id: string) => {
     markAsReadMutation.mutate(id);
   };
 
-  // وظيفة لتحديد كل الإشعارات كمقروءة
   const markAllAsRead = async () => {
     const unreadNotifications = notifications.filter((n: Notification) => !n.isRead);
     for (const notification of unreadNotifications) {
@@ -90,12 +114,36 @@ const Notifications = () => {
             <p className="text-muted-foreground mb-6">
               ستظهر هنا كل التنبيهات والتذكيرات المتعلقة بأهدافك
             </p>
+            <Button 
+              onClick={() => createTestNotification.mutate()}
+              disabled={createTestNotification.isPending}
+              className="bg-growup hover:bg-growup-dark"
+            >
+              {createTestNotification.isPending ? "جاري الإنشاء..." : "إنشاء إشعار تجريبي"}
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold">كل الإشعارات</h2>
-              <Button variant="ghost" className="text-sm" onClick={markAllAsRead}>تحديد الكل كمقروء</Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  className="text-sm" 
+                  onClick={markAllAsRead}
+                  disabled={markAsReadMutation.isPending}
+                >
+                  تحديد الكل كمقروء
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="text-sm" 
+                  onClick={() => createTestNotification.mutate()}
+                  disabled={createTestNotification.isPending}
+                >
+                  إشعار تجريبي
+                </Button>
+              </div>
             </div>
 
             {notifications.map((notification: Notification) => (

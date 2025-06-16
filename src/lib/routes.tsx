@@ -18,6 +18,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Contact from '@/pages/Contact';
 import DailyTasks from '@/pages/DailyTasks';
+import BreakHabits from '@/pages/BreakHabits';
 
 // Legal Pages
 import LegalMenu from '@/pages/legal/LegalMenu';
@@ -28,7 +29,6 @@ import RefundPolicy from '@/pages/legal/RefundPolicy';
 // Lazy Pages
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const SelfDevelopment = lazy(() => import('@/pages/SelfDevelopment'));
-const BreakHabits = lazy(() => import('@/pages/BreakHabits'));
 const FinancialPlanning = lazy(() => import('@/pages/FinancialPlanning'));
 const MajorGoals = lazy(() => import('@/pages/MajorGoals'));
 
@@ -47,16 +47,30 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  const userRole = user ? JSON.parse(user).role : null;
-
-  if (!token) return <Navigate to="/login" replace />;
+  const userStr = localStorage.getItem('user');
   
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'admin' ? '/admin' : '/not-authorized'} replace />;
+  console.log('ProtectedRoute check:', { token: !!token, user: !!userStr });
+  
+  if (!token || !userStr) {
+    console.log('No token or user, redirecting to login');
+    return <Navigate to="/login" replace />;
   }
+  
+  try {
+    const user = JSON.parse(userStr);
+    const userRole = user.role;
+    
+    if (requiredRole && userRole !== requiredRole) {
+      return <Navigate to={userRole === 'admin' ? '/admin' : '/not-authorized'} replace />;
+    }
 
-  return <>{children}</>;
+    return <>{children}</>;
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return <Navigate to="/login" replace />;
+  }
 };
 
 const withSidebar = (Component: React.ComponentType) => (
@@ -73,22 +87,7 @@ const withSidebar = (Component: React.ComponentType) => (
 export const appRoutes: RouteObject[] = [
   // Public Routes
   { path: '/', element: <OnboardingScreen /> },
-  {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Login />
-    ),
-  },
-  {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/main-menu" replace />
-    ) : (
-      <Login />
-    ),
-  },
+  { path: '/login', element: <Login /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/reset-password', element: <ResetPassword /> },
   { path: '/legal', element: <LegalMenu /> },
@@ -129,7 +128,7 @@ export const appRoutes: RouteObject[] = [
     path: '/break-habits',
     element: (
       <ProtectedRoute>
-        {withSidebar(BreakHabits)}
+        <BreakHabits />
       </ProtectedRoute>
     ),
   },
@@ -165,14 +164,6 @@ export const appRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   path: '/menu',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Menu />
-  //     </ProtectedRoute>
-  //   ),
-  // },
   {
     path: '/profile',
     element: (

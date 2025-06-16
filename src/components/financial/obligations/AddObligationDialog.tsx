@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,61 +6,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { apiClient } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// تعريف أنواع الالتزامات
-export type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
-export type RecurrenceType = "شهري" | "ربع سنوي" | "سنوي" | "مرة واحدة";
+import type { Obligation, ObligationType, RecurrenceType } from "@/lib/types";
 
-// واجهة الالتزام
-export interface Obligation {
-  id: string;
+export interface NewObligationData {
   name: string;
   type: ObligationType;
   amount: number;
-  dueDate: string;
+  dueDate: string; // YYYY-MM-DD
   recurrence: RecurrenceType;
-  notes?: string;
-  isPaid: boolean;
-  enableNotifications: boolean;
-  notificationSent?: boolean;
-  downPayment?: number;
-  interestRate?: number;
+  notes: string;
 }
-
-type NewObligationData = Omit<Obligation, "id" | "isPaid" | "enableNotifications">;
 
 interface AddObligationDialogProps {
-  onAddObligation: (obligation: Obligation) => void;
+  open: boolean;
+  onClose: () => void;
+  onAddObligation: (obligation: Omit<Obligation, 'id'>) => void;
 }
 
-export function AddObligationDialog({ onAddObligation }: AddObligationDialogProps) {
+export function AddObligationDialog({open, 
+  onClose, 
+  onAddObligation 
+}: AddObligationDialogProps) {
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
-
   const [newObligation, setNewObligation] = useState<NewObligationData>({
     name: "",
     type: "قسط",
     amount: 0,
-    dueDate: new Date().toISOString().split("T")[0],
+    dueDate: new Date().toISOString().split('T')[0],
     recurrence: "شهري",
     notes: "",
-    downPayment: 0,
-    interestRate: 0,
   });
 
-  const safeNumber = (value: number | undefined) => {
-    return value !== undefined && !isNaN(value) && value >= 0 ? value : 0;
-  };
-
-  const handleAddObligation = async () => {
+  const handleAddObligation = () => {
     if (newObligation.name.trim() === "") {
       toast({
         title: "خطأ",
@@ -69,7 +50,7 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
       return;
     }
 
-    if (newObligation.amount <= 0 || isNaN(newObligation.amount)) {
+    if (newObligation.amount <= 0) {
       toast({
         title: "خطأ",
         description: "يجب إدخال مبلغ صحيح",
@@ -78,56 +59,29 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
       return;
     }
 
-    try {
-      const response = await apiClient.post<{ id: string }>("/custom-installment-plans", {
-        name: newObligation.name,
-        totalAmount: safeNumber(newObligation.amount),
-        monthlyAmount: safeNumber(newObligation.amount), // يمكن تعديله لاحقًا بمعادلة فعلية
-        dueDate: newObligation.dueDate,
-        downPayment: safeNumber(newObligation.downPayment),
-        interestRate: safeNumber(newObligation.interestRate),
-        type: newObligation.type,
-        recurrence: newObligation.recurrence,
-        notes: newObligation.notes,
-      });
-
-      onAddObligation({
-        id: response.id,
-        name: newObligation.name,
-        type: newObligation.type,
-        amount: safeNumber(newObligation.amount),
-        dueDate: newObligation.dueDate,
-        recurrence: newObligation.recurrence,
-        notes: newObligation.notes || "",
-        downPayment: safeNumber(newObligation.downPayment),
-        interestRate: safeNumber(newObligation.interestRate),
-        isPaid: false,
-        enableNotifications: true,
-      });
-
-      toast({
-        title: "تم الإضافة",
-        description: "تم إضافة الالتزام الجديد بنجاح",
-      });
-
-      setShowDialog(false);
-      setNewObligation({
-        name: "",
-        type: "قسط",
-        amount: 0,
-        dueDate: new Date().toISOString().split("T")[0],
-        recurrence: "شهري",
-        notes: "",
-        downPayment: 0,
-        interestRate: 0,
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة الالتزام",
-        variant: "destructive",
-      });
-    }
+    const newId = `obligation-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    onAddObligation({
+      ...newObligation,
+      isPaid: false,
+      enableNotifications: true,
+    });
+    
+    setNewObligation({
+      name: "",
+      type: "قسط",
+      amount: 0,
+      dueDate: new Date().toISOString().split('T')[0],
+      recurrence: "شهري",
+      notes: "",
+    });
+    
+    setShowDialog(false);
+    
+    toast({
+      title: "تم الإضافة",
+      description: "تم إضافة الالتزام الجديد بنجاح",
+    });
   };
 
   return (
@@ -145,27 +99,20 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label className="text-right block">الاسم</Label>
-            <Input
-              className="text-right"
-              placeholder="مثال: قسط سيارة"
+            <Input 
+              className="text-right" 
+              placeholder="مثال: قسط سيارة" 
               value={newObligation.name}
-              onChange={(e) =>
-                setNewObligation({ ...newObligation, name: e.target.value })
-              }
+              onChange={e => setNewObligation({...newObligation, name: e.target.value})}
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label className="text-right block">نوع الالتزام</Label>
-            <select
-              className="w-full p-2 border rounded text-right"
+            <select 
+              className="w-full p-2 border rounded text-right" 
               value={newObligation.type}
-              onChange={(e) =>
-                setNewObligation({
-                  ...newObligation,
-                  type: e.target.value as ObligationType,
-                })
-              }
+              onChange={e => setNewObligation({...newObligation, type: e.target.value as ObligationType})}
             >
               <option value="قسط">قسط</option>
               <option value="مناسبة">مناسبة</option>
@@ -173,46 +120,34 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
               <option value="آخر">آخر</option>
             </select>
           </div>
-
+          
           <div className="space-y-2">
             <Label className="text-right block">المبلغ (ريال)</Label>
-            <Input
-              type="number"
-              className="text-right"
-              placeholder="مثال: 3000"
-              value={newObligation.amount || ""}
-              onChange={(e) =>
-                setNewObligation({
-                  ...newObligation,
-                  amount: Number(e.target.value),
-                })
-              }
+            <Input 
+              type="number" 
+              className="text-right" 
+              placeholder="مثال: 3000" 
+              value={newObligation.amount || ''}
+              onChange={e => setNewObligation({...newObligation, amount: Number(e.target.value)})}
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label className="text-right block">تاريخ الاستحقاق</Label>
-            <Input
-              type="date"
-              className="text-right"
+            <Input 
+              type="date" 
+              className="text-right" 
               value={newObligation.dueDate}
-              onChange={(e) =>
-                setNewObligation({ ...newObligation, dueDate: e.target.value })
-              }
+              onChange={e => setNewObligation({...newObligation, dueDate: e.target.value})}
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label className="text-right block">تكرار الالتزام</Label>
-            <select
-              className="w-full p-2 border rounded text-right"
+            <select 
+              className="w-full p-2 border rounded text-right" 
               value={newObligation.recurrence}
-              onChange={(e) =>
-                setNewObligation({
-                  ...newObligation,
-                  recurrence: e.target.value as RecurrenceType,
-                })
-              }
+              onChange={e => setNewObligation({...newObligation, recurrence: e.target.value as RecurrenceType})}
             >
               <option value="شهري">شهري</option>
               <option value="ربع سنوي">ربع سنوي</option>
@@ -220,56 +155,22 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
               <option value="مرة واحدة">مرة واحدة</option>
             </select>
           </div>
-
+          
           <div className="space-y-2">
             <Label className="text-right block">ملاحظة إضافية (اختياري)</Label>
-            <Textarea
-              className="text-right"
-              placeholder="أضف أي ملاحظات إضافية هنا"
+            <Textarea 
+              className="text-right" 
+              placeholder="أضف أي ملاحظات إضافية هنا" 
               value={newObligation.notes}
-              onChange={(e) =>
-                setNewObligation({ ...newObligation, notes: e.target.value })
-              }
+              onChange={e => setNewObligation({...newObligation, notes: e.target.value})}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label className="text-right block">الدفعة المقدمة (اختياري)</Label>
-            <Input
-              type="number"
-              className="text-right"
-              placeholder="مثال: 500"
-              value={newObligation.downPayment || ""}
-              onChange={(e) =>
-                setNewObligation({
-                  ...newObligation,
-                  downPayment: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-right block">نسبة الفائدة % (اختياري)</Label>
-            <Input
-              type="number"
-              className="text-right"
-              placeholder="مثال: 2.5"
-              value={newObligation.interestRate || ""}
-              onChange={(e) =>
-                setNewObligation({
-                  ...newObligation,
-                  interestRate: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-
+          
           <div className="flex justify-end gap-2 mt-4">
             <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>
               إلغاء
             </Button>
-            <Button
+            <Button 
               className="bg-growup hover:bg-growup-dark"
               onClick={handleAddObligation}
             >

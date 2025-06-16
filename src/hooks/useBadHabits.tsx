@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BadHabitsService, CreateBadHabitRequest } from '@/services/badHabitsService';
 import { useToast } from './use-toast';
-import { useNotifications } from '@/context/NotificationContext';
+// import { useNotifications } from '@/contexts/NotificationContext';
 
 export function useBadHabits() {
   const { toast } = useToast();
@@ -25,7 +25,7 @@ export function useBadHabits() {
         description: "تمت إضافة العادة بنجاح. أنت تستطيع!"
       });
       
-      // // Send notification
+      // Send notification
       // sendNotification({
       //   title: "عادة جديدة للتخلص منها",
       //   message: `تم إضافة العادة "${data.name}" لمساعدتك في التخلص منها`,

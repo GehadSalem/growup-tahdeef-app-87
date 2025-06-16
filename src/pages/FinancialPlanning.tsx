@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ExpenseTracker } from "@/components/financial/ExpenseTracker";
 import { MonthlySummary } from "@/components/financial/MonthlySummary";
-import { MonthlyObligations } from "@/components/financial/MonthlyObligations";
+import MonthlyObligations from "@/components/financial/MonthlyObligations";
 import { SavingsGoal } from "@/components/financial/SavingsGoal";
 import { EmergencyFund } from "@/components/financial/EmergencyFund";
 import { useAuth } from "@/hooks/useAuth";

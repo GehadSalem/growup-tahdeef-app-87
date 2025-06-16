@@ -1,64 +1,115 @@
-
 import { format, addMonths, addDays, isAfter, isBefore } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Obligation } from "./AddObligationDialog";
+import { Obligation } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api";
 
 interface ObligationsListProps {
   obligations: Obligation[];
-  income: number;
+  onUpdate: (id: string, updatedData: Partial<Obligation>) => void;
+  onDelete: (id: string) => void;
   togglePaymentStatus: (id: string) => void;
 }
 
-export function ObligationsList({ obligations, income, togglePaymentStatus }: ObligationsListProps) {
+
+export function ObligationsList({ obligations, onUpdate, onDelete, togglePaymentStatus }: ObligationsListProps) {
+  const { toast } = useToast();
+
   // تنسيق التاريخ بالعربية
   const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return format(date, "d MMMM yyyy", { locale: ar });
-  };
-
-  // حساب تأثير الالتزام على الراتب كنسبة مئوية
-  const calculateImpact = (amount: number): string => {
-    const percentage = (amount / income) * 100;
-    return `${percentage.toFixed(1)}%`;
+    try {
+      const date = new Date(dateString);
+      return format(date, "d MMMM yyyy", { locale: ar });
+    } catch (error) {
+      return dateString;
+    }
   };
 
   // حساب تاريخ السداد القادم حسب التكرار
   const getNextPaymentDate = (dueDate: string, recurrence: string): string => {
-    const date = new Date(dueDate);
-    const today = new Date();
-    
-    let nextDate = new Date(date);
-    
-    // إذا كان التاريخ قد مر، نحسب التاريخ القادم
-    if (isBefore(nextDate, today)) {
-      switch (recurrence) {
-        case "شهري":
-          // نضيف شهر حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 1);
-          }
-          break;
-        case "ربع سنوي":
-          // نضيف 3 أشهر حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 3);
-          }
-          break;
-        case "سنوي":
-          // نضيف سنة (12 شهر) حتى نصل لتاريخ مستقبلي
-          while (isBefore(nextDate, today)) {
-            nextDate = addMonths(nextDate, 12);
-          }
-          break;
-        case "مرة واحدة":
-          // لا نغير التاريخ لأنه يحدث مرة واحدة فقط
-          break;
+    try {
+      const date = new Date(dueDate);
+      const today = new Date();
+      
+      let nextDate = new Date(date);
+      
+      if (isBefore(nextDate, today)) {
+        switch (recurrence) {
+          case "شهري":
+            while (isBefore(nextDate, today)) {
+              nextDate = addMonths(nextDate, 1);
+            }
+            break;
+          case "ربع سنوي":
+            while (isBefore(nextDate, today)) {
+              nextDate = addMonths(nextDate, 3);
+            }
+            break;
+          case "سنوي":
+            while (isBefore(nextDate, today)) {
+              nextDate = addMonths(nextDate, 12);
+            }
+            break;
+          case "مرة واحدة":
+            break;
+        }
       }
+      
+      return format(nextDate, "yyyy-MM-dd");
+    } catch (error) {
+      return dueDate;
     }
-    
-    return format(nextDate, "yyyy-MM-dd");
+  };
+
+  const handleTogglePayment = async (id: string) => {
+    try {
+      const obligation = obligations.find(o => o.id === id);
+      if (!obligation) return;
+
+      const newStatus = !obligation.isPaid;
+      
+      // تحديث الخادم أولاً
+      await apiClient.patch(`/custom-installment-plans/${id}`, {
+        status: newStatus ? 'paid' : 'unpaid'
+      });
+
+      // ثم تحديث الحالة المحلية
+      onUpdate(id, { isPaid: newStatus });
+      
+      toast({
+        title: "تم التحديث",
+        description: `تم ${newStatus ? 'تمييز' : 'إلغاء تمييز'} الالتزام على أنه مدفوع`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحديث حالة الدفع",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      // حذف من الخادم أولاً
+      await apiClient.delete(`/custom-installment-plans/${id}`);
+      
+      // ثم تحديث الحالة المحلية
+      onDelete(id);
+      
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الالتزام بنجاح",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حذف الالتزام",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -68,9 +119,10 @@ export function ObligationsList({ obligations, income, togglePaymentStatus }: Ob
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-right">نسبة التأثير</TableHead>
+              <TableHead className="text-right">الإجراءات</TableHead>
               <TableHead className="text-right">حالة السداد</TableHead>
               <TableHead className="text-right">تاريخ السداد القادم</TableHead>
+              <TableHead className="text-right">التكرار</TableHead>
               <TableHead className="text-right">المبلغ</TableHead>
               <TableHead className="text-right">النوع</TableHead>
               <TableHead className="text-right">اسم الالتزام</TableHead>
@@ -79,12 +131,20 @@ export function ObligationsList({ obligations, income, togglePaymentStatus }: Ob
           <TableBody>
             {obligations.map((obligation) => (
               <TableRow key={obligation.id}>
-                <TableCell className="text-right">{calculateImpact(obligation.amount)}</TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => handleDelete(obligation.id)}
+                  >
+                    حذف
+                  </Button>
+                </TableCell>
                 <TableCell className="text-right">
                   <Button 
                     variant={obligation.isPaid ? "default" : "outline"} 
                     size="sm" 
-                    onClick={() => togglePaymentStatus(obligation.id)}
+                    onClick={() => handleTogglePayment(obligation.id)}
                     className={obligation.isPaid ? "bg-green-500 hover:bg-green-600" : ""}
                   >
                     {obligation.isPaid ? "تم الدفع" : "غير مدفوع"}
@@ -93,6 +153,7 @@ export function ObligationsList({ obligations, income, togglePaymentStatus }: Ob
                 <TableCell className="text-right" dir="rtl">
                   {formatDate(getNextPaymentDate(obligation.dueDate, obligation.recurrence))}
                 </TableCell>
+                <TableCell className="text-right">{obligation.recurrence}</TableCell>
                 <TableCell className="text-right">{obligation.amount} ريال</TableCell>
                 <TableCell className="text-right">{obligation.type}</TableCell>
                 <TableCell className="text-right">{obligation.name}</TableCell>

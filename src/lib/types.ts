@@ -54,17 +54,23 @@ export interface MonthlyObligation {
   salaryImpactPercentage: number;
   notes?: string;
 }
-export interface obligation{
-  id: string,
-  name: string,
-  amount: number,
-  dueDate: string,
-  recurrence: "مرة واحدة" | "شهري" | "ربع سنوي" | "سنوي",
-  isPaid: boolean,
-  type: string,
-  notificationSent?: boolean
-}
+// Shared types for obligations
 
+
+export type RecurrenceType = 'شهري' | 'ربع سنوي' | 'سنوي' | 'مرة واحدة';
+export type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
+export interface Obligation {
+  id: string;
+  name: string;
+  type: ObligationType;
+  amount: number;
+  dueDate: string;
+  recurrence: RecurrenceType;
+  notes?: string;
+  isPaid: boolean;
+  enableNotifications: boolean;
+  notificationSent?: boolean;
+}
 /**
  * نوع عنصر القائمة/الفئة
  */

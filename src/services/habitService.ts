@@ -4,7 +4,7 @@ import { apiClient } from '@/lib/api';
 export interface Habit {
   id: string;
   name: string;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: string;
   completed: boolean;
   category: string;
   createdAt: string;
@@ -13,7 +13,7 @@ export interface Habit {
 
 export interface CreateHabitRequest {
   name: string;
-  frequency: 'daily' | 'weekly' | 'monthly';
+  frequency: string;
   category?: string;
 }
 
