@@ -23,7 +23,7 @@ export const useHabitsAPI = () => {
   const createHabitMutation = useMutation({
     mutationFn: async (habitData: CreateHabitRequest) => {
       console.log('Creating habit mutation:', habitData);
-      return await HabitService.createHabit(habitData);
+      return await HabitService.addHabit(habitData);
     },
     onSuccess: (newHabit) => {
       console.log('Habit created successfully:', newHabit);
@@ -91,12 +91,12 @@ export const useHabitsAPI = () => {
     }
   });
 
-  // Delete habit mutation - Fixed to handle 204 response properly
+  // Delete habit mutation
   const deleteHabitMutation = useMutation({
     mutationFn: async (id: string) => {
       console.log('Deleting habit:', id);
       await HabitService.deleteHabit(id);
-      return id; // Return the ID for optimistic updates
+      return id;
     },
     onSuccess: (deletedId) => {
       console.log('Habit deleted successfully:', deletedId);
@@ -110,40 +110,23 @@ export const useHabitsAPI = () => {
       console.error('Error deleting habit:', error);
       toast({
         title: "خطأ",
-        description: error?.message || "فشل في حذف العادة",
+        description: "فشل في حذف العادة",
         variant: "destructive",
       });
     }
   });
 
-  // Calculate daily progress
-  const calculateDailyProgress = () => {
-    if (habitsData.length === 0) return 0;
-    const completedHabits = habitsData.filter(habit => habit.completed).length;
-    const progress = Math.round((completedHabits / habitsData.length) * 100);
-    console.log('Daily progress calculated:', progress, 'completed:', completedHabits, 'total:', habitsData.length);
-    return progress;
-  };
-
-  // Log habit data when it changes
-  useEffect(() => {
-    if (habitsData.length > 0) {
-      console.log('Habits data updated:', habitsData);
-    }
-  }, [habitsData]);
-
   return {
     habits: habitsData,
     isLoading,
     error,
-    addHabit: createHabitMutation.mutate,
-    toggleHabitComplete: toggleHabitMutation.mutate,
+    createHabit: createHabitMutation.mutate,
+    toggleHabit: toggleHabitMutation.mutate,
+    editHabit: editHabitMutation.mutate,
     deleteHabit: deleteHabitMutation.mutate,
-    editHabit: editHabitMutation.mutateAsync,
-    calculateDailyProgress,
     isCreating: createHabitMutation.isPending,
     isToggling: toggleHabitMutation.isPending,
-    isDeleting: deleteHabitMutation.isPending,
     isEditing: editHabitMutation.isPending,
+    isDeleting: deleteHabitMutation.isPending,
   };
 };

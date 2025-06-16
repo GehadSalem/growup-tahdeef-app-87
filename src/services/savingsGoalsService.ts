@@ -6,20 +6,16 @@ export interface SavingsGoal {
   goalName: string;
   targetAmount: number;
   currentAmount: number;
-  targetDate?: string;
   description?: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateSavingsGoalRequest {
   goalName: string;
   targetAmount: number;
-  targetDate?: string;
   description?: string;
-}
-
-export interface AddToSavingsRequest {
-  amount: number;
 }
 
 export class SavingsGoalsService {
@@ -43,7 +39,7 @@ export class SavingsGoalsService {
     return apiClient.delete(`/savingsGoals/${id}`);
   }
 
-  static async addToSavingsGoal(id: string, amount: AddToSavingsRequest): Promise<SavingsGoal> {
+  static async addToSavingsGoal(id: string, amount: { amount: number }): Promise<SavingsGoal> {
     return apiClient.post<SavingsGoal>(`/savingsGoals/${id}`, amount);
   }
 }
