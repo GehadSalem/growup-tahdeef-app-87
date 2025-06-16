@@ -11,10 +11,19 @@ import { Plus, Wallet, Target, Calculator, Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { IncomeService } from "@/services/incomeService";
+import { ExpenseService } from "@/services/expenseService";
+import { EmergencyService } from "@/services/emergencyService";
+import { useExpensesAPI } from "@/hooks/useExpensesAPI";
 
 const FinancialPlanning = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const { addExpense, isAdding } = useExpensesAPI();
   
   // State management
   const [monthlyIncome, setMonthlyIncome] = useState(0);
@@ -35,10 +44,125 @@ const FinancialPlanning = () => {
   const [obligationAmount, setObligationAmount] = useState(0);
   const [obligationDueDate, setObligationDueDate] = useState(1);
 
-  // Calculate emergency fund (10% of income)
+  // Redirect to login if not authenticated
   useEffect(() => {
-    setEmergencyFund(monthlyIncome * 0.1);
-  }, [monthlyIncome]);
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Get user's incomes from API
+  const { data: incomesData = [] } = useQuery({
+    queryKey: ['incomes'],
+    queryFn: IncomeService.getUserIncomes,
+    enabled: isAuthenticated,
+  });
+
+  // Get expenses from API
+  const { data: expensesData = [] } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: ExpenseService.getExpenses,
+    enabled: isAuthenticated,
+  });
+
+  // Get emergency fund from API
+  const { data: emergencyData } = useQuery({
+    queryKey: ['emergency'],
+    queryFn: EmergencyService.getEmergencyFunds,
+    enabled: isAuthenticated,
+  });
+
+  // Add income mutation
+  const addIncomeMutation = useMutation({
+    mutationFn: IncomeService.addIncome,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      toast({
+        title: "تم تحديث الدخل",
+        description: "تم تحديث الدخل الشهري بنجاح"
+      });
+    },
+    onError: (error: any) => {
+      console.error('Income API Error:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في تحديث الدخل",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Add to emergency fund mutation
+  const addToEmergencyMutation = useMutation({
+    mutationFn: EmergencyService.addToEmergencyFund,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency'] });
+      toast({
+        title: "تم إضافة المبلغ",
+        description: "تم إضافة المبلغ لصندوق الطوارئ بنجاح"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إضافة المبلغ",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Calculate monthly income from API data
+  useEffect(() => {
+    if (incomesData.length > 0) {
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      
+      const monthlyIncomes = incomesData.filter(income => {
+        const incomeDate = new Date(income.date);
+        return incomeDate.getMonth() + 1 === currentMonth && 
+               incomeDate.getFullYear() === currentYear;
+      });
+      
+      const totalIncome = monthlyIncomes.reduce((sum, income) => sum + income.amount, 0);
+      setMonthlyIncome(totalIncome);
+    }
+  }, [incomesData]);
+
+  // Calculate expenses from API data
+  useEffect(() => {
+    if (expensesData.length > 0) {
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      
+      const monthlyExpenses = expensesData.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate.getMonth() + 1 === currentMonth && 
+               expenseDate.getFullYear() === currentYear;
+      });
+      
+      const total = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+      setTotalExpenses(total);
+      
+      // Convert API expenses to local format
+      const formattedExpenses = monthlyExpenses.map(expense => ({
+        id: expense.id,
+        amount: expense.amount,
+        category: expense.category,
+        description: expense.description || '',
+        date: new Date(expense.date).toISOString().split('T')[0]
+      }));
+      setExpenses(formattedExpenses);
+    }
+  }, [expensesData]);
+
+  // Calculate emergency fund from API data
+  useEffect(() => {
+    if (emergencyData) {
+      setEmergencyFund(emergencyData.totalAmount || monthlyIncome * 0.1);
+    } else {
+      setEmergencyFund(monthlyIncome * 0.1);
+    }
+  }, [emergencyData, monthlyIncome]);
 
   // Calculate remaining balance
   const remainingBalance = monthlyIncome - emergencyFund - totalExpenses;
@@ -55,18 +179,32 @@ const FinancialPlanning = () => {
     "أخرى"
   ];
 
+  const handleUpdateIncome = () => {
+    if (monthlyIncome > 0) {
+      addIncomeMutation.mutate({
+        amount: monthlyIncome,
+        source: "راتب شهري",
+        description: "تحديث الدخل الشهري",
+        incomeDate: new Date().toISOString()
+      });
+    } else {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال قيمة صحيحة للدخل",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleAddExpense = () => {
     if (expenseAmount > 0 && expenseCategory && expenseDescription) {
-      const newExpense = {
-        id: Date.now().toString(),
+      // Add to API
+      addExpense({
         amount: expenseAmount,
         category: expenseCategory,
         description: expenseDescription,
-        date: new Date().toISOString().split('T')[0]
-      };
-      
-      setExpenses([...expenses, newExpense]);
-      setTotalExpenses(prev => prev + expenseAmount);
+        date: new Date().toISOString()
+      });
       
       // Reset form
       setExpenseAmount(0);
@@ -105,6 +243,10 @@ const FinancialPlanning = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 font-cairo">
       {/* Header */}
@@ -142,6 +284,14 @@ const FinancialPlanning = () => {
                   placeholder="أدخل دخلك الشهري"
                 />
               </div>
+              
+              <Button
+                className="w-full bg-growup hover:bg-growup-dark"
+                onClick={handleUpdateIncome}
+                disabled={addIncomeMutation.isPending}
+              >
+                {addIncomeMutation.isPending ? "جاري التحديث..." : "تحديث الدخل"}
+              </Button>
               
               {monthlyIncome > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
@@ -244,8 +394,8 @@ const FinancialPlanning = () => {
                           <Button variant="outline" onClick={() => setShowExpenseDialog(false)}>
                             إلغاء
                           </Button>
-                          <Button onClick={handleAddExpense}>
-                            إضافة
+                          <Button onClick={handleAddExpense} disabled={isAdding}>
+                            {isAdding ? "جاري الإضافة..." : "إضافة"}
                           </Button>
                         </div>
                       </div>
