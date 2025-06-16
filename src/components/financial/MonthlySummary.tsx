@@ -33,22 +33,23 @@ export function MonthlySummary({ income }: MonthlySummaryProps) {
       setExpenses(monthlyExpenses);
       
       const categoryData = monthlyExpenses.reduce((acc: { name: string; value: number }[], expense: any) => {
-        const amount = expense.amount || 0;
-        const existingCategory = acc.find(item => item.name === expense.category);
-        
-        if (existingCategory) {
-          existingCategory.value += amount;
-        } else {
-          acc.push({ name: expense.category, value: amount });
-        }
-        return acc;
-      }, []);
+  const amount = parseFloat(expense.amount) || 0;
+  const existingCategory = acc.find(item => item.name === expense.category);
+  
+  if (existingCategory) {
+    existingCategory.value += amount;
+  } else {
+    acc.push({ name: expense.category, value: amount });
+  }
+  return acc;
+}, []);
+
       
       setMonthlyData(categoryData);
     }
   }, [expensesData]);
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+const totalExpenses = expenses.reduce((sum, expense) => sum + (typeof expense.amount === "number" ? expense.amount : parseFloat(expense.amount) || 0), 0);
   const expensePercentage = income > 0 ? (totalExpenses / income) * 100 : 0;
   const remainingAmount = income - totalExpenses;
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];

@@ -113,7 +113,7 @@ export function ObligationsList({ obligations, onUpdate, onDelete, togglePayment
   };
 
   return (
-    <div className="mb-6 overflow-x-auto">
+    <div className="mb-6">
       <h3 className="text-lg font-bold mb-3 text-right font-cairo">قائمة الالتزامات</h3>
       {obligations.length > 0 ? (
         <Table>
@@ -154,7 +154,7 @@ export function ObligationsList({ obligations, onUpdate, onDelete, togglePayment
                   {formatDate(getNextPaymentDate(obligation.dueDate, obligation.recurrence))}
                 </TableCell>
                 <TableCell className="text-right">{obligation.recurrence}</TableCell>
-                <TableCell className="text-right">{obligation.amount} ريال</TableCell>
+                <TableCell className="text-right">{obligation.totalAmount} ريال</TableCell>
                 <TableCell className="text-right">{obligation.type}</TableCell>
                 <TableCell className="text-right">{obligation.name}</TableCell>
               </TableRow>

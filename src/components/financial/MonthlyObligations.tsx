@@ -29,7 +29,7 @@ export default function MonthlyObligations() {
   //     {
   //       id: '1',
   //       name: 'إيجار المنزل',
-  //       amount: 2500,
+  //       totalAmount: 2500,
   //       type: 'إيجار' as ObligationType,
   //       dueDate: '2024-01-01',
   //       recurrence: 'شهري',
@@ -39,7 +39,7 @@ export default function MonthlyObligations() {
   //     {
   //       id: '2',
   //       name: 'فواتير الكهرباء والماء',
-  //       amount: 300,
+  //       totalAmount: 300,
   //       type: 'فواتير' as ObligationType,
   //       dueDate: '2024-01-05',
   //       recurrence: 'شهري',
@@ -49,7 +49,7 @@ export default function MonthlyObligations() {
   //     {
   //       id: '3',
   //       name: 'قسط السيارة',
-  //       amount: 800,
+  //       totalAmount: 800,
   //       type: 'قرض' as ObligationType,
   //       dueDate: '2024-01-10',
   //       recurrence: 'شهري',
@@ -71,18 +71,19 @@ useEffect(() => {
 
   fetchObligations();
 }, []);
-  const totalObligations = obligations.reduce((sum, o) => sum + safeNumber(o.amount), 0);
+  const totalObligations = obligations.reduce((sum, o) => sum + safeNumber(o.totalAmount), 0);
   const remainingIncome = safeNumber(monthlyIncome) - totalObligations;
   const savingsRemaining = remainingIncome - safeNumber(savingsGoal);
   const obligationPercentage = safeNumber(monthlyIncome) > 0 ? (totalObligations / safeNumber(monthlyIncome)) * 100 : 0;
 
-  const addObligation = (newObligation: Omit<Obligation, 'id'>) => {
-    const obligation: Obligation = {
-      ...newObligation,
-      id: Date.now().toString(),
-    };
-    setObligations(prev => [...prev, obligation]);
-  };
+  const addObligation = async (newObligation: Omit<Obligation, 'id'>) => {
+  try {
+    const response = await apiClient.post<Obligation>('/custom-installment-plans', newObligation);
+    setObligations(prev => [...prev, response]);
+  } catch (error) {
+    console.error("فشل في إضافة الالتزام:", error);
+  }
+};
 
   const updateObligation = (id: string, updatedObligation: Partial<Obligation>) => {
     setObligations(prev =>
@@ -105,13 +106,14 @@ useEffect(() => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-[340px] w-[340px] px-2">
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold font-cairo">الالتزامات الشهرية</h1>
-        <Button 
-          onClick={() => setShowAddDialog(true)}
+        <Button
           className="bg-growup hover:bg-growup-dark"
+          onClick={() => setShowAddDialog(true)}
         >
           <Plus className="ml-2 h-4 w-4" />
           إضافة التزام
@@ -141,18 +143,13 @@ useEffect(() => {
         savingsRemaining={savingsRemaining}
       />
 
-      {/* Add Dialog */}
-      <AddObligationDialog 
-  open={showAddDialog}
-  onClose={() => setShowAddDialog(false)}
-  onAddObligation={(newObligation) => {
-    const obligation: Obligation = {
-      ...newObligation,
-      id: Date.now().toString(),
-    };
-    setObligations(prev => [...prev, obligation]);
-  }}
-/>
+      <AddObligationDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        onAddObligation={addObligation}
+      />
     </div>
+    </div>
+    
   );
 }

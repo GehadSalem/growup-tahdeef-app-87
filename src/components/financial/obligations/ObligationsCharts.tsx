@@ -23,12 +23,12 @@ export function ObligationsCharts({ obligations }: ObligationsChartsProps) {
     const data: { [key: string]: number } = {};
     
     obligations.forEach(obligation => {
-      const amount = safeNumber(obligation.amount);
-      if (amount > 0) {
+      const totalAmount = safeNumber(obligation.totalAmount);
+      if (totalAmount > 0) {
         if (data[obligation.type]) {
-          data[obligation.type] += amount;
+          data[obligation.type] += totalAmount;
         } else {
-          data[obligation.type] = amount;
+          data[obligation.type] = totalAmount;
         }
       }
     });
@@ -47,11 +47,11 @@ export function ObligationsCharts({ obligations }: ObligationsChartsProps) {
     return obligations
       .map(item => ({ 
         name: item.name.length > 15 ? item.name.substring(0, 15) + '...' : item.name, 
-        amount: safeNumber(item.amount),
+        totalAmount: safeNumber(item.totalAmount),
         fullName: item.name
       }))
-      .filter(item => item.amount > 0)
-      .sort((a, b) => b.amount - a.amount)
+      .filter(item => item.totalAmount > 0)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
       .slice(0, 5);
   };
 
@@ -159,7 +159,7 @@ export function ObligationsCharts({ obligations }: ObligationsChartsProps) {
                     return item?.fullName || label;
                   }}
                 />
-                <Bar dataKey="amount" fill="#8884d8" name="المبلغ" />
+                <Bar dataKey="totalAmount" fill="#8884d8" name="المبلغ" />
               </BarChart>
             </ResponsiveContainer>
           ) : (

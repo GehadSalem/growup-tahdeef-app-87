@@ -47,7 +47,7 @@ export interface MonthlyObligation {
   id: string;
   name: string;
   type: "loan" | "occasion" | "purchase" | "other"; // قسط - مناسبة - شراء - آخر
-  amount: number;
+  totalAmount: number;
   dueDate: string;
   frequency: "monthly" | "quarterly" | "yearly" | "once"; // شهري - ربع سنوي - سنوي - مرة واحدة
   isPaid: boolean;
@@ -63,7 +63,7 @@ export interface Obligation {
   id: string;
   name: string;
   type: ObligationType;
-  amount: number;
+  totalAmount: number;
   dueDate: string;
   recurrence: RecurrenceType;
   notes?: string;

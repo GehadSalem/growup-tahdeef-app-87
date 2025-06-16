@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -8,22 +7,78 @@ import { BadHabitForm } from "@/components/bad-habits/BadHabitForm";
 import { BadHabitCard } from "@/components/bad-habits/BadHabitCard";
 import { MotivationalTips } from "@/components/bad-habits/MotivationalTips";
 import { useNavigate } from "react-router-dom";
+import { apiClient } from "@/lib/api";
 
 export default function BreakHabits() {
   const { badHabits, addBadHabit, incrementDayCount, calculateProgress } = useBadHabits();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  
-  const handleAddHabit = (habit: { name: string; goal: string; alternativeAction: string }) => {
-    addBadHabit(habit);
-    setShowAddForm(false);
+
+  useEffect(() => {
+    const validateSession = async () => {
+      try {
+        setIsLoading(true);
+        await apiClient.get('/validate-token');
+        setError(null);
+      } catch (err) {
+        console.error('Session validation error:', err);
+        if (err instanceof Error && err.message.includes('401')) {
+          setError('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى');
+        } else {
+          setError('حدث خطأ أثناء تحميل البيانات');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateSession();
+  }, []);
+
+  const handleAddHabit = async (habit: { name: string; goal: string; alternativeAction: string }) => {
+    try {
+      await addBadHabit(habit);
+      setShowAddForm(false);
+    } catch (err) {
+      console.error('Error adding habit:', err);
+      setError('حدث خطأ أثناء إضافة العادة');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
+          <h3 className="text-lg font-bold text-red-500 mb-4">{error}</h3>
+          <Button 
+            onClick={() => navigate('/login')}
+            className="bg-growup hover:bg-growup-dark"
+          >
+            العودة إلى صفحة الدخول
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
       <AppHeader showMenu title="كسر العادات السيئة" onBackClick={() => navigate('/main-menu')} />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        {/* قسم العنوان */}
+        {/* باقي الكود كما هو */}
         <section className="mb-6">
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md text-center border border-gray-100">
             <h2 className="text-lg sm:text-xl font-bold font-cairo mb-2">مسار التغيير</h2>
@@ -40,7 +95,6 @@ export default function BreakHabits() {
           </div>
         </section>
         
-        {/* نموذج إضافة عادة سيئة */}
         {showAddForm && (
           <section className="mb-6">
             <BadHabitForm 
@@ -50,7 +104,6 @@ export default function BreakHabits() {
           </section>
         )}
         
-        {/* قائمة العادات السيئة */}
         <section className="space-y-4 sm:space-y-6">
           {badHabits.map(habit => (
             <BadHabitCard
@@ -75,7 +128,6 @@ export default function BreakHabits() {
           )}
         </section>
         
-        {/* قسم النصائح التحفيزية */}
         <section className="mt-6 sm:mt-8">
           <MotivationalTips />
         </section>
