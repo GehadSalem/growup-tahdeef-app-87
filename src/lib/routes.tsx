@@ -71,16 +71,27 @@ const withSidebar = (Component: React.ComponentType) => (
 );
 
 export const appRoutes: RouteObject[] = [
-  // Public Routes
-  { path: '/', element: <OnboardingScreen /> },
+  // Root route - check for authentication and redirect appropriately
   {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Login />
-    ),
+    path: '/',
+    element: (() => {
+      const token = localStorage.getItem('token');
+      const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+      
+      if (!token) {
+        if (onboardingCompleted === 'true') {
+          return <Navigate to="/login" replace />;
+        } else {
+          return <Navigate to="/onboarding" replace />;
+        }
+      } else {
+        return <Navigate to="/main-menu" replace />;
+      }
+    })(),
   },
+
+  // Public Routes
+  { path: '/onboarding', element: <OnboardingScreen /> },
   {
     path: '/login',
     element: localStorage.getItem('token') ? (
@@ -165,14 +176,6 @@ export const appRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   path: '/menu',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Menu />
-  //     </ProtectedRoute>
-  //   ),
-  // },
   {
     path: '/profile',
     element: (
