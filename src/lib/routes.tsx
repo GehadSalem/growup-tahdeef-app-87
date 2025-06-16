@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loading } from '@/components/shared/Loading';
 
 // Core Pages
@@ -60,14 +61,14 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 };
 
 const withSidebar = (Component: React.ComponentType) => (
-  <>
+  <SidebarProvider>
     <AppSidebar />
     <div className="flex-1">
       <Suspense fallback={<Loading />}>
         <Component />
       </Suspense>
     </div>
-  </>
+  </SidebarProvider>
 );
 
 export const appRoutes: RouteObject[] = [
