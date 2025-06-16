@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
@@ -29,19 +28,19 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<{ type: string; message: string } | null>(null);
 
-const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
-  const targetPath = role === 'admin' ? '/admin' : '/dashboard';
-  const currentPath = window.location.pathname;
-  
-  // فقط إذا كنا لسنا في الصفحة الصحيحة بالفعل
-  if (currentPath !== targetPath) {
-    navigate(targetPath, { replace: true });
-    return true; // تم التوجيه
-  }
-  return false; // لم يتم التوجيه
-}, [navigate]);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
 
+    if (token && userData) {
+      const user: UserData = JSON.parse(userData);
+      redirectBasedOnRole(user.role);
+    }
+  }, []);
 
+  const redirectBasedOnRole = (role: 'user' | 'admin') => {
+    navigate(role === 'admin' ? '/admin' : '/dashboard');
+  };
 
   const toggleAuthMode = () => {
     setIsLogin((prev) => !prev);
@@ -49,65 +48,64 @@ const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
   };
 
   const signInWithGoogle = async () => {
-    setIsLoading(true);
-    setAuthError(null);
-    const provider = new GoogleAuthProvider();
+  setIsLoading(true);
+  setAuthError(null);
+  const provider = new GoogleAuthProvider();
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      
-      if (!result.user) {
-        throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
-      }
-
-      const idToken = await result.user.getIdToken();
-      
-      if (!idToken) {
-        throw new Error("فشل في إنشاء رمز المصادقة");
-      }
-
-      const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
-
-      if (!res.user || !res.token) {
-        throw new Error("استجابة غير صالحة من الخادم");
-      }
-
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-
-      toast({ 
-        title: "تم تسجيل الدخول بنجاح", 
-        description: "مرحباً بك في GrowUp!",
-        duration: 2000 
-      });
-      
-      // Use setTimeout to ensure the state is properly set before navigation
-      setTimeout(() => {
-        redirectBasedOnRole(res.user.role);
-      }, 100);
-    } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-      
-      let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
-      
-      if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        errorMessage = "تم إلغاء طلب التسجيل";
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
-      }
-
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: error.response?.data?.message || errorMessage,
-        variant: "destructive",
-        duration: 3000
-      });
-    } finally {
-      setIsLoading(false);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    
+    // تأكيد أن المستخدم قد سجل الدخول بالفعل
+    if (!result.user) {
+      throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
     }
-  };
+
+    const idToken = await result.user.getIdToken();
+    
+    // إضافة تحقق إضافي للـ token
+    if (!idToken) {
+      throw new Error("فشل في إنشاء رمز المصادقة");
+    }
+
+    const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
+
+    if (!res.user || !res.token) {
+      throw new Error("استجابة غير صالحة من الخادم");
+    }
+
+    localStorage.setItem("token", res.token);
+    localStorage.setItem("user", JSON.stringify(res.user));
+
+    toast({ 
+      title: "تم تسجيل الدخول بنجاح", 
+      description: "مرحباً بك في GrowUp!",
+      duration: 2000 
+    });
+    
+    redirectBasedOnRole(res.user.role);
+  } catch (error: any) {
+    console.error("Google Sign-In Error:", error);
+    
+    let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      errorMessage = "تم إلغاء طلب التسجيل";
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
+    }
+
+    toast({
+      title: "خطأ في تسجيل الدخول",
+      description: error.response?.data?.message || errorMessage,
+      variant: "destructive",
+      duration: 3000
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,10 +137,7 @@ const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
         description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
       });
 
-      // Use setTimeout to ensure the state is properly set before navigation
-      setTimeout(() => {
-        redirectBasedOnRole(userData.role);
-      }, 100);
+      redirectBasedOnRole(userData.role);
     } catch (error: any) {
       const errData = error.response?.data;
 
