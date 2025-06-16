@@ -6,10 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './button';
 import { useState } from 'react';
 
-interface AppHeaderProps {
-  title?: string;
-  showBackButton?: boolean;
+export interface AppHeaderProps {
   showMenu?: boolean;
+  title?: string;
+  onLogout?: () => void;
+  showBackButton?: boolean;
   onBackClick?: () => void;
   className?: string;
   hideNotifications?: boolean;
@@ -17,9 +18,9 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ 
-  title, 
   showBackButton = false,
-  showMenu = false, 
+  showMenu = false,
+  title,
   onBackClick,
   className,
   hideNotifications = false,

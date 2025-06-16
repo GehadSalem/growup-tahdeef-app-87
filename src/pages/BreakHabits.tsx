@@ -15,10 +15,8 @@ export default function BreakHabits() {
   const navigate = useNavigate();
   
   const handleAddHabit = (habit: { name: string; goal: string; alternativeAction: string }) => {
-    const result = addBadHabit(habit);
-    if (result) {
-      setShowAddForm(false);
-    }
+    addBadHabit(habit);
+    setShowAddForm(false);
   };
 
   return (
