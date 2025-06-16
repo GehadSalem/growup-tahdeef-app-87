@@ -11,6 +11,7 @@ import { ObligationsList } from "./obligations/ObligationsList";
 import { ObligationsCharts } from "./obligations/ObligationsCharts";
 import { ObligationsTips } from "./obligations/ObligationsTips";
 import { checkUpcomingObligations } from "./utils/dateUtils";
+import { apiClient } from "@/lib/api";
 
 export function MonthlyObligations() {
   const { toast } = useToast();
@@ -65,6 +66,31 @@ export function MonthlyObligations() {
     
     return () => clearInterval(midnightReset);
   }, [obligations, toast]);
+
+  useEffect(() => {
+  const fetchObligations = async () => {
+    try {
+      const response = await apiClient.get<Obligation[]>("/custom-installment-plans");
+
+      // لو البيانات جاية بصيغة مختلفة عدّل حسب الحاجة
+      const fetchedObligations = response.map((item) => ({
+        ...item,
+        isPaid: item.isPaid ?? false,
+        enableNotifications: item.enableNotifications ?? true,
+      }));
+
+      setObligations(fetchedObligations);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تحميل الالتزامات",
+        variant: "destructive",
+      });
+    }
+  };
+
+  fetchObligations();
+}, []);
 
   return (
     <div className="space-y-6">

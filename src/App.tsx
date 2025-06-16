@@ -1,13 +1,14 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, useRoutes } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { appRoutes } from "@/lib/routes";
 import { Suspense } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
+import { NotificationProvider } from "./context/NotificationContext";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 // إنشاء عميل للاستعلامات
 const queryClient = new QueryClient({
@@ -29,27 +30,25 @@ const Loading = () => (
   </div>
 );
 
-// مكون المسارات لاستخدام useRoutes
-const AppRoutes = () => {
-  const routes = useRoutes(appRoutes);
-  return <Suspense fallback={<Loading />}>{routes}</Suspense>;
-};
+// إنشاء المسارات
+const router = createBrowserRouter(appRoutes);
 
 // المكون الرئيسي للتطبيق
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <BrowserRouter>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <SidebarProvider>
             <div className="flex min-h-screen w-full">
-              <AppRoutes />
+              <RouterProvider 
+                router={router}
+                fallbackElement={<Loading />}
+              />
             </div>
           </SidebarProvider>
         </TooltipProvider>
-      </BrowserRouter>
     </AuthProvider>
   </QueryClientProvider>
 );

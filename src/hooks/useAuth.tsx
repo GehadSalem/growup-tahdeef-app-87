@@ -40,13 +40,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(response.user);
       toast({
         title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في تطبيق GrowUp"
+        description: "مرحباً بك في تطبيق GrowUp",
+        duration: 5000
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "خطأ في تسجيل الدخول";
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "تأكد من البيانات المدخلة",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
       });
       throw error;
     } finally {
@@ -61,13 +64,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(response.user);
       toast({
         title: "تم إنشاء الحساب بنجاح",
-        description: "مرحباً بك في تطبيق GrowUp"
+        description: "مرحباً بك في تطبيق GrowUp",
+        duration: 5000
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "خطأ في إنشاء الحساب";
       toast({
         title: "خطأ في إنشاء الحساب",
-        description: "تأكد من البيانات المدخلة",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 8000
       });
       throw error;
     } finally {
@@ -80,7 +86,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     toast({
       title: "تم تسجيل الخروج",
-      description: "نراك قريباً!"
+      description: "نراك قريباً!",
+      duration: 3000
     });
   };
 

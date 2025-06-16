@@ -3,7 +3,7 @@ import { apiClient } from '@/lib/api';
 
 export interface SavingsGoal {
   id: string;
-  name: string;
+  goalName: string;
   targetAmount: number;
   currentAmount: number;
   targetDate?: string;
@@ -12,7 +12,7 @@ export interface SavingsGoal {
 }
 
 export interface CreateSavingsGoalRequest {
-  name: string;
+  goalName: string;
   targetAmount: number;
   targetDate?: string;
   description?: string;

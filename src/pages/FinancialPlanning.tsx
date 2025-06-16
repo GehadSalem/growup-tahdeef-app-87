@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -26,6 +25,7 @@ export default function FinancialPlanning() {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [income, setIncome] = useState<number>(0);
+  const [incomeDescription, setIncomeDescription] = useState<string>("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -69,11 +69,12 @@ export default function FinancialPlanning() {
     enabled: isAuthenticated,
   });
 
-  // Add income mutation with proper required fields
+  // Add income mutation with all required fields
   const addIncomeMutation = useMutation({
     mutationFn: IncomeService.addIncome,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incomes'] });
+      setIncomeDescription(""); // Clear description after success
       toast({
         title: "تم إضافة الدخل",
         description: "تم إضافة الدخل بنجاح"
@@ -107,18 +108,16 @@ export default function FinancialPlanning() {
   }, [incomes]);
 
   const handleUpdateIncome = () => {
-    if (income > 0) {
-      // Include all required fields: amount, description, and date
+    if (income > 0 && incomeDescription.trim()) {
       addIncomeMutation.mutate({
         amount: income,
         source: "راتب شهري",
-        description: "تحديث الدخل الشهري", // Required field
-        date: new Date().toISOString() // Required field
+        description: incomeDescription
       });
     } else {
       toast({
         title: "خطأ",
-        description: "يرجى إدخال قيمة صحيحة للدخل",
+        description: "يرجى إدخال قيمة صحيحة للدخل ووصف",
         variant: "destructive"
       });
     }
@@ -154,13 +153,26 @@ export default function FinancialPlanning() {
                   placeholder="مثال: 15000"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="income-description">
+                  وصف الدخل
+                </Label>
+                <Input
+                  id="income-description"
+                  type="text"
+                  value={incomeDescription}
+                  onChange={e => setIncomeDescription(e.target.value)}
+                  className="text-right text-sm sm:text-base"
+                  placeholder="مثال: راتب شهر ديسمبر"
+                />
+              </div>
               <div className="w-full">
                 <Button
                   className="bg-growup hover:bg-growup-dark w-full text-sm sm:text-base py-2 sm:py-3"
                   onClick={handleUpdateIncome}
                   disabled={addIncomeMutation.isPending}
                 >
-                  {addIncomeMutation.isPending ? "جاري التحديث..." : "تحديث الدخل"}
+                  {addIncomeMutation.isPending ? "جاري الإضافة..." : "إضافة الدخل"}
                 </Button>
               </div>
             </div>

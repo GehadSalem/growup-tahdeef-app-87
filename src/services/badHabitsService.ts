@@ -5,12 +5,12 @@ export interface BadHabit {
   id: string;
   name: string;
   description?: string;
+  goal: string;
   dayCount: number;
+  alternativeAction: string;
   createdAt: string;
   updatedAt: string;
   lastOccurrence?: string;
-  goal: string;
-  alternativeAction: string;
 }
 
 export interface CreateBadHabitRequest {
@@ -25,7 +25,7 @@ export class BadHabitsService {
     console.log('Fetching bad habits...');
     const result = await apiClient.get<BadHabit[]>('/bad-habits');
     console.log('Bad habits fetched:', result);
-    return result;
+    return Array.isArray(result) ? result : [];
   }
 
   static async createBadHabit(habit: CreateBadHabitRequest): Promise<BadHabit> {

@@ -3,88 +3,21 @@ import { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BadHabitsService, CreateBadHabitRequest } from "@/services/badHabitsService";
+import { useBadHabits } from "@/hooks/useBadHabits";
 import { BadHabitForm } from "@/components/bad-habits/BadHabitForm";
 import { BadHabitCard } from "@/components/bad-habits/BadHabitCard";
 import { MotivationalTips } from "@/components/bad-habits/MotivationalTips";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 
 export default function BreakHabits() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { badHabits, addBadHabit, incrementDayCount, calculateProgress } = useBadHabits();
   const [showAddForm, setShowAddForm] = useState(false);
-  
-  // Get bad habits
-  const { data: badHabits = [], isLoading } = useQuery({
-    queryKey: ['badHabits'],
-    queryFn: BadHabitsService.getBadHabits,
-  });
-
-  // Add bad habit mutation
-  const addBadHabitMutation = useMutation({
-    mutationFn: (habit: CreateBadHabitRequest) => BadHabitsService.createBadHabit(habit),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['badHabits'] });
-      toast({
-        title: "تم إضافة العادة",
-        description: "تمت إضافة العادة السيئة للتخلص منها"
-      });
-      setShowAddForm(false);
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في إضافة العادة",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Record occurrence mutation
-  const recordOccurrenceMutation = useMutation({
-    mutationFn: (id: string) => BadHabitsService.recordOccurrence(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['badHabits'] });
-      toast({
-        title: "تم التسجيل",
-        description: "تم تسجيل اليوم الجديد"
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في تسجيل اليوم",
-        variant: "destructive"
-      });
-    }
-  });
+  const navigate = useNavigate();
   
   const handleAddHabit = (habit: { name: string; goal: string; alternativeAction: string }) => {
-    addBadHabitMutation.mutate(habit);
+    addBadHabit(habit);
+    setShowAddForm(false);
   };
-
-  const handleIncrementDay = (id: string) => {
-    recordOccurrenceMutation.mutate(id);
-  };
-
-  const calculateProgress = (dayCount: number) => {
-    // Simple progress calculation - can be customized
-    return Math.min((dayCount / 30) * 100, 100);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg sm:text-xl font-cairo text-gray-600">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
@@ -123,7 +56,7 @@ export default function BreakHabits() {
             <BadHabitCard
               key={habit.id}
               habit={habit}
-              onIncrementDay={handleIncrementDay}
+              onIncrementDay={incrementDayCount}
               progressPercentage={calculateProgress(habit.dayCount)}
             />
           ))}

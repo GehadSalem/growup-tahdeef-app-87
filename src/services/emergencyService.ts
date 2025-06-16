@@ -16,6 +16,11 @@ export interface EmergencyFundRequest {
   type: 'deposit' | 'withdrawal';
 }
 
+export interface EmergencyWithdrawalRequest {
+  amount: number;
+  description: string;
+}
+
 export interface EmergencyFundSummary {
   totalAmount: number;
   transactions: EmergencyFund[];
@@ -24,6 +29,10 @@ export interface EmergencyFundSummary {
 export class EmergencyService {
   static async addToEmergencyFund(data: EmergencyFundRequest): Promise<EmergencyFund> {
     return apiClient.post<EmergencyFund>('/emergency', data);
+  }
+
+  static async withdrawFromEmergencyFund(data: EmergencyWithdrawalRequest): Promise<EmergencyFund> {
+    return apiClient.post<EmergencyFund>('/emergency/withdraw', data);
   }
 
   static async getEmergencyFunds(): Promise<EmergencyFundSummary> {

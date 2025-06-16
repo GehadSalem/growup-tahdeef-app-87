@@ -54,6 +54,16 @@ export interface MonthlyObligation {
   salaryImpactPercentage: number;
   notes?: string;
 }
+export interface obligation{
+  id: string,
+  name: string,
+  amount: number,
+  dueDate: string,
+  recurrence: "مرة واحدة" | "شهري" | "ربع سنوي" | "سنوي",
+  isPaid: boolean,
+  type: string,
+  notificationSent?: boolean
+}
 
 /**
  * نوع عنصر القائمة/الفئة
