@@ -52,14 +52,14 @@ export default function BreakHabits() {
         
         {/* قائمة العادات السيئة */}
         <section className="space-y-4 sm:space-y-6">
-          {badHabits.map(habit => (
+          {/* {badHabits.map(habit => (
             <BadHabitCard
               key={habit.id}
               habit={habit}
               onIncrementDay={incrementDayCount}
               progressPercentage={calculateProgress(habit.dayCount)}
             />
-          ))}
+          ))} */}
           
           {badHabits.length === 0 && !showAddForm && (
             <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
