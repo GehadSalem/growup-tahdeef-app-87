@@ -304,7 +304,7 @@ const FinancialPlanning = () => {
                   
                   <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">{totalExpenses.toFixed(0)}</div>
+                      <div className="text-2xl font-bold text-red-600">{totalExpenses}</div>
                       <div className="text-sm text-red-700">إجمالي المصروفات</div>
                     </div>
                   </div>

@@ -17,11 +17,11 @@ export default function SelfDevelopment() {
   const { 
     habits, 
     toggleHabitComplete, 
-    addHabit, 
+    createHabit: addHabit, 
     deleteHabit,
     editHabit,
     isLoading
-  } = useHabitsAPI();
+  } : any = useHabitsAPI();
   
   // Redirect to login if not authenticated
   useEffect(() => {

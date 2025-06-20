@@ -33,7 +33,7 @@ export const useHabitsAPI = () => {
         description: "تمت إضافة العادة الجديدة بنجاح"
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error creating habit:', error);
       toast({
         title: "خطأ",
@@ -57,7 +57,7 @@ export const useHabitsAPI = () => {
         description: "تم تحديث حالة العادة بنجاح"
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error toggling habit:', error);
       toast({
         title: "خطأ",
@@ -106,7 +106,7 @@ export const useHabitsAPI = () => {
         description: "تم حذف العادة بنجاح",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error deleting habit:', error);
       toast({
         title: "خطأ",
