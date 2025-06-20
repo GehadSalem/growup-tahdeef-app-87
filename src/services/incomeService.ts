@@ -14,7 +14,7 @@ export interface CreateIncomeRequest {
   amount: number;
   source: string;
   description?: string;
-  date?: string;
+  incomeDate?: string;
 }
 
 export class IncomeService {

@@ -1,51 +1,72 @@
-// ثوابت وإعدادات التطبيق
 
-import { CategoryItem } from "./types";
+import { 
+  Target, 
+  PiggyBank, 
+  TrendingUp, 
+  CheckCircle2,
+  Calendar,
+  Brain,
+  UserCheck,
+  BarChart3
+} from "lucide-react";
 
-// تحديد فئات التطبيق الرئيسية
-// export const APP_CATEGORIES: CategoryItem[] = [
-//   {
-//     id: "self-development",
-//     name: "تطوير الذات",
-//     description: "طور مهاراتك وعاداتك الإيجابية",
-//     icon: "📚",
-//     route: "/self-development",
-//     color: "bg-purple-100"
-//   },
-//   {
-//     id: "break-habits",
-//     name: "كسر العادات السيئة",
-//     description: "تخلص من العادات السيئة خطوة بخطوة",
-//     icon: "🎯",
-//     route: "/break-habits",
-//     color: "bg-red-100"
-//   },
-//   {
-//     id: "dashboard",
-//     name: "لوحة التحكم",
-//     description: "نظرة عامة على تقدمك اليومي",
-//     icon: "📊",
-//     route: "/dashboard",
-//     color: "bg-blue-100"
-//   },
-//   {
-//     id: "financial-planning",
-//     name: "التخطيط المالي",
-//     description: "إدارة ميزانيتك ومصاريفك الشهرية",
-//     icon: "💰",
-//     route: "/financial-planning",
-//     color: "bg-green-100"
-//   },
-//   {
-//     id: "major-goals",
-//     name: "الأهداف الكبرى",
-//     description: "حدد وتابع أهدافك الرئيسية",
-//     icon: "🎯",
-//     route: "/major-goals", 
-//     color: "bg-orange-100"
-//   }
-// ];
-
+// App categories for navigation
+export const APP_CATEGORIES = [
+  {
+    id: "dashboard",
+    name: "اللوحة الرئيسية",
+    title: "اللوحة الرئيسية",
+    description: "نظرة عامة على تقدمك",
+    icon: "BarChart3",
+    route: "/dashboard",
+    color: "blue"
+  },
+  {
+    id: "major-goals",
+    name: "الأهداف الرئيسية",
+    title: "الأهداف الرئيسية", 
+    description: "حدد وتابع أهدافك الكبيرة",
+    icon: "Target",
+    route: "/major-goals",
+    color: "green"
+  },
+  {
+    id: "financial-planning",
+    name: "التخطيط المالي",
+    title: "التخطيط المالي",
+    description: "إدارة مالية ذكية",
+    icon: "PiggyBank", 
+    route: "/financial-planning",
+    color: "emerald"
+  },
+  {
+    id: "daily-tasks",
+    name: "المهام اليومية",
+    title: "المهام اليومية",
+    description: "نظم يومك بفعالية",
+    icon: "CheckCircle2",
+    route: "/daily-tasks", 
+    color: "purple"
+  },
+  {
+    id: "self-development",
+    name: "التطوير الذاتي",
+    title: "التطوير الذاتي",
+    description: "بناء عادات إيجابية",
+    icon: "Brain",
+    route: "/self-development",
+    color: "orange"
+  },
+  {
+    id: "break-habits",
+    name: "كسر العادات السيئة", 
+    title: "كسر العادات السيئة",
+    description: "تخلص من العادات الضارة",
+    icon: "UserCheck",
+    route: "/break-habits",
+    color: "red"
+  }
+];
 // بيانات نموذجية للعادات اليومية
 export const SAMPLE_HABITS = [
   { id: "1", name: "قرأت 10 صفحات من كتاب", category: "تعلم", completed: false, icon: "📚" },

@@ -6,21 +6,22 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './button';
 import { useState } from 'react';
 
-interface AppHeaderProps {
-  title?: string;
-  showBackButton?: boolean;
+export interface AppHeaderProps {
   showMenu?: boolean;
-  onMenuClick?: () => void;
+  title?: string;
+  onLogout?: () => void;
+  showBackButton?: boolean;
+  onBackClick?: () => void;
   className?: string;
   hideNotifications?: boolean;
   hideProfile?: boolean;
 }
 
 export function AppHeader({ 
-  title, 
   showBackButton = false,
-  showMenu = false, 
-  onMenuClick,
+  showMenu = false,
+  title,
+  onBackClick,
   className,
   hideNotifications = false,
   hideProfile = false
@@ -59,7 +60,7 @@ export function AppHeader({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onMenuClick}
+            onClick={onBackClick}
             className="rounded-full"
           >
             <MenuIcon className="h-5 w-5" />

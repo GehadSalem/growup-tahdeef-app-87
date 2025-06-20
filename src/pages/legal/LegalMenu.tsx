@@ -30,8 +30,7 @@ export default function LegalMenu() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showBackButton title="المستندات القانونية" />
-      
+      <AppHeader showMenu title="المستندات القانونية" onBackClick={() => navigate('/main-menu')} />
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-lg mx-auto">
           <div className="mb-6 text-center">

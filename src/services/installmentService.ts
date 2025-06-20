@@ -3,20 +3,19 @@ import { apiClient } from '@/lib/api';
 
 export interface Installment {
   id: string;
-  name: string;
-  totalAmount: number;
-  monthlyAmount: number;
-  remainingAmount: number;
-  dueDate: string;
-  isPaid: boolean;
+  amount: number;
+  paymentDate: string;
+  installmentPlanId: string;
+  status: 'pending' | 'paid' | 'overdue';
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateInstallmentRequest {
-  name: string;
-  totalAmount: number;
-  monthlyAmount: number;
-  dueDate: string;
+  amount: number;
+  paymentDate: string;
+  installmentPlanId: string;
 }
 
 export class InstallmentService {

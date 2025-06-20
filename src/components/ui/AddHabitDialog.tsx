@@ -58,7 +58,7 @@ export function AddHabitDialog({ open, onOpenChange, onAddHabit }: AddHabitDialo
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
+    if (name) {
       const habit = {
         name,
         category,

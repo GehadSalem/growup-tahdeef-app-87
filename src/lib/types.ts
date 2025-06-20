@@ -53,6 +53,7 @@ export interface MonthlyObligation {
   isPaid: boolean;
   salaryImpactPercentage: number;
   notes?: string;
+  notificationSent?: boolean; // Add this property
 }
 
 /**
@@ -214,3 +215,4 @@ export interface Notification {
   createdAt: string;
   userId: string;
 }
+

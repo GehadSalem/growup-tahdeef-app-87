@@ -5,48 +5,40 @@ export interface MajorGoal {
   id: string;
   title: string;
   description?: string;
-  targetAmount?: number;
-  currentAmount?: number;
-  targetDate?: string;
-  category: string;
+  targetDate: string;
   progress: number;
+  status: 'active' | 'completed' | 'paused';
+  category?: string;
   userId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateMajorGoalRequest {
   title: string;
   description?: string;
-  targetAmount?: number;
-  targetDate?: string;
-  category: string;
-}
-
-export interface UpdateProgressRequest {
-  currentAmount: number;
+  targetDate: string;
+  category?: string;
 }
 
 export class MajorGoalsService {
   static async createMajorGoal(goal: CreateMajorGoalRequest): Promise<MajorGoal> {
-    return apiClient.post<MajorGoal>('/majorGoals', goal);
+    return apiClient.post<MajorGoal>('/majorgoals', goal);
   }
 
   static async getUserMajorGoals(): Promise<MajorGoal[]> {
-    return apiClient.get<MajorGoal[]>('/majorGoals');
+    return apiClient.get<MajorGoal[]>('/majorgoals');
   }
 
   static async getMajorGoalById(id: string): Promise<MajorGoal> {
-    return apiClient.get<MajorGoal>(`/majorGoals/${id}`);
+    return apiClient.get<MajorGoal>(`/majorgoals/${id}`);
   }
 
   static async updateMajorGoal(id: string, goal: Partial<CreateMajorGoalRequest>): Promise<MajorGoal> {
-    return apiClient.put<MajorGoal>(`/majorGoals/${id}`, goal);
+    return apiClient.put<MajorGoal>(`/majorgoals/${id}`, goal);
   }
 
   static async deleteMajorGoal(id: string): Promise<void> {
-    return apiClient.delete(`/majorGoals/${id}`);
-  }
-
-  static async updateProgress(id: string, progress: UpdateProgressRequest): Promise<MajorGoal> {
-    return apiClient.patch<MajorGoal>(`/majorGoals/${id}`, progress);
+    return apiClient.delete(`/majorgoals/${id}`);
   }
 }

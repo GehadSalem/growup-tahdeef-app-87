@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // تعريف أنواع الالتزامات
-export type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
-export type RecurrenceType = "شهري" | "ربع سنوي" | "سنوي" | "مرة واحدة";
+export type ObligationType = "loan" | "subscription" | "purchase" | "other";
+export type RecurrenceType = "monthly" | "quarterly" | "yearly" | "one-time";
 
-// واجهة الالتزام
+// تعريف واجهة الالتزام
 export interface Obligation {
   id: string;
   name: string;
@@ -22,10 +22,10 @@ export interface Obligation {
   recurrence: RecurrenceType;
   notes?: string;
   isPaid: boolean;
-  enableNotifications: boolean;
-  notificationSent?: boolean;
+  enableNotifications?: boolean;
 }
 
+// واجهة الالتزام
 type NewObligationData = Omit<Obligation, "id" | "isPaid" | "enableNotifications">;
 
 interface AddObligationDialogProps {
@@ -37,10 +37,10 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
   const [showDialog, setShowDialog] = useState(false);
   const [newObligation, setNewObligation] = useState<NewObligationData>({
     name: "",
-    type: "قسط",
+    type: "loan",
     amount: 0,
     dueDate: new Date().toISOString().split('T')[0],
-    recurrence: "شهري",
+    recurrence: "monthly",
     notes: "",
   });
 
@@ -69,15 +69,14 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
       ...newObligation,
       id: newId,
       isPaid: false,
-      enableNotifications: true,
     });
     
     setNewObligation({
       name: "",
-      type: "قسط",
+      type: "loan",
       amount: 0,
       dueDate: new Date().toISOString().split('T')[0],
-      recurrence: "شهري",
+      recurrence: "monthly",
       notes: "",
     });
     
@@ -119,10 +118,10 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
               value={newObligation.type}
               onChange={e => setNewObligation({...newObligation, type: e.target.value as ObligationType})}
             >
-              <option value="قسط">قسط</option>
-              <option value="مناسبة">مناسبة</option>
-              <option value="شراء">شراء</option>
-              <option value="آخر">آخر</option>
+              <option value="loan">قسط</option>
+              <option value="subscription">مناسبة</option>
+              <option value="purchase">شراء</option>
+              <option value="other">آخر</option>
             </select>
           </div>
           
@@ -154,10 +153,10 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
               value={newObligation.recurrence}
               onChange={e => setNewObligation({...newObligation, recurrence: e.target.value as RecurrenceType})}
             >
-              <option value="شهري">شهري</option>
-              <option value="ربع سنوي">ربع سنوي</option>
-              <option value="سنوي">سنوي</option>
-              <option value="مرة واحدة">مرة واحدة</option>
+              <option value="monthly">شهري</option>
+              <option value="quarterly">ربع سنوي</option>
+              <option value="yearly">سنوي</option>
+              <option value="one-time">مرة واحدة</option>
             </select>
           </div>
           

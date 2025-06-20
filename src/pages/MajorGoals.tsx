@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Lightbulb, Target, TrendingUp, Calendar } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MajorGoalsService } from "@/services/majorGoalsService";
+import { NotificationHelper } from "@/services/notificationHelper";
 
 // أنواع الأهداف الكبرى
 const GOAL_TYPES = [
@@ -47,53 +48,126 @@ const CAREER_OPPORTUNITIES = [
 ];
 
 interface MonthlySaving {
-  month: string; // تاريخ الشهر بتنسيق YYYY-MM
-  amount: number; // المبلغ الذي تم توفيره
-  date: string; // تاريخ الإضافة
-}
-
-interface Goal {
-  id: string;
-  type: string;
-  name: string;
-  cost: number;
-  targetDate: string;
-  monthlySaving: number;
-  currentSaving: number;
-  monthlySavingsHistory: MonthlySaving[];
-  lastReminderDate?: string;
+  month: string;
+  amount: number;
+  date: string;
 }
 
 export default function MajorGoals() {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const queryClient = useQueryClient();
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [isAddingMonthlySaving, setIsAddingMonthlySaving] = useState(false);
   const [newMonthlySaving, setNewMonthlySaving] = useState<number>(0);
   const [currentMonth, setCurrentMonth] = useState<string>(format(new Date(), "yyyy-MM"));
   
-  const form = useForm({
-    defaultValues: {
-      amount: 0,
+  // نموذج لإضافة هدف جديد
+  const [newGoal, setNewGoal] = useState({
+    title: "",
+    description: "",
+    targetAmount: 0,
+    currentAmount: 0,
+    targetDate: "",
+    category: "marriage",
+  });
+
+  // Get major goals from API
+  const { data: goals = [], isLoading, error } = useQuery({
+    queryKey: ['major-goals'],
+    queryFn: MajorGoalsService.getUserMajorGoals,
+  });
+
+  // Create goal mutation
+  const createGoalMutation = useMutation({
+    mutationFn: MajorGoalsService.createMajorGoal,
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['major-goals'] });
+      await NotificationHelper.sendGoalNotification('created', data.title);
+      toast({
+        title: "تم إضافة الهدف",
+        description: "تم إضافة الهدف الجديد بنجاح"
+      });
+      setNewGoal({
+        title: "",
+        description: "",
+        targetAmount: 0,
+        currentAmount: 0,
+        targetDate: "",
+        category: "marriage",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Create goal error:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في إضافة الهدف",
+        variant: "destructive"
+      });
     }
   });
-  
-  // نموذج لإضافة هدف جديد
-  const [newGoal, setNewGoal] = useState<Omit<Goal, "id" | "monthlySavingsHistory">>({
-    type: "marriage",
-    name: "",
-    cost: 0,
-    targetDate: "",
-    monthlySaving: 0,
-    currentSaving: 0,
+
+  // Update progress mutation
+  const updateProgressMutation = useMutation({
+    mutationFn: ({ id, currentAmount }: { id: string; currentAmount: number }) =>
+      MajorGoalsService.updateProgress(id, { currentAmount }),
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['major-goals'] });
+      
+      // Check if goal is achieved
+      if (data.targetAmount && data.currentAmount >= data.targetAmount) {
+        await NotificationHelper.sendGoalNotification('completed', data.title);
+      } else {
+        const progress = data.targetAmount ? (data.currentAmount / data.targetAmount) * 100 : 0;
+        if (progress >= 50 && progress < 100) {
+          await NotificationHelper.sendGoalNotification('milestone', data.title, progress);
+        }
+      }
+      
+      toast({
+        title: "تم تحديث التقدم",
+        description: "تم تحديث مبلغ الادخار بنجاح"
+      });
+    },
+    onError: (error: any) => {
+      console.error('Update progress error:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في تحديث التقدم",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete goal mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: MajorGoalsService.deleteMajorGoal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['major-goals'] });
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الهدف بنجاح"
+      });
+    },
+    onError: (error: any) => {
+      console.error('Delete goal error:', error);
+      toast({
+        title: "خطأ",
+        description: error.message || "فشل في حذف الهدف",
+        variant: "destructive"
+      });
+    }
   });
 
   // حساب المدة المتبقية بالشهور للوصول للهدف
-  const calculateMonthsToGoal = (goal: Omit<Goal, "id" | "monthlySavingsHistory"> | Goal): number => {
-    if (goal.monthlySaving <= 0) return 0;
+  const calculateMonthsToGoal = (goal: any): number => {
+    if (!goal.targetDate || !goal.targetAmount || goal.targetAmount <= 0) return 0;
     
-    const remainingAmount = goal.cost - goal.currentSaving;
-    return Math.ceil(remainingAmount / goal.monthlySaving);
+    const monthlyRequired = calculateRequiredMonthlySaving(goal);
+    if (monthlyRequired <= 0) return 0;
+    
+    const remainingAmount = (goal.targetAmount || 0) - (goal.currentAmount || 0);
+    return Math.ceil(remainingAmount / monthlyRequired);
   };
   
   // تنسيق عرض المدة المتبقية بالسنوات والشهور
@@ -113,8 +187,8 @@ export default function MajorGoals() {
   };
   
   // حساب المبلغ الشهري اللازم توفيره للوصول للهدف في الوقت المحدد
-  const calculateRequiredMonthlySaving = (goal: Omit<Goal, "id" | "monthlySavingsHistory"> | Goal): number => {
-    if (!goal.targetDate) return 0;
+  const calculateRequiredMonthlySaving = (goal: any): number => {
+    if (!goal.targetDate || !goal.targetAmount) return 0;
     
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
@@ -126,19 +200,13 @@ export default function MajorGoals() {
     
     if (monthsDiff <= 0) return 0;
     
-    const remainingAmount = goal.cost - goal.currentSaving;
+    const remainingAmount = (goal.targetAmount || 0) - (goal.currentAmount || 0);
     return Math.ceil(remainingAmount / monthsDiff);
-  };
-
-  // التحقق من توفر توفير شهري للشهر الحالي
-  const hasCurrentMonthSaving = (goal: Goal): boolean => {
-    const currentMonthStr = format(new Date(), "yyyy-MM");
-    return goal.monthlySavingsHistory.some(saving => saving.month === currentMonthStr);
   };
   
   // إضافة هدف جديد
   const handleAddGoal = () => {
-    if (newGoal.name.trim() === "") {
+    if (newGoal.title.trim() === "") {
       toast({
         title: "خطأ",
         description: "يرجى إدخال اسم الهدف",
@@ -147,7 +215,7 @@ export default function MajorGoals() {
       return;
     }
     
-    if (newGoal.cost <= 0) {
+    if (newGoal.targetAmount <= 0) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال تكلفة صحيحة للهدف",
@@ -177,32 +245,7 @@ export default function MajorGoals() {
       return;
     }
     
-    // حساب المبلغ الشهري اللازم
-    const requiredMonthlySaving = calculateRequiredMonthlySaving(newGoal);
-    
-    const newId = `goal-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    
-    setGoals([...goals, {
-      ...newGoal,
-      id: newId,
-      monthlySaving: newGoal.monthlySaving || requiredMonthlySaving,
-      monthlySavingsHistory: []
-    }]);
-    
-    // إعادة تعيين نموذج الهدف الجديد
-    setNewGoal({
-      type: "marriage",
-      name: "",
-      cost: 0,
-      targetDate: "",
-      monthlySaving: 0,
-      currentSaving: 0
-    });
-    
-    toast({
-      title: "تم الإضافة",
-      description: "تم إضافة الهدف الجديد بنجاح",
-    });
+    createGoalMutation.mutate(newGoal);
   };
   
   // فتح مربع حوار إضافة توفير شهري
@@ -224,58 +267,25 @@ export default function MajorGoals() {
       return;
     }
     
-    // تحديث الهدف المحدد بإضافة التوفير الشهري الجديد
-    setGoals(goals.map(goal => {
-      if (goal.id === selectedGoalId) {
-        // التحقق مما إذا كان هناك توفير مسجل لهذا الشهر بالفعل
-        const existingMonthSavingIndex = goal.monthlySavingsHistory.findIndex(
-          saving => saving.month === currentMonth
-        );
-        
-        let updatedSavingsHistory = [...goal.monthlySavingsHistory];
-        
-        if (existingMonthSavingIndex >= 0) {
-          // تحديث التوفير الموجود لهذا الشهر
-          updatedSavingsHistory[existingMonthSavingIndex] = {
-            month: currentMonth,
-            amount: newMonthlySaving,
-            date: new Date().toISOString()
-          };
-        } else {
-          // إضافة توفير جديد لهذا الشهر
-          updatedSavingsHistory.push({
-            month: currentMonth,
-            amount: newMonthlySaving,
-            date: new Date().toISOString()
-          });
-        }
-        
-        // حساب إجمالي المبلغ المتوفر الجديد
-        const totalSavings = updatedSavingsHistory.reduce((sum, saving) => sum + saving.amount, 0);
-        
-        return {
-          ...goal,
-          currentSaving: totalSavings,
-          monthlySavingsHistory: updatedSavingsHistory
-        };
-      }
-      return goal;
-    }));
+    const selectedGoal = goals.find(goal => goal.id === selectedGoalId);
+    if (selectedGoal) {
+      const newCurrentAmount = (selectedGoal.currentAmount || 0) + newMonthlySaving;
+      updateProgressMutation.mutate({
+        id: selectedGoalId,
+        currentAmount: newCurrentAmount
+      });
+    }
     
     // إغلاق مربع الحوار وإعادة تعيين القيم
     setIsAddingMonthlySaving(false);
     setSelectedGoalId(null);
     setNewMonthlySaving(0);
-    
-    toast({
-      title: "تم التحديث",
-      description: "تم تسجيل التوفير الشهري بنجاح",
-    });
   };
   
   // حساب نسبة التقدم نحو الهدف
-  const calculateProgress = (goal: Goal): number => {
-    return Math.min(100, (goal.currentSaving / goal.cost) * 100);
+  const calculateProgress = (goal: any): number => {
+    if (!goal.targetAmount || goal.targetAmount <= 0) return 0;
+    return Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100);
   };
   
   // تنسيق التاريخ بشكل مقروء
@@ -283,71 +293,46 @@ export default function MajorGoals() {
     const date = new Date(dateString);
     return format(date, "d MMMM yyyy", { locale: ar });
   };
-
-  // تنسيق الشهر والسنة
-  const formatMonth = (yearMonth: string): string => {
-    const [year, month] = yearMonth.split("-");
-    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-    return format(date, "MMMM yyyy", { locale: ar });
-  };
   
   // الحصول على أيقونة الهدف
-  const getGoalIcon = (type: string): string => {
-    const goalType = GOAL_TYPES.find(g => g.id === type);
+  const getGoalIcon = (category: string): string => {
+    const goalType = GOAL_TYPES.find(g => g.id === category);
     return goalType ? goalType.icon : "🎯";
-  };
-
-  // الحصول على الهدف من خلال المعرف
-  const getSelectedGoal = (): Goal | undefined => {
-    return goals.find(goal => goal.id === selectedGoalId);
   };
   
   // حذف هدف
   const handleDeleteGoal = (goalId: string) => {
-    setGoals(goals.filter(goal => goal.id !== goalId));
-    
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف الهدف بنجاح",
-    });
+    deleteGoalMutation.mutate(goalId);
   };
 
-  // إنشاء تذكيرات للأهداف
-  React.useEffect(() => {
-    const today = new Date();
-    const currentMonthStr = format(today, "yyyy-MM");
-    
-    goals.forEach(goal => {
-      // التحقق مما إذا كان المستخدم قد أدخل توفير للشهر الحالي
-      if (!hasCurrentMonthSaving(goal) && 
-          (!goal.lastReminderDate || 
-           new Date(goal.lastReminderDate).getMonth() !== today.getMonth())) {
-        
-        // إظهار تذكير للتوفير الشهري
-        toast({
-          title: `تذكير بهدفك: ${goal.name}`,
-          description: `يجب عليك ادخار ${goal.monthlySaving} ريال هذا الشهر للوصول إلى هدفك في الوقت المحدد.`,
-        });
-        
-        // تحديث تاريخ آخر تذكير
-        setGoals(goals.map(g => 
-          g.id === goal.id ? { ...g, lastReminderDate: today.toISOString() } : g
-        ));
-      }
-    });
-  }, [goals, toast]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader showMenu title="الأهداف الكبرى" onBackClick={() => navigate('/main-menu')} />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-lg sm:text-xl font-cairo text-gray-600">جاري التحميل...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Major goals error:', error);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader showBackButton title="الأهداف الكبرى" />
-      
-      <div className="container mx-auto py-6 px-4">
-        <div className="space-y-6">
+      <AppHeader showMenu title="الأهداف الكبرى" onBackClick={() => navigate('/main-menu')} />
+      <div className="container mx-auto py-4 sm:py-6 px-4">
+        <div className="space-y-4 sm:space-y-6">
           {/* نموذج إضافة هدف جديد */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Target className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5" />
                 إضافة هدف مالي جديد
               </CardTitle>
             </CardHeader>
@@ -358,9 +343,9 @@ export default function MajorGoals() {
                     <Label htmlFor="goal-type">نوع الهدف</Label>
                     <select 
                       id="goal-type"
-                      className="w-full rounded-md border border-gray-300 p-2 mt-1"
-                      value={newGoal.type}
-                      onChange={(e) => setNewGoal({...newGoal, type: e.target.value})}
+                      className="w-full rounded-md border border-gray-300 p-2 mt-1 text-sm"
+                      value={newGoal.category}
+                      onChange={(e) => setNewGoal({...newGoal, category: e.target.value})}
                     >
                       {GOAL_TYPES.map((type) => (
                         <option key={type.id} value={type.id}>
@@ -374,10 +359,22 @@ export default function MajorGoals() {
                     <Input 
                       id="goal-name"
                       placeholder="مثال: شراء سيارة تويوتا كامري"
-                      value={newGoal.name}
-                      onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
+                      value={newGoal.title}
+                      onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
+                      className="text-sm"
                     />
                   </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="goal-description">وصف الهدف (اختياري)</Label>
+                  <Input 
+                    id="goal-description"
+                    placeholder="وصف تفصيلي للهدف"
+                    value={newGoal.description}
+                    onChange={(e) => setNewGoal({...newGoal, description: e.target.value})}
+                    className="text-sm"
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -387,8 +384,20 @@ export default function MajorGoals() {
                       id="goal-cost"
                       type="number"
                       placeholder="التكلفة الإجمالية"
-                      value={newGoal.cost || ""}
-                      onChange={(e) => setNewGoal({...newGoal, cost: Number(e.target.value)})}
+                      value={newGoal.targetAmount || ""}
+                      onChange={(e) => setNewGoal({...newGoal, targetAmount: Number(e.target.value)})}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="goal-current-amount">المبلغ المتوفر حالياً (ريال)</Label>
+                    <Input 
+                      id="goal-current-amount"
+                      type="number"
+                      placeholder="المبلغ المتوفر حالياً"
+                      value={newGoal.currentAmount || ""}
+                      onChange={(e) => setNewGoal({...newGoal, currentAmount: Number(e.target.value)})}
+                      className="text-sm"
                     />
                   </div>
                   <div>
@@ -398,40 +407,13 @@ export default function MajorGoals() {
                       type="date"
                       value={newGoal.targetDate}
                       onChange={(e) => setNewGoal({...newGoal, targetDate: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="goal-current-saving">المبلغ المتوفر حالياً (ريال)</Label>
-                    <Input 
-                      id="goal-current-saving"
-                      type="number"
-                      placeholder="المبلغ المتوفر حالياً"
-                      value={newGoal.currentSaving || ""}
-                      onChange={(e) => setNewGoal({...newGoal, currentSaving: Number(e.target.value)})}
+                      className="text-sm"
                     />
                   </div>
                 </div>
                 
-                <div>
-                  <Label htmlFor="goal-monthly-saving">
-                    المبلغ الشهري المخطط توفيره (ريال)
-                    {newGoal.targetDate && (
-                      <span className="text-xs text-gray-500 block">
-                        المبلغ المقترح: {calculateRequiredMonthlySaving(newGoal)} ريال شهرياً
-                      </span>
-                    )}
-                  </Label>
-                  <Input 
-                    id="goal-monthly-saving"
-                    type="number"
-                    placeholder="المبلغ الشهري"
-                    value={newGoal.monthlySaving || ""}
-                    onChange={(e) => setNewGoal({...newGoal, monthlySaving: Number(e.target.value)})}
-                  />
-                </div>
-                
-                <Button onClick={handleAddGoal}>
-                  إضافة الهدف
+                <Button onClick={handleAddGoal} disabled={createGoalMutation.isPending} className="w-full sm:w-auto">
+                  {createGoalMutation.isPending ? "جاري الإضافة..." : "إضافة الهدف"}
                 </Button>
               </div>
             </CardContent>
@@ -439,13 +421,13 @@ export default function MajorGoals() {
           
           {/* قائمة الأهداف */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">أهدافك المالية ({goals.length})</h2>
+            <h2 className="text-lg sm:text-xl font-bold">أهدافك المالية ({goals.length})</h2>
             
             {goals.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
-                  <Target className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-4 text-gray-500">
+                  <Target className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                  <p className="mt-4 text-gray-500 text-sm sm:text-base">
                     لم تقم بإضافة أي هدف مالي بعد
                   </p>
                 </CardContent>
@@ -456,16 +438,17 @@ export default function MajorGoals() {
                   <Card key={goal.id}>
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">
-                          <span className="inline-block mr-2">{getGoalIcon(goal.type)}</span>
-                          {goal.name}
+                        <CardTitle className="text-base sm:text-lg">
+                          <span className="inline-block mr-2">{getGoalIcon(goal.category)}</span>
+                          {goal.title}
                         </CardTitle>
                         <div className="flex space-x-2">
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="text-red-500 h-8 px-2"
+                            className="text-red-500 h-8 px-2 text-xs"
                             onClick={() => handleDeleteGoal(goal.id)}
+                            disabled={deleteGoalMutation.isPending}
                           >
                             حذف
                           </Button>
@@ -473,78 +456,59 @@ export default function MajorGoals() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex justify-between text-sm">
+                      <div className="space-y-3 sm:space-y-4">
+                        {goal.description && (
+                          <div className="text-xs sm:text-sm text-gray-600">
+                            {goal.description}
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span>التكلفة الإجمالية:</span>
-                          <span className="font-bold">{goal.cost.toLocaleString()} ريال</span>
+                          <span className="font-bold">{(goal.targetAmount || 0).toLocaleString()} ريال</span>
                         </div>
                         
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span>المبلغ المتوفر حالياً:</span>
-                          <span className="font-bold">{goal.currentSaving.toLocaleString()} ريال</span>
+                          <span className="font-bold">{(goal.currentAmount || 0).toLocaleString()} ريال</span>
                         </div>
                         
                         <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
+                          <div className="flex justify-between text-xs sm:text-sm">
                             <span>نسبة الإنجاز:</span>
                             <span className="font-bold">{calculateProgress(goal).toFixed(1)}%</span>
                           </div>
                           <Progress value={calculateProgress(goal)} className="h-2" />
                         </div>
                         
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span>المبلغ الشهري المطلوب:</span>
-                          <span className="font-bold">{goal.monthlySaving.toLocaleString()} ريال</span>
+                          <span className="font-bold">{calculateRequiredMonthlySaving(goal).toLocaleString()} ريال</span>
                         </div>
                         
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span>المدة المتبقية:</span>
                           <span className="font-bold">{formatRemainingTime(calculateMonthsToGoal(goal))}</span>
                         </div>
                         
-                        <div className="flex justify-between text-sm">
-                          <span>التاريخ المستهدف:</span>
-                          <span className="font-bold">{formatDate(goal.targetDate)}</span>
-                        </div>
+                        {goal.targetDate && (
+                          <div className="flex justify-between text-xs sm:text-sm">
+                            <span>التاريخ المستهدف:</span>
+                            <span className="font-bold">{formatDate(goal.targetDate)}</span>
+                          </div>
+                        )}
                         
                         {/* قسم الادخار الشهري */}
                         <div className="pt-3 border-t border-gray-200">
-                          <div className="flex justify-between items-center mb-2">
-                            <Button
-                              size="sm"
-                              onClick={() => openAddMonthlySavingDialog(goal.id)}
-                              className="bg-green-600 hover:bg-green-700 text-xs"
-                            >
-                              <Calendar className="h-4 w-4 ml-1" />
-                              إضافة إدخار هذا الشهر
-                            </Button>
-                            <h4 className="text-sm font-bold">سجل الادخار الشهري</h4>
-                          </div>
-                          
-                          {goal.monthlySavingsHistory.length > 0 ? (
-                            <div className="max-h-36 overflow-y-auto">
-                              <table className="min-w-full text-sm">
-                                <thead>
-                                  <tr>
-                                    <th className="text-right">الشهر</th>
-                                    <th className="text-right">المبلغ</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {goal.monthlySavingsHistory
-                                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                    .map((saving, idx) => (
-                                    <tr key={idx} className="border-b border-gray-100">
-                                      <td className="py-1">{formatMonth(saving.month)}</td>
-                                      <td className="py-1 font-semibold">{saving.amount.toLocaleString()} ريال</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-center text-gray-500">لم تسجل أي مبالغ مدخرة بعد</p>
-                          )}
+                          <Button
+                            size="sm"
+                            onClick={() => openAddMonthlySavingDialog(goal.id)}
+                            className="bg-green-600 hover:bg-green-700 text-xs w-full sm:w-auto"
+                            disabled={updateProgressMutation.isPending}
+                          >
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
+                            إضافة مبلغ للهدف
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -557,8 +521,8 @@ export default function MajorGoals() {
           {/* فرص زيادة الدخل */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Lightbulb className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
                 فرص لزيادة الدخل
               </CardTitle>
             </CardHeader>
@@ -567,14 +531,14 @@ export default function MajorGoals() {
                 {CAREER_OPPORTUNITIES.map((opportunity, index) => (
                   <Card key={index}>
                     <CardContent className="p-4">
-                      <h3 className="font-bold text-lg mb-2">{opportunity.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{opportunity.description}</p>
-                      <p className="text-sm mb-2">
+                      <h3 className="font-bold text-sm sm:text-lg mb-2">{opportunity.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2">{opportunity.description}</p>
+                      <p className="text-xs sm:text-sm mb-2">
                         <span className="font-bold">متوسط الدخل: </span>
                         {opportunity.avgIncome}
                       </p>
                       <div>
-                        <span className="text-sm font-bold">مصادر للتعلم: </span>
+                        <span className="text-xs sm:text-sm font-bold">مصادر للتعلم: </span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {opportunity.resources.map((resource, idx) => (
                             <span 
@@ -600,10 +564,10 @@ export default function MajorGoals() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-right font-cairo">
-              إضافة مبلغ الادخار الشهري
+              إضافة مبلغ للهدف
               {selectedGoalId && (
                 <div className="text-sm font-normal text-gray-500 mt-1">
-                  {goals.find(g => g.id === selectedGoalId)?.name}
+                  {goals.find(g => g.id === selectedGoalId)?.title}
                 </div>
               )}
             </DialogTitle>
@@ -611,47 +575,37 @@ export default function MajorGoals() {
           
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="month" className="text-right col-span-1">الشهر</Label>
-              <Input
-                id="month"
-                type="month"
-                className="col-span-3"
-                value={currentMonth}
-                onChange={(e) => setCurrentMonth(e.target.value)}
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right col-span-1">المبلغ</Label>
               <div className="col-span-3 flex items-center gap-2">
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="أدخل المبلغ الذي وفرته هذا الشهر"
+                  placeholder="أدخل المبلغ المراد إضافته"
                   value={newMonthlySaving || ""}
                   onChange={(e) => setNewMonthlySaving(Number(e.target.value))}
+                  className="text-sm"
                 />
-                <span>ريال</span>
+                <span className="text-sm">ريال</span>
               </div>
             </div>
             
             {selectedGoalId && (
-              <div className="text-sm text-amber-600 mt-2">
+              <div className="text-xs sm:text-sm text-amber-600 mt-2">
                 <div className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>المبلغ المطلوب شهرياً:</span>
-                  <strong>{goals.find(g => g.id === selectedGoalId)?.monthlySaving.toLocaleString()} ريال</strong>
+                  <strong>{calculateRequiredMonthlySaving(goals.find(g => g.id === selectedGoalId) || {}).toLocaleString()} ريال</strong>
                 </div>
               </div>
             )}
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddingMonthlySaving(false)}>
+            <Button variant="outline" onClick={() => setIsAddingMonthlySaving(false)} className="text-sm">
               إلغاء
             </Button>
-            <Button onClick={handleAddMonthlySaving}>
-              حفظ المبلغ
+            <Button onClick={handleAddMonthlySaving} disabled={updateProgressMutation.isPending} className="text-sm">
+              {updateProgressMutation.isPending ? "جاري الحفظ..." : "حفظ المبلغ"}
             </Button>
           </DialogFooter>
         </DialogContent>

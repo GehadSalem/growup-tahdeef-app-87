@@ -1,146 +1,183 @@
 
-import { AppHeader } from "@/components/ui/AppHeader";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { AppHeader } from "@/components/ui/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Home, 
-  BookText, 
-  CircleX, 
-  PiggyBank, 
-  Target,
-  LayoutGrid,
+import {
+  Book,
+  Calendar,
+  CheckCircle,
   FileText,
-  Star,
-  CheckSquare
+  Flame,
+  Home,
+  LayoutDashboard,
+  ListChecks,
+  LucideIcon,
+  MessageSquare,
+  PiggyBank,
+  Settings,
+  ShoppingBag,
+  Bell,
+  Target
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from '@/contexts/NotificationContext';
 
-export default function MainMenu() {
+interface MenuItem {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  route: string;
+  color: string;
+  bgColor: string;
+  badge?: number;
+}
+
+const MainMenu = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
+  const { toast } = useToast();
   
-  const menuItems = [
+  const { unreadCount } = useNotifications();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const menuItems: MenuItem[] = [
     {
-      id: 'dashboard',
-      title: 'الرئيسية',
-      icon: <Home className="h-8 w-8" />,
-      path: '/dashboard',
-      color: 'bg-growup hover:bg-growup-dark'
+      title: "الرئيسية",
+      description: "نظرة عامة على حسابك",
+      icon: Home,
+      route: "/dashboard",
+      color: "text-blue-500",
+      bgColor: "bg-blue-50"
     },
     {
-      id: 'self-development',
-      title: 'تطوير الذات',
-      description: 'عادات لتطوير نفسك',
-      icon: <BookText className="h-6 w-6" />,
-      path: '/self-development',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "الأهداف الكبرى",
+      description: "خطط لأهدافك طويلة الأجل",
+      icon: Target,
+      route: "/major-goals",
+      color: "text-green-500",
+      bgColor: "bg-green-50"
     },
     {
-      id: 'daily-tasks',
-      title: 'المهام اليومية',
-      description: 'إدارة مهامك اليومية',
-      icon: <CheckSquare className="h-6 w-6" />,
-      path: '/daily-tasks',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "التخطيط المالي",
+      description: "إدارة المصروفات والادخار",
+      icon: PiggyBank,
+      route: "/financial-planning",
+      color: "text-orange-500",
+      bgColor: "bg-orange-50"
     },
     {
-      id: 'break-habits',
-      title: 'كسر العادات السيئة',
-      description: 'التخلص من العادات الضارة',
-      icon: <CircleX className="h-6 w-6" />,
-      path: '/break-habits',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "تحدي العادات السيئة",
+      description: "تخلص من العادات السيئة",
+      icon: Flame,
+      route: "/break-habits",
+      color: "text-red-500",
+      bgColor: "bg-red-50"
     },
     {
-      id: 'financial-planning',
-      title: 'التخطيط المالي',
-      description: 'إدارة أموالك بذكاء',
-      icon: <PiggyBank className="h-6 w-6" />,
-      path: '/financial-planning',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "قائمة المهام",
+      description: "إدارة المهام اليومية",
+      icon: ListChecks,
+      route: "/todo",
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-50"
     },
     {
-      id: 'major-goals',
-      title: 'أهدافي الكبرى',
-      description: 'تحقيق أهدافك الطموحة',
-      icon: <Target className="h-6 w-6" />,
-      path: '/major-goals',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "المناسبات والفعاليات",
+      description: "تخطيط وتنظيم المناسبات",
+      icon: Calendar,
+      route: "/events",
+      color: "text-teal-500",
+      bgColor: "bg-teal-50"
     },
     {
-      id: 'dashboard-control',
-      title: 'لوحة التحكم',
-      description: 'إدارة الحساب والإعدادات',
-      icon: <LayoutGrid className="h-6 w-6" />,
-      path: '/menu',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "المدونة",
+      description: "مقالات ونصائح مالية",
+      icon: Book,
+      route: "/blog",
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-50"
     },
     {
-      id: 'legal',
-      title: 'المستندات القانونية',
-      description: 'الشروط والسياسات',
-      icon: <FileText className="h-6 w-6" />,
-      path: '/legal',
-      color: 'bg-gray-100 hover:bg-gray-200'
+      title: "المجتمع",
+      description: "تواصل مع الآخرين",
+      icon: MessageSquare,
+      route: "/community",
+      color: "text-pink-500",
+      bgColor: "bg-pink-50"
+    },
+    {
+      title: "الإشعارات",
+      description: "تنبيهات وتذكيرات مهمة",
+      icon: Bell,
+      route: "/notifications",
+      color: "text-purple-500",
+      bgColor: "bg-purple-50",
+      badge: unreadCount > 0 ? unreadCount : undefined
+    },
+    {
+      title: "الإعدادات",
+      description: "تخصيص التطبيق",
+      icon: Settings,
+      route: "/settings",
+      color: "text-gray-500",
+      bgColor: "bg-gray-50"
+    },
+    {
+      title: "المستندات القانونية",
+      description: "الشروط والسياسات",
+      icon: FileText,
+      route: "/legal",
+      color: "text-gray-500",
+      bgColor: "bg-gray-50"
     }
   ];
-  
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="قائمة GrowUp" showBackButton />
-      
-      <div className="container mx-auto px-8 py-6">
-        <div className="max-w-lg mx-auto">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold mb-2 font-cairo">قائمة GrowUp</h1>
-            <p className="text-gray-600 font-cairo">اختر من القائمة الجانبية أو عد للصفحة الرئيسية</p>
-          </div>
-          
-          {/* Main Dashboard Button */}
-          <Button
-            className={`w-full h-16 mb-6 text-lg font-bold ${menuItems[0].color}`}
-            onClick={() => navigate(menuItems[0].path)}
-          >
-            <div className="flex items-center gap-3">
-              {menuItems[0].icon}
-              <span>{menuItems[0].title}</span>
-            </div>
-          </Button>
-          
-          {/* Other Menu Items */}
-          <div className="space-y-3">
-            {menuItems.slice(1).map((item) => (
-              <Card 
-                key={item.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => navigate(item.path)}
-              >
-                <CardContent className="p-4 flex items-center">
-                  <div className={`h-12 w-12 rounded-full ${item.color} flex items-center justify-center ml-4`}>
-                    {item.icon}
-                  </div>
-                  <div className="text-right flex-1">
-                    <h3 className="font-bold font-cairo">{item.title}</h3>
-                    {item.description && (
-                      <p className="text-gray-600 text-sm font-cairo">{item.description}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Premium Subscription Button */}
-          <Button
-            className="w-full h-16 mt-6 bg-growup hover:bg-growup-dark text-lg font-bold"
-            onClick={() => navigate('/subscription')}
-          >
-            <div className="flex items-center gap-3">
-              <Star className="h-6 w-6" />
-              <span>اشترك في العضوية المميزة</span>
-            </div>
-          </Button>
+      <AppHeader title="القائمة الرئيسية" onBackClick={handleLogout} />
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {menuItems.map((item, index) => (
+            <Card
+              key={index}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate(item.route)}
+            >
+              <CardContent className="p-4 flex items-start">
+                <div className={`h-12 w-12 rounded-full ${item.bgColor} flex items-center justify-center ml-4`}>
+                  <item.icon className={`h-6 w-6 ${item.color}`} />
+                </div>
+                <div className="text-right flex-1">
+                  <h3 className="font-bold">{item.title} {item.badge && (
+                    <span className="bg-red-500 text-white text-xs font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-red-900">
+                      {item.badge}
+                    </span>
+                  )}</h3>
+                  <p className="text-gray-600 text-sm">{item.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default MainMenu;

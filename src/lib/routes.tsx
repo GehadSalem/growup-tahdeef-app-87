@@ -2,12 +2,12 @@
 import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loading } from '@/components/shared/Loading';
 
 // Core Pages
 import OnboardingScreen from '@/pages/OnboardingScreen';
 import Login from '@/pages/Login';
-import Menu from '@/pages/Menu';
 import MainMenu from '@/pages/MainMenu';
 import NotFound from '@/pages/NotFound';
 import Subscription from '@/pages/Subscription';
@@ -61,27 +61,38 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 };
 
 const withSidebar = (Component: React.ComponentType) => (
-  <>
+  <SidebarProvider>
     <AppSidebar />
     <div className="flex-1">
       <Suspense fallback={<Loading />}>
         <Component />
       </Suspense>
     </div>
-  </>
+  </SidebarProvider>
 );
 
 export const appRoutes: RouteObject[] = [
-  // Public Routes
-  { path: '/', element: <OnboardingScreen /> },
+  // Root route - check for authentication and redirect appropriately
   {
-    path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Login />
-    ),
+    path: '/',
+    element: (() => {
+      const token = localStorage.getItem('token');
+      const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+      
+      if (!token) {
+        if (onboardingCompleted === 'true') {
+          return <Navigate to="/login" replace />;
+        } else {
+          return <Navigate to="/onboarding" replace />;
+        }
+      } else {
+        return <Navigate to="/main-menu" replace />;
+      }
+    })(),
   },
+
+  // Public Routes
+  { path: '/onboarding', element: <OnboardingScreen /> },
   {
     path: '/login',
     element: localStorage.getItem('token') ? (
@@ -166,14 +177,6 @@ export const appRoutes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  // {
-  //   path: '/menu',
-  //   element: (
-  //     <ProtectedRoute>
-  //       <Menu />
-  //     </ProtectedRoute>
-  //   ),
-  // },
   {
     path: '/profile',
     element: (
