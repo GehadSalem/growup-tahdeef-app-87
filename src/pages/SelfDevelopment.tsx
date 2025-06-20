@@ -16,7 +16,7 @@ export default function SelfDevelopment() {
   
   const { 
     habits, 
-    toggleHabitComplete, 
+    toggleHabit: toggleHabitComplete, 
     createHabit: addHabit, 
     deleteHabit,
     editHabit,
