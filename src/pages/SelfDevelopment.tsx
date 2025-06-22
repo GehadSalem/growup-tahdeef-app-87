@@ -8,6 +8,7 @@ import { AddHabitDialog } from "@/components/ui/AddHabitDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { CreateHabitRequest } from "@/services/habitService";
 
 export default function SelfDevelopment() {
   const navigate = useNavigate();
@@ -16,12 +17,12 @@ export default function SelfDevelopment() {
   
   const { 
     habits, 
-    toggleHabit: toggleHabitComplete, 
-    createHabit: addHabit, 
+    toggleHabit, 
+    createHabit, 
     deleteHabit,
-    editHabit,
+    updateHabit,
     isLoading
-  } : any = useHabitsAPI();
+  } = useHabitsAPI();
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -45,8 +46,8 @@ export default function SelfDevelopment() {
     );
   }
 
-  const handleAddHabit = async (habitData: { name: string; category: string; frequency: { type: "daily" | "weekly" | "monthly"; time?: string; days?: number[]; dayOfMonth?: number; } }) => {
-    await addHabit(habitData);
+  const handleAddHabit = async (habitData: CreateHabitRequest) => {
+    createHabit(habitData);
     setShowAddDialog(false);
   };
 
@@ -74,11 +75,11 @@ export default function SelfDevelopment() {
         {/* Habits List */}
         <HabitsList 
           habits={habits}
-          onHabitComplete={toggleHabitComplete}
+          onHabitComplete={toggleHabit}
           onHabitDelete={deleteHabit}
-          onAddHabit={addHabit}
-          onHabitEdit={async (id, habitData) => {
-            await editHabit({ id, habitData });
+          onAddHabit={createHabit}
+          onHabitEdit={(id: string, habitData: any) => {
+            updateHabit({ id, habitData });
           }}
         />
 
