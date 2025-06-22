@@ -1,165 +1,86 @@
+import { useEffect, useState } from 'react';
+import { AppHeader } from '@/components/ui/AppHeader';
+import { useNavigate } from 'react-router-dom';
+import { NotificationService } from '@/services/notificationService';
+import { Notification } from '@/lib/types';
 
-import React, { useEffect } from "react";
-import { AppHeader } from "@/components/ui/AppHeader";
-import { Bell, Check, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { useNotifications } from "@/contexts/NotificationContext";
-
-const Notifications = () => {
+export default function Notifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { 
-    notifications, 
-    unreadCount, 
-    markAsRead, 
-    deleteNotification, 
-    handleNotificationClick 
-  } = useNotifications();
-  const { toast } = useToast();
 
-  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedNotifications = await NotificationService.getNotifications();
+        setNotifications(fetchedNotifications || []);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+    fetchNotifications();
+  }, []);
 
-  const noNotifications = !notifications || notifications.length === 0;
+  const unreadNotifications = notifications.filter(notification => !notification.isRead);
 
-  const markAllAsRead = async () => {
-    if (!notifications || notifications.length === 0) return;
-    
-    const unreadNotifications = notifications.filter(n => !n.read);
-    for (const notification of unreadNotifications) {
-      markAsRead(notification.id);
-    }
-    toast({
-      title: "تم التحديث",
-      description: "تم تحديد جميع الإشعارات كمقروءة"
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-SA', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return '✅';
-      case 'warning':
-        return '⚠️';
-      case 'error':
-        return '❌';
-      default:
-        return '📢';
+  const markAsRead = async (id: string) => {
+    try {
+      await NotificationService.markAsRead(id);
+      setNotifications(prev => prev.map(notification =>
+        notification.id === id ? { ...notification, isRead: true } : notification
+      ));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader title={`الإشعارات ${unreadCount > 0 ? `(${unreadCount})` : ''}`} onBackClick={() => navigate('/main-menu')} />
-
+      <AppHeader
+        showMenu
+        title="الإشعارات"
+        onBackClick={() => navigate("/main-menu")}
+      />
       <div className="container mx-auto px-4 py-6">
-        {noNotifications ? (
-          <div className="flex flex-col items-center justify-center mt-20 text-center">
-            <div className="bg-gray-100 p-6 rounded-full mb-6">
-              <Bell className="h-10 w-10 text-gray-400" />
-            </div>
-            <h2 className="text-xl font-bold mb-2 font-cairo">لا توجد إشعارات</h2>
-            <p className="text-gray-600 mb-6 font-cairo">
-              ستظهر هنا كل التنبيهات والتذكيرات المتعلقة بأهدافك
-            </p>
+        {isLoading ? (
+          <div className="text-center py-12">
+            جاري التحميل...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="text-center py-12">
+            لا يوجد لديك إشعارات حالياً.
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold font-cairo">
-                كل الإشعارات ({notifications.length})
-                {unreadCount > 0 && (
-                  <span className="text-sm text-growup mr-2">
-                    {unreadCount} غير مقروءة
-                  </span>
-                )}
-              </h2>
-              {unreadCount > 0 && (
-                <Button variant="ghost" className="text-sm font-cairo" onClick={markAllAsRead}>
-                  تحديد الكل كمقروء
-                </Button>
-              )}
-            </div>
-
-            {notifications.map((notification) => (
-              <div
+          <ul className="space-y-4">
+            {notifications.map(notification => (
+              <li
                 key={notification.id}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  notification.read ? "bg-white" : "bg-blue-50 border-blue-200"
-                }`}
-                onClick={() => handleNotificationClick(notification)}
+                className={`bg-white rounded-xl shadow-md p-4 border border-gray-100 ${!notification.isRead ? 'bg-blue-50' : ''}`}
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">{getNotificationIcon(notification.type)}</span>
-                      <h3 className="font-bold font-cairo text-right">{notification.title}</h3>
-                      {!notification.read && (
-                        <div className="h-2 w-2 rounded-full bg-growup"></div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2 text-right font-cairo">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-500 font-cairo">
-                      {formatDate(notification.createdAt)}
-                    </p>
-                  </div>
-                  <div className="flex gap-1 mr-2">
-                    {!notification.read && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-1 h-auto font-cairo" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead(notification.id);
-                        }}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="p-1 h-auto text-red-500 hover:text-red-700" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNotification(notification.id);
-                      }}
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold font-cairo text-lg">{notification.title}</h3>
+                  {!notification.isRead && (
+                    <button
+                      onClick={() => markAsRead(notification.id)}
+                      className="text-growup hover:underline font-cairo text-sm"
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      تحديد كمقروء
+                    </button>
+                  )}
                 </div>
-              </div>
+                <p className="text-gray-600 font-cairo">{notification.message}</p>
+                <p className="text-gray-400 text-sm font-cairo">
+                  {new Date(notification.createdAt).toLocaleString()}
+                </p>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>
   );
-};
-
-export default Notifications;
+}

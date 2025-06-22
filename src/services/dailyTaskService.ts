@@ -1,49 +1,49 @@
 
 import { apiClient } from '@/lib/api';
-
-export interface DailyTask {
-  id: string;
-  title: string;
-  description?: string;
-  isCompleted: boolean;
-  priority: 'high' | 'medium' | 'low';
-  dueDate?: string;
-  category?: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { DailyTask } from '@/lib/types';
 
 export interface CreateDailyTaskRequest {
   title: string;
   description?: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: 'low' | 'medium' | 'high';
+  dueDate: string;
+}
+
+export interface UpdateDailyTaskRequest {
+  title?: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
   dueDate?: string;
-  category?: string;
 }
 
 export class DailyTaskService {
-  static async createTask(task: CreateDailyTaskRequest): Promise<DailyTask> {
-    return apiClient.post<DailyTask>('/dailyTask', task);
-  }
-
   static async getTasks(): Promise<DailyTask[]> {
-    return apiClient.get<DailyTask[]>('/dailyTask');
+    try {
+      const response = await apiClient.get<DailyTask[]>('/dailyTask');
+      return response || [];
+    } catch (error) {
+      console.error('Error fetching daily tasks:', error);
+      return [];
+    }
   }
 
-  static async getTaskById(id: string): Promise<DailyTask> {
-    return apiClient.get<DailyTask>(`/dailyTask/${id}`);
+  static async createTask(task: CreateDailyTaskRequest): Promise<DailyTask> {
+    return await apiClient.post<DailyTask>('/dailyTask', task);
   }
 
-  static async updateTask(id: string, task: Partial<CreateDailyTaskRequest>): Promise<DailyTask> {
-    return apiClient.patch<DailyTask>(`/dailyTask/${id}`, task);
+  static async updateTask(id: string, task: UpdateDailyTaskRequest): Promise<DailyTask> {
+    return await apiClient.patch<DailyTask>(`/dailyTask/${id}`, task);
   }
 
   static async markTaskComplete(id: string): Promise<DailyTask> {
-    return apiClient.patch<DailyTask>(`/dailyTask/${id}/complete`);
+    return await apiClient.patch<DailyTask>(`/dailyTask/${id}/complete`);
   }
 
   static async deleteTask(id: string): Promise<void> {
-    return apiClient.delete(`/dailyTask/${id}`);
+    await apiClient.delete(`/dailyTask/${id}`);
+  }
+
+  static async getTaskById(id: string): Promise<DailyTask> {
+    return await apiClient.get<DailyTask>(`/dailyTask/${id}`);
   }
 }

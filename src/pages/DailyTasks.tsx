@@ -1,303 +1,396 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/ui/AppHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Plus, CheckCircle2, Clock, Trash2, Edit } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Edit, Trash2, CheckCircle, Circle } from "lucide-react";
 import { DailyTaskService, CreateDailyTaskRequest } from "@/services/dailyTaskService";
+import { DailyTask } from "@/lib/types";
+import { DailyTaskForm } from "@/components/daily-tasks/DailyTaskForm";
+import { useNavigate } from "react-router-dom";
 
 export default function DailyTasks() {
+  const [tasks, setTasks] = useState<DailyTask[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<DailyTask | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    priority: "medium" as "low" | "medium" | "high"
-  });
 
-  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+    fetchTasks();
+  }, []);
 
-  // Get daily tasks
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ['dailyTasks'],
-    queryFn: DailyTaskService.getTasks,
-    enabled: isAuthenticated,
-  });
-
-  // Add task mutation
-  const addTaskMutation = useMutation({
-    mutationFn: (taskData: CreateDailyTaskRequest) => DailyTaskService.createTask(taskData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dailyTasks'] });
-      toast({
-        title: "تم إضافة المهمة",
-        description: "تمت إضافة المهمة بنجاح"
-      });
-      setNewTask({ title: "", description: "", priority: "medium" });
-      setShowAddForm(false);
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في إضافة المهمة",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Complete task mutation
-  const completeTaskMutation = useMutation({
-    mutationFn: (id: string) => DailyTaskService.markTaskComplete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dailyTasks'] });
-      toast({
-        title: "تم إنجاز المهمة",
-        description: "تم تحديث حالة المهمة"
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في تحديث المهمة",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Delete task mutation
-  const deleteTaskMutation = useMutation({
-    mutationFn: (id: string) => DailyTaskService.deleteTask(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dailyTasks'] });
-      toast({
-        title: "تم حذف المهمة",
-        description: "تم حذف المهمة بنجاح"
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في حذف المهمة",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleAddTask = () => {
-    if (!newTask.title.trim()) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال عنوان المهمة",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    addTaskMutation.mutate({
-      title: newTask.title,
-      description: newTask.description,
-      priority: newTask.priority
-    });
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "text-red-600 bg-red-50";
-      case "medium": return "text-yellow-600 bg-yellow-50";
-      case "low": return "text-green-600 bg-green-50";
-      default: return "text-gray-600 bg-gray-50";
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedTasks = await DailyTaskService.getTasks();
+      setTasks(fetchedTasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case "high": return "عالية";
-      case "medium": return "متوسطة";
-      case "low": return "منخفضة";
-      default: return "غير محدد";
+  const addTask = async (task: CreateDailyTaskRequest) => {
+    try {
+      const newTask = await DailyTaskService.createTask(task);
+      setTasks(prevTasks => [...prevTasks, newTask]);
+      setShowAddTaskForm(false);
+    } catch (error) {
+      console.error("Error creating task:", error);
     }
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  const updateTask = async (id: string, updatedTask: Partial<DailyTask>) => {
+    try {
+      const updated = await DailyTaskService.updateTask(id, updatedTask);
+      setTasks(prevTasks =>
+        prevTasks.map(task => (task.id === id ? { ...task, ...updated } : task))
+      );
+      setIsEditing(false);
+      setSelectedTask(null);
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg sm:text-xl font-cairo text-gray-600">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
+  const markTaskComplete = async (id: string) => {
+    try {
+      await DailyTaskService.markTaskComplete(id);
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === id ? { ...task, isCompleted: true } : task
+        )
+      );
+    } catch (error) {
+      console.error("Error marking task as complete:", error);
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      await DailyTaskService.deleteTask(id);
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const handleEditClick = (task: DailyTask) => {
+    setSelectedTask(task);
+    setIsEditing(true);
+    setShowAddTaskForm(true);
+  };
+
+  const completedTasks = tasks.filter(task => task.isCompleted);
+  const pendingTasks = tasks.filter(task => !task.isCompleted);
+  const overdueTasks = tasks.filter(task => 
+    !task.isCompleted && new Date(task.dueDate) < new Date()
+  );
+
+  const todayTasks = tasks.filter(task => {
+    const taskDate = new Date(task.dueDate).toDateString();
+    const today = new Date().toDateString();
+    return taskDate === today;
+  });
+
+  const completedTodayTasks = todayTasks.filter(task => task.isCompleted);
+
+  const toggleTaskCompletion = async (taskId: string, currentStatus: boolean) => {
+    if (currentStatus) {
+      // Task is currently completed, we need to mark it as incomplete
+      // This might require a separate API endpoint or updating the task
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        await updateTask(taskId, { ...task, isCompleted: false });
+      }
+    } else {
+      await markTaskComplete(taskId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="المهام اليومية" onBackClick={() => navigate('/main-menu')} />
-      
+      <AppHeader
+        showMenu
+        title="المهام اليومية"
+        onBackClick={() => navigate("/main-menu")}
+      />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <div className="mb-6 text-center">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2 font-cairo">مهامك اليومية</h1>
-          <p className="text-sm sm:text-base text-gray-600 font-cairo">نظم مهامك وحقق إنتاجية أفضل</p>
-        </div>
+        {/* Add Task Section */}
+        <section className="mb-6">
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md text-center border border-gray-100">
+            <h2 className="text-lg sm:text-xl font-bold font-cairo mb-2">
+              إدارة المهام اليومية
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 font-cairo">
+              خطط ليومك بكفاءة
+            </p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  setShowAddTaskForm(!showAddTaskForm);
+                  setSelectedTask(null);
+                  setIsEditing(false);
+                }}
+                className="flex items-center justify-center gap-2 text-growup font-bold hover:bg-growup/5 rounded-lg px-3 sm:px-4 py-2 transition-colors text-sm sm:text-base"
+              >
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>إضافة مهمة جديدة</span>
+              </button>
+            </div>
+          </div>
+        </section>
 
-        {/* Add Task Button */}
-        <div className="mb-6">
-          <Button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-growup hover:bg-growup-dark w-full text-sm sm:text-base py-2 sm:py-3"
-          >
-            <Plus className="ml-2 h-4 w-4" />
-            إضافة مهمة جديدة
-          </Button>
-        </div>
-
-        {/* Add Task Form */}
-        {showAddForm && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-right font-cairo text-lg sm:text-xl">إضافة مهمة جديدة</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-right block font-cairo text-sm sm:text-base">عنوان المهمة</Label>
-                  <Input
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                    className="text-right text-sm sm:text-base"
-                    placeholder="مثال: مراجعة التقارير الشهرية"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-right block font-cairo text-sm sm:text-base">الوصف (اختياري)</Label>
-                  <Textarea
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                    className="text-right text-sm sm:text-base"
-                    placeholder="تفاصيل إضافية عن المهمة"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-right block font-cairo text-sm sm:text-base">الأولوية</Label>
-                  <select
-                    value={newTask.priority}
-                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as "low" | "medium" | "high" })}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="low">منخفضة</option>
-                    <option value="medium">متوسطة</option>
-                    <option value="high">عالية</option>
-                  </select>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddForm(false)}
-                    className="text-sm sm:text-base py-2 sm:py-3"
-                  >
-                    إلغاء
-                  </Button>
-                  <Button
-                    onClick={handleAddTask}
-                    disabled={addTaskMutation.isPending}
-                    className="bg-growup hover:bg-growup-dark text-sm sm:text-base py-2 sm:py-3"
-                  >
-                    {addTaskMutation.isPending ? "جاري الإضافة..." : "إضافة المهمة"}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Add/Edit Task Form */}
+        {showAddTaskForm && (
+          <section className="mb-6">
+            <DailyTaskForm
+              onSubmit={addTask}
+              onUpdate={updateTask}
+              onCancel={() => {
+                setShowAddTaskForm(false);
+                setSelectedTask(null);
+                setIsEditing(false);
+              }}
+              task={selectedTask}
+              isEditing={isEditing}
+            />
+          </section>
         )}
 
-        {/* Tasks List */}
-        <div className="space-y-3 sm:space-y-4">
-          {tasks.map((task) => (
-            <Card key={task.id} className={`${task.completed ? 'bg-green-50 border-green-200' : 'bg-white'} transition-all duration-200`}>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex-1 text-right">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                        {getPriorityText(task.priority)}
-                      </span>
-                      <h3 className={`font-bold text-sm sm:text-base font-cairo ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                        {task.title}
-                      </h3>
+        {/* Task Lists */}
+        {isLoading ? (
+          <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p className="text-gray-500 mb-4 font-cairo text-sm sm:text-base">جاري التحميل...</p>
+          </div>
+        ) : (
+          <>
+            {/* Today's Tasks */}
+            <section className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg font-bold font-cairo">مهام اليوم</h3>
+              {todayTasks.length > 0 ? (
+                todayTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => toggleTaskCompletion(task.id, task.isCompleted)}
+                        className="mr-4"
+                      >
+                        {task.isCompleted ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-gray-400" />
+                        )}
+                      </button>
+                      <div>
+                        <h4
+                          className={`font-bold font-cairo ${
+                            task.isCompleted ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {task.title}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(task.dueDate).toLocaleDateString("ar-SA")}
+                        </p>
+                      </div>
                     </div>
-                    {task.description && (
-                      <p className={`text-xs sm:text-sm text-gray-600 font-cairo ${task.completed ? 'line-through' : ''}`}>
-                        {task.description}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-end gap-2 mt-2 text-xs text-gray-500">
-                      <Clock className="h-3 w-3" />
-                      <span>{new Date(task.createdAt).toLocaleDateString('ar-SA')}</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditClick(task)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={task.completed ? "default" : "outline"}
-                      onClick={() => completeTaskMutation.mutate(task.id)}
-                      disabled={completeTaskMutation.isPending}
-                      className={`text-xs sm:text-sm ${task.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
-                    >
-                      <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                      {task.completed ? "مكتملة" : "إنجاز"}
-                    </Button>
-                    
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => deleteTaskMutation.mutate(task.id)}
-                      disabled={deleteTaskMutation.isPending}
-                      className="text-red-600 hover:text-red-700 text-xs sm:text-sm"
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 font-cairo text-sm">لا توجد مهام محددة لهذا اليوم</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              )}
+            </section>
 
-          {tasks.length === 0 && (
-            <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
-              <p className="text-gray-500 mb-4 font-cairo text-sm sm:text-base">لا توجد مهام بعد</p>
-              <Button 
-                onClick={() => setShowAddForm(true)}
-                className="bg-growup hover:bg-growup-dark text-sm sm:text-base py-2 sm:py-3"
-              >
-                <Plus className="mr-0 ml-2 h-4 w-4" />
-                إضافة مهمة جديدة
-              </Button>
-            </div>
-          )}
-        </div>
+            {/* Pending Tasks */}
+            <section className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg font-bold font-cairo">المهام المعلقة</h3>
+              {pendingTasks.length > 0 ? (
+                pendingTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => toggleTaskCompletion(task.id, task.isCompleted)}
+                        className="mr-4"
+                      >
+                        {task.isCompleted ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-gray-400" />
+                        )}
+                      </button>
+                      <div>
+                        <h4
+                          className={`font-bold font-cairo ${
+                            task.isCompleted ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {task.title}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(task.dueDate).toLocaleDateString("ar-SA")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditClick(task)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 font-cairo text-sm">لا توجد مهام معلقة</p>
+                </div>
+              )}
+            </section>
+
+            {/* Completed Tasks */}
+            <section className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg font-bold font-cairo">المهام المكتملة</h3>
+              {completedTasks.length > 0 ? (
+                completedTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => toggleTaskCompletion(task.id, task.isCompleted)}
+                        className="mr-4"
+                      >
+                        {task.isCompleted ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-gray-400" />
+                        )}
+                      </button>
+                      <div>
+                        <h4
+                          className={`font-bold font-cairo ${
+                            task.isCompleted ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {task.title}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(task.dueDate).toLocaleDateString("ar-SA")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditClick(task)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 font-cairo text-sm">لا توجد مهام مكتملة</p>
+                </div>
+              )}
+            </section>
+
+            {/* Overdue Tasks */}
+            <section className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg font-bold font-cairo">المهام المتأخرة</h3>
+              {overdueTasks.length > 0 ? (
+                overdueTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => toggleTaskCompletion(task.id, task.isCompleted)}
+                        className="mr-4"
+                      >
+                        {task.isCompleted ? (
+                          <CheckCircle className="h-6 w-6 text-green-500" />
+                        ) : (
+                          <Circle className="h-6 w-6 text-gray-400" />
+                        )}
+                      </button>
+                      <div>
+                        <h4
+                          className={`font-bold font-cairo ${
+                            task.isCompleted ? "line-through text-gray-500" : ""
+                          }`}
+                        >
+                          {task.title}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {new Date(task.dueDate).toLocaleDateString("ar-SA")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleEditClick(task)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 font-cairo text-sm">لا توجد مهام متأخرة</p>
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </div>
   );

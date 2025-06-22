@@ -1,44 +1,51 @@
 
 import { apiClient } from '@/lib/api';
-
-export interface MajorGoal {
-  id: string;
-  title: string;
-  description?: string;
-  targetDate: string;
-  progress: number;
-  status: 'active' | 'completed' | 'paused';
-  category?: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { MajorGoal } from '@/lib/types';
 
 export interface CreateMajorGoalRequest {
   title: string;
-  description?: string;
+  description: string;
   targetDate: string;
+  totalSteps: number;
+  category: string;
+  priority: 'low' | 'medium' | 'high';
+}
+
+export interface UpdateMajorGoalRequest {
+  title?: string;
+  description?: string;
+  targetDate?: string;
+  currentProgress?: number;
+  totalSteps?: number;
   category?: string;
+  priority?: 'low' | 'medium' | 'high';
+  status?: 'active' | 'completed' | 'paused';
 }
 
 export class MajorGoalsService {
+  static async getMajorGoals(): Promise<MajorGoal[]> {
+    try {
+      const response = await apiClient.get<MajorGoal[]>('/majorgoals');
+      return response || [];
+    } catch (error) {
+      console.error('Error fetching major goals:', error);
+      return [];
+    }
+  }
+
   static async createMajorGoal(goal: CreateMajorGoalRequest): Promise<MajorGoal> {
-    return apiClient.post<MajorGoal>('/majorgoals', goal);
+    return await apiClient.post<MajorGoal>('/majorgoals', goal);
   }
 
-  static async getUserMajorGoals(): Promise<MajorGoal[]> {
-    return apiClient.get<MajorGoal[]>('/majorgoals');
-  }
-
-  static async getMajorGoalById(id: string): Promise<MajorGoal> {
-    return apiClient.get<MajorGoal>(`/majorgoals/${id}`);
-  }
-
-  static async updateMajorGoal(id: string, goal: Partial<CreateMajorGoalRequest>): Promise<MajorGoal> {
-    return apiClient.put<MajorGoal>(`/majorgoals/${id}`, goal);
+  static async updateMajorGoal(id: string, goal: UpdateMajorGoalRequest): Promise<MajorGoal> {
+    return await apiClient.put<MajorGoal>(`/majorgoals/${id}`, goal);
   }
 
   static async deleteMajorGoal(id: string): Promise<void> {
-    return apiClient.delete(`/majorgoals/${id}`);
+    await apiClient.delete(`/majorgoals/${id}`);
+  }
+
+  static async getMajorGoalById(id: string): Promise<MajorGoal> {
+    return await apiClient.get<MajorGoal>(`/majorgoals/${id}`);
   }
 }

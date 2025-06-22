@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { apiClient } from "@/lib/api";
+import { AuthService } from "@/services/authService";
 
 interface UserData {
   id: string;
@@ -28,16 +29,29 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<{ type: string; message: string } | null>(null);
 
-  const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
-    const targetPath = role === 'admin' ? '/admin' : '/dashboard';
-    const currentPath = window.location.pathname;
-
-    if (currentPath !== targetPath) {
-      console.log("Redirecting to:", targetPath);
-      navigate(targetPath, { replace: true });
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const user = localStorage.getItem('user');
+      if (user) {
+        const userData = JSON.parse(user);
+        console.log("User already logged in, redirecting...", userData);
+        redirectBasedOnRole(userData.role);
+      }
     }
-  }, [navigate]);
+  }, []);
 
+  const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
+    console.log("Redirecting based on role:", role);
+    const targetPath = role === 'admin' ? '/admin' : '/dashboard';
+    
+    // Use setTimeout to ensure navigation happens after component updates
+    setTimeout(() => {
+      console.log("Navigating to:", targetPath);
+      navigate(targetPath, { replace: true });
+    }, 100);
+  }, [navigate]);
 
   const toggleAuthMode = () => {
     setIsLogin((prev) => !prev);
@@ -56,12 +70,10 @@ export default function Login() {
       const idToken = await result.user.getIdToken();
       if (!idToken) throw new Error("فشل في إنشاء رمز المصادقة");
 
-      const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
-
-      if (!res.user || !res.token) throw new Error("استجابة غير صالحة من الخادم");
-
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      console.log("Google sign-in successful, calling API...");
+      const response = await AuthService.googleAuth(idToken);
+      
+      console.log("API response:", response);
 
       toast({
         title: "تم تسجيل الدخول بنجاح",
@@ -69,7 +81,7 @@ export default function Login() {
         duration: 2000
       });
 
-      redirectBasedOnRole(res.user.role);
+      redirectBasedOnRole(response.user.role);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
@@ -109,22 +121,25 @@ export default function Login() {
     }
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/register";
-      const body = isLogin ? { email, password } : { email, password, name };
+      console.log(`Attempting ${isLogin ? 'login' : 'register'}...`);
+      
+      let response;
+      if (isLogin) {
+        response = await AuthService.login({ email, password });
+      } else {
+        response = await AuthService.register({ email, password, name });
+      }
 
-      const res = await apiClient.post<{ user: UserData; token: string }>(endpoint, body);
-      const { user: userData, token } = res;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
+      console.log("Auth response:", response);
 
       toast({
         title: isLogin ? "تم تسجيل الدخول بنجاح" : "تم إنشاء الحساب بنجاح",
         description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
       });
 
-      redirectBasedOnRole(userData.role);
+      redirectBasedOnRole(response.user.role);
     } catch (error: any) {
+      console.error("Auth error:", error);
       const errData = error.response?.data;
       if (errData) handleAuthErrors(errData);
 
