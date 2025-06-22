@@ -29,35 +29,40 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<{ type: string; message: string } | null>(null);
 
-  // Check if user is already logged in on component mount
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const user = localStorage.getItem('user');
-      if (user) {
-        const userData = JSON.parse(user);
-        console.log("User already logged in, redirecting...", userData);
-        redirectBasedOnRole(userData.role);
-      }
-    }
-  }, []);
-
-  const redirectBasedOnRole = useCallback((role: 'user' | 'admin') => {
-    console.log("Redirecting based on role:", role);
-    const targetPath = role === 'admin' ? '/admin' : '/dashboard';
-    
-    // Use setTimeout to ensure navigation happens after component updates
-    setTimeout(() => {
-      console.log("Navigating to:", targetPath);
-      navigate(targetPath, { replace: true });
-    }, 100);
-  }, [navigate]);
 
   const toggleAuthMode = () => {
     setIsLogin((prev) => !prev);
     setAuthError(null);
   };
 
+  useEffect(() => {
+    // Check if user is already logged in when component mounts
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      const userData = JSON.parse(user);
+      navigate(userData.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    }
+  }, []);
+
+  const handleAuthSuccess = (response: any) => {
+    // Save user data to localStorage
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+
+    // Show success message
+    toast({
+      title: "تم تسجيل الدخول بنجاح",
+      description: "مرحباً بك في GrowUp!",
+      duration: 2000
+    });
+
+    // Navigate after a short delay to allow toast to show
+    setTimeout(() => {
+      navigate(response.user.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    }, 500);
+  };
   const signInWithGoogle = async () => {
     setIsLoading(true);
     setAuthError(null);
@@ -70,18 +75,8 @@ export default function Login() {
       const idToken = await result.user.getIdToken();
       if (!idToken) throw new Error("فشل في إنشاء رمز المصادقة");
 
-      console.log("Google sign-in successful, calling API...");
       const response = await AuthService.googleAuth(idToken);
-      
-      console.log("API response:", response);
-
-      toast({
-        title: "تم تسجيل الدخول بنجاح",
-        description: "مرحباً بك في GrowUp!",
-        duration: 2000
-      });
-
-      redirectBasedOnRole(response.user.role);
+      handleAuthSuccess(response);
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
       let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
@@ -121,23 +116,13 @@ export default function Login() {
     }
 
     try {
-      console.log(`Attempting ${isLogin ? 'login' : 'register'}...`);
-      
-      let response;
+      let response: Awaited<ReturnType<typeof AuthService.login>> | Awaited<ReturnType<typeof AuthService.register>>;
       if (isLogin) {
         response = await AuthService.login({ email, password });
       } else {
         response = await AuthService.register({ email, password, name });
       }
-
-      console.log("Auth response:", response);
-
-      toast({
-        title: isLogin ? "تم تسجيل الدخول بنجاح" : "تم إنشاء الحساب بنجاح",
-        description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
-      });
-
-      redirectBasedOnRole(response.user.role);
+      handleAuthSuccess(response);
     } catch (error: any) {
       console.error("Auth error:", error);
       const errData = error.response?.data;
@@ -167,7 +152,6 @@ export default function Login() {
       message: messages[errorData.errorType] || errorData.message || "حدث خطأ أثناء المصادقة",
     });
   };
-
   return (
     <div className="min-h-screen w-full bg-growup-light">
       <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">

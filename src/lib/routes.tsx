@@ -1,9 +1,9 @@
-
 import { lazy, Suspense } from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/sidebar/AppSidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Loading } from '@/components/shared/Loading';
+import { useAuth } from '@/hooks/useAuth';
 
 // Core Pages
 import OnboardingScreen from '@/pages/OnboardingScreen';
@@ -25,6 +25,7 @@ import LegalMenu from '@/pages/legal/LegalMenu';
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
 import TermsOfService from '@/pages/legal/TermsOfService';
 import RefundPolicy from '@/pages/legal/RefundPolicy';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Lazy Pages
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -41,25 +42,6 @@ const AdminContent = lazy(() => import('@/pages/admin/Content'));
 const AdminSupport = lazy(() => import('@/pages/admin/Support'));
 const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: 'user' | 'admin';
-}
-
-const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  const userRole = user ? JSON.parse(user).role : null;
-
-  if (!token) return <Navigate to="/login" replace />;
-  
-  if (requiredRole && userRole !== requiredRole) {
-    return <Navigate to={userRole === 'admin' ? '/admin' : '/not-authorized'} replace />;
-  }
-
-  return <>{children}</>;
-};
-
 const withSidebar = (Component: React.ComponentType) => (
   <SidebarProvider>
     <AppSidebar />
@@ -71,36 +53,35 @@ const withSidebar = (Component: React.ComponentType) => (
   </SidebarProvider>
 );
 
+const RootElement = () => {
+  const { user } = useAuth();
+  const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+
+  // If you have a loading state elsewhere, handle it there. Otherwise, remove this check.
+  // if (loading) return <Loading />;
+  
+  if (!user) {
+    return <Navigate to={onboardingCompleted === 'true' ? '/login' : '/onboarding'} replace />;
+  }
+  
+  return <Navigate to={user && 'role' in user && (user as any).role === 'admin' ? '/admin' : '/dashboard'} replace />;
+};
+
+const LoginElement = () => {
+  const { user } = useAuth();
+  return user ? <Navigate to="/dashboard" replace /> : <Login />;
+};
+
 export const appRoutes: RouteObject[] = [
-  // Root route - check for authentication and redirect appropriately
   {
     path: '/',
-    element: (() => {
-      const token = localStorage.getItem('token');
-      const onboardingCompleted = localStorage.getItem('onboardingCompleted');
-      
-      if (!token) {
-        if (onboardingCompleted === 'true') {
-          return <Navigate to="/login" replace />;
-        } else {
-          return <Navigate to="/onboarding" replace />;
-        }
-      } else {
-        return <Navigate to="/dashboard" replace />;
-      }
-    })(),
+    element: <ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>,
   },
-
-  // Public Routes
-  { path: '/onboarding', element: <OnboardingScreen /> },
   {
     path: '/login',
-    element: localStorage.getItem('token') ? (
-      <Navigate to="/dashboard" replace />
-    ) : (
-      <Login />
-    ),
+    element: <Login />,
   },
+  { path: '/onboarding', element: <OnboardingScreen /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/reset-password', element: <ResetPassword /> },
   { path: '/legal', element: <LegalMenu /> },
@@ -109,7 +90,6 @@ export const appRoutes: RouteObject[] = [
   { path: '/refund-policy', element: <RefundPolicy /> },
   { path: '/contact', element: <Contact /> },
   { path: '/not-authorized', element: <div className="p-4 text-center">ليس لديك صلاحية الوصول إلى هذه الصفحة</div> },
-
   // Main Menu Route
   {
     path: '/main-menu',
@@ -123,11 +103,7 @@ export const appRoutes: RouteObject[] = [
   // Protected Routes - User
   {
     path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        {withSidebar(Dashboard)}
-      </ProtectedRoute>
-    ),
+    element: <ProtectedRoute>{withSidebar(Dashboard)}</ProtectedRoute>,
   },
   {
     path: '/self-development',
