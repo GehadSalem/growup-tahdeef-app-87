@@ -18,6 +18,7 @@ export interface AuthResponse {
     id: string;
     email: string;
     name: string;
+    role?: string;
   };
 }
 
@@ -36,8 +37,8 @@ export class AuthService {
     return response;
   }
 
-  static async googleAuth(token: string): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/google', { idToken: token });
+  static async googleAuth(idToken: string): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>('/auth/google', { idToken });
     localStorage.setItem('token', response.token);
     localStorage.setItem('user', JSON.stringify(response.user));
     return response;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { apiClient } from "@/lib/api";
+import { AuthService } from "@/services/authService";
 
 interface UserData {
   id: string;
@@ -33,8 +34,14 @@ export default function Login() {
     const userData = localStorage.getItem("user");
 
     if (token && userData) {
-      const user: UserData = JSON.parse(userData);
-      redirectBasedOnRole(user.role);
+      try {
+        const user: UserData = JSON.parse(userData);
+        redirectBasedOnRole(user.role);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -48,64 +55,55 @@ export default function Login() {
   };
 
   const signInWithGoogle = async () => {
-  setIsLoading(true);
-  setAuthError(null);
-  const provider = new GoogleAuthProvider();
+    setIsLoading(true);
+    setAuthError(null);
+    const provider = new GoogleAuthProvider();
 
-  try {
-    const result = await signInWithPopup(auth, provider);
-    
-    // تأكيد أن المستخدم قد سجل الدخول بالفعل
-    if (!result.user) {
-      throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
+    try {
+      const result = await signInWithPopup(auth, provider);
+      
+      if (!result.user) {
+        throw new Error("فشل الحصول على بيانات المستخدم من جوجل");
+      }
+
+      const idToken = await result.user.getIdToken();
+      
+      if (!idToken) {
+        throw new Error("فشل في إنشاء رمز المصادقة");
+      }
+
+      const response = await AuthService.googleAuth(idToken);
+
+      toast({ 
+        title: "تم تسجيل الدخول بنجاح", 
+        description: "مرحباً بك في GrowUp!",
+        duration: 2000 
+      });
+      
+      redirectBasedOnRole(response.user.role as 'user' | 'admin');
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+      
+      let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "تم إلغاء طلب التسجيل";
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
+      }
+
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: error.message || errorMessage,
+        variant: "destructive",
+        duration: 3000
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    const idToken = await result.user.getIdToken();
-    
-    // إضافة تحقق إضافي للـ token
-    if (!idToken) {
-      throw new Error("فشل في إنشاء رمز المصادقة");
-    }
-
-    const res = await apiClient.post<{ user: UserData; token: string }>("/auth/google", { idToken });
-
-    if (!res.user || !res.token) {
-      throw new Error("استجابة غير صالحة من الخادم");
-    }
-
-    localStorage.setItem("token", res.token);
-    localStorage.setItem("user", JSON.stringify(res.user));
-
-    toast({ 
-      title: "تم تسجيل الدخول بنجاح", 
-      description: "مرحباً بك في GrowUp!",
-      duration: 2000 
-    });
-    
-    redirectBasedOnRole(res.user.role);
-  } catch (error: any) {
-    console.error("Google Sign-In Error:", error);
-    
-    let errorMessage = "حدث خطأ أثناء تسجيل الدخول بجوجل";
-    
-    if (error.code === 'auth/popup-closed-by-user') {
-      errorMessage = "تم إغلاق نافذة التسجيل قبل إكمال العملية";
-    } else if (error.code === 'auth/cancelled-popup-request') {
-      errorMessage = "تم إلغاء طلب التسجيل";
-    } else if (error.code === 'auth/account-exists-with-different-credential') {
-      errorMessage = "هذا البريد الإلكتروني مسجل بالفعل بطريقة تسجيل مختلفة";
-    }
-
-    toast({
-      title: "خطأ في تسجيل الدخول",
-      description: error.response?.data?.message || errorMessage,
-      variant: "destructive",
-      duration: 3000
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,32 +121,33 @@ export default function Login() {
     }
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/register";
-      const body = isLogin ? { email, password } : { email, password, name };
-
-      const res = await apiClient.post<{ user: UserData; token: string }>(endpoint, body);
-      const { user: userData, token } = res;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
+      let response;
+      
+      if (isLogin) {
+        response = await AuthService.login({ email, password });
+      } else {
+        response = await AuthService.register({ email, password, name });
+      }
 
       toast({
         title: isLogin ? "تم تسجيل الدخول بنجاح" : "تم إنشاء الحساب بنجاح",
         description: isLogin ? "مرحباً بك مجدداً!" : "مرحباً بك في GrowUp!",
       });
 
-      redirectBasedOnRole(userData.role);
+      redirectBasedOnRole(response.user.role as 'user' | 'admin');
     } catch (error: any) {
-      const errData = error.response?.data;
+      console.error("Auth Error:", error);
+      
+      // Handle specific API errors
+      const errorMessage = error.response?.data?.message || error.message || "حدث خطأ غير متوقع";
+      const errorType = error.response?.data?.errorType;
 
-      if (errData) {
-        handleAuthErrors(errData);
-      }
-
-      if (!authError) {
+      if (errorType) {
+        handleAuthErrors({ errorType, message: errorMessage });
+      } else {
         toast({
           title: "خطأ",
-          description: errData?.message || error.message || "حدث خطأ غير متوقع",
+          description: errorMessage,
           variant: "destructive",
         });
       }
