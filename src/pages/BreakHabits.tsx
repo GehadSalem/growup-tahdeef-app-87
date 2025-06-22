@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -10,10 +9,18 @@ import { MotivationalTips } from "@/components/bad-habits/MotivationalTips";
 import { useNavigate } from "react-router-dom";
 
 export default function BreakHabits() {
-  const { badHabits, addBadHabit, incrementDayCount, calculateProgress } = useBadHabits();
+  const {
+    badHabits,
+    isLoading,
+    addBadHabit,
+    incrementDayCount,
+    calculateProgress,
+    isAdding,
+  } = useBadHabits();
+
   const [showAddForm, setShowAddForm] = useState(false);
   const navigate = useNavigate();
-  
+
   const handleAddHabit = (habit: { name: string; goal: string; alternativeAction: string }) => {
     addBadHabit(habit);
     setShowAddForm(false);
@@ -21,15 +28,21 @@ export default function BreakHabits() {
 
   return (
     <div className="min-h-screen bg-gray-50 w-full">
-      <AppHeader showMenu title="كسر العادات السيئة" onBackClick={() => navigate('/main-menu')} />
+      <AppHeader
+        showMenu
+        title="كسر العادات السيئة"
+        onBackClick={() => navigate("/main-menu")}
+      />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        {/* قسم العنوان */}
+        {/* العنوان */}
         <section className="mb-6">
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md text-center border border-gray-100">
             <h2 className="text-lg sm:text-xl font-bold font-cairo mb-2">مسار التغيير</h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 font-cairo">كل يوم تصمد فيه هو انتصار على نفسك</p>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 font-cairo">
+              كل يوم تصمد فيه هو انتصار على نفسك
+            </p>
             <div className="flex justify-center">
-              <button 
+              <button
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="flex items-center justify-center gap-2 text-growup font-bold hover:bg-growup/5 rounded-lg px-3 sm:px-4 py-2 transition-colors text-sm sm:text-base"
               >
@@ -39,43 +52,53 @@ export default function BreakHabits() {
             </div>
           </div>
         </section>
-        
-        {/* نموذج إضافة عادة سيئة */}
+
+        {/* نموذج الإضافة */}
         {showAddForm && (
           <section className="mb-6">
-            <BadHabitForm 
+            <BadHabitForm
               onAddHabit={handleAddHabit}
               onCancel={() => setShowAddForm(false)}
             />
           </section>
         )}
-        
-        {/* قائمة العادات السيئة */}
-        <section className="space-y-4 sm:space-y-6">
-          {/* {badHabits.map(habit => (
-            <BadHabitCard
-              key={habit.id}
-              habit={habit}
-              onIncrementDay={incrementDayCount}
-              progressPercentage={calculateProgress(habit.dayCount)}
-            />
-          ))} */}
-          
-          {badHabits.length === 0 && !showAddForm && (
-            <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
-              <p className="text-gray-500 mb-4 font-cairo text-sm sm:text-base">لم تقم بإضافة أي عادات بعد</p>
-              <Button 
-                onClick={() => setShowAddForm(true)}
-                className="bg-growup hover:bg-growup-dark text-sm sm:text-base py-2 sm:py-3"
-              >
-                <Plus className="mr-0 ml-2 h-4 w-4" />
-                إضافة عادة للتخلص منها
-              </Button>
-            </div>
-          )}
-        </section>
-        
-        {/* قسم النصائح التحفيزية */}
+
+        {/* عرض العادات أو شاشة التحميل */}
+        {isLoading ? (
+          <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p className="text-gray-500 mb-4 font-cairo text-sm sm:text-base">جاري التحميل...</p>
+          </div>
+        ) : (
+          <section className="space-y-4 sm:space-y-6">
+            {badHabits.length > 0 ? (
+              badHabits.map((habit) => (
+                <BadHabitCard
+                  key={habit.id}
+                  habit={habit}
+                  onIncrementDay={incrementDayCount}
+                  progressPercentage={calculateProgress(habit.dayCount)}
+                />
+              ))
+            ) : (
+              !showAddForm && (
+                <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <p className="text-gray-500 mb-4 font-cairo text-sm sm:text-base">
+                    لم تقم بإضافة أي عادات بعد
+                  </p>
+                  <Button
+                    onClick={() => setShowAddForm(true)}
+                    className="bg-growup hover:bg-growup-dark text-sm sm:text-base py-2 sm:py-3"
+                  >
+                    <Plus className="mr-0 ml-2 h-4 w-4" />
+                    إضافة عادة للتخلص منها
+                  </Button>
+                </div>
+              )
+            )}
+          </section>
+        )}
+
+        {/* النصائح */}
         <section className="mt-6 sm:mt-8">
           <MotivationalTips />
         </section>
