@@ -86,7 +86,7 @@ export const appRoutes: RouteObject[] = [
           return <Navigate to="/onboarding" replace />;
         }
       } else {
-        return <Navigate to="/main-menu" replace />;
+        return <Navigate to="/dashboard" replace />;
       }
     })(),
   },
@@ -96,7 +96,7 @@ export const appRoutes: RouteObject[] = [
   {
     path: '/login',
     element: localStorage.getItem('token') ? (
-      <Navigate to="/main-menu" replace />
+      <Navigate to="/dashboard" replace />
     ) : (
       <Login />
     ),
