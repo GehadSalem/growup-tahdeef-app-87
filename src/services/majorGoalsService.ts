@@ -19,6 +19,7 @@ export interface CreateMajorGoalRequest {
   description?: string;
   targetDate: string;
   category?: string;
+  estimatedCost?: number;
 }
 
 export class MajorGoalsService {

@@ -74,7 +74,7 @@ export default function MajorGoals() {
   const [newGoal, setNewGoal] = useState({
     title: "",
     description: "",
-    targetAmount: 0,
+    estimatedCost: 0,
     currentAmount: 0,
     targetDate: "",
     category: "marriage",
@@ -103,7 +103,7 @@ export default function MajorGoals() {
       setNewGoal({
         title: "",
         description: "",
-        targetAmount: 0,
+        estimatedCost: 0,
         currentAmount: 0,
         targetDate: "",
         category: "marriage",
@@ -133,11 +133,11 @@ export default function MajorGoals() {
       console.log(data);
 
       // Check if goal is achieved
-      if (data.targetAmount && data.currentAmount >= data.targetAmount) {
+      if (data.estimatedCost && data.currentAmount >= data.estimatedCost) {
         await NotificationHelper.sendGoalNotification("completed", data.title);
       } else {
-        const progress = data.targetAmount
-          ? (data.currentAmount / data.targetAmount) * 100
+        const progress = data.estimatedCost
+          ? (data.currentAmount / data.estimatedCost) * 100
           : 0;
         if (progress >= 50 && progress < 100) {
           await NotificationHelper.sendGoalNotification(
@@ -242,7 +242,7 @@ export default function MajorGoals() {
       return;
     }
 
-    if (newGoal.targetAmount <= 0) {
+    if (newGoal.estimatedCost <= 0) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال تكلفة صحيحة للهدف",
@@ -428,11 +428,11 @@ export default function MajorGoals() {
                       id="goal-cost"
                       type="number"
                       placeholder="التكلفة الإجمالية"
-                      value={newGoal.targetAmount || ""}
+                      value={newGoal.estimatedCost || ""}
                       onChange={(e) =>
                         setNewGoal({
                           ...newGoal,
-                          targetAmount: Number(e.target.value),
+                          estimatedCost: Number(e.target.value),
                         })
                       }
                       className="text-sm"
@@ -534,7 +534,7 @@ export default function MajorGoals() {
                         <div className="flex justify-between text-xs sm:text-sm">
                           <span>التكلفة الإجمالية:</span>
                           <span className="font-bold">
-                            {(goal.targetAmount || 0).toLocaleString()} ريال
+                            {(goal.estimatedCost || 0).toLocaleString()} ريال
                           </span>
                         </div>
 

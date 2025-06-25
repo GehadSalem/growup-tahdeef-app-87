@@ -14,6 +14,7 @@ export interface BadHabit {
 export interface CreateBadHabitRequest {
   name: string;
   description?: string;
+  severity?: number;
 }
 
 export class BadHabitsService {
