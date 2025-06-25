@@ -1,7 +1,7 @@
 
 // Base API configuration
-// const API_BASE_URL = 'https://api.growupe.com/api';
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://api.growupe.com/api';
+// const API_BASE_URL = 'http://localhost:3000/api';
 const SECRET_PREFIX = 'yoursecretkey__';
 
 // API client with authentication

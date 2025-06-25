@@ -111,6 +111,7 @@ export interface MajorGoal {
  * نوع المستخدم
  */
 export interface User {
+  role?: 'user' | 'admin';
   id: string;
   name: string;
   email: string;
@@ -122,6 +123,7 @@ export interface User {
   };
   referralCode?: string;
   referralCount?: number;
+  
 }
 
 /**

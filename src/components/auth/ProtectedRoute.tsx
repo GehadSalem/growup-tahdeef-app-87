@@ -1,28 +1,30 @@
-
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { Loading } from '@/components/shared/Loading';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: 'user' | 'admin';
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+  const location = useLocation();
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl font-cairo text-gray-600">جاري التحميل...</p>
-        </div>
-      </div>
-    );
+  if (!token || !user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!isAuthenticated) {
+  try {
+    const userData = JSON.parse(user);
+    
+    if (requiredRole && userData.role !== requiredRole) {
+      return <Navigate to="/not-authorized" replace />;
+    }
+
+    return <>{children}</>;
+  } catch (e) {
     return <Navigate to="/login" replace />;
   }
-
-  return <>{children}</>;
 };

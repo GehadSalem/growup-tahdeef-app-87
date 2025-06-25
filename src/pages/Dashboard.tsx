@@ -16,11 +16,11 @@ export default function Dashboard() {
   const { isAuthenticated } = useAuth();
   
   // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     navigate('/login');
+  //   }
+  // }, [isAuthenticated, navigate]);
 
   // Get expenses and incomes for charts
   const { data: expensesData = [], isLoading: expensesLoading } = useQuery({
