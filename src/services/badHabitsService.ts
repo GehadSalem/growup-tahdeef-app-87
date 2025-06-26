@@ -4,17 +4,22 @@ import { apiClient } from '@/lib/api';
 export interface BadHabit {
   id: string;
   name: string;
-  description?: string;
+  goal: string;
   dayCount: number;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
+  alternativeAction: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastOccurrence?: string;
 }
 
 export interface CreateBadHabitRequest {
   name: string;
+  goal: string;
+  dayCount: number;
+  alternativeAction: string;
   description?: string;
-  severity?: number;
+  lastOccurrence?: string;
 }
 
 export class BadHabitsService {
