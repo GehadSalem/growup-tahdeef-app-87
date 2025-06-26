@@ -12,6 +12,9 @@ export interface MajorGoal {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  currentAmount:number;
+  estimatedCost?: number;
+  remainingAmount?: number;
 }
 
 export interface CreateMajorGoalRequest {

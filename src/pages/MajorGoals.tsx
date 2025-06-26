@@ -130,13 +130,11 @@ export default function MajorGoals() {
     }) => MajorGoalsService.updateMajorGoal(id, { currentAmount } as any),
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["major-goals"] });
-      console.log(data);
-
       // Check if goal is achieved
       if (data.estimatedCost && data.currentAmount >= data.estimatedCost) {
         await NotificationHelper.sendGoalNotification("completed", data.title);
       } else {
-        const progress = data.estimatedCost
+        const progress = data.currentAmount
           ? (data.currentAmount / data.estimatedCost) * 100
           : 0;
         if (progress >= 50 && progress < 100) {
@@ -185,11 +183,14 @@ export default function MajorGoals() {
 
   // حساب المدة المتبقية بالشهور للوصول للهدف
   const calculateMonthsToGoal = (goal: any): number => {
-    if (!goal.targetDate || !goal.targetAmount || goal.targetAmount <= 0)
-      return 0;
-
+    
+    if (!goal.targetDate) return 0;
+    console.log("passs");
+    
     const monthlyRequired = calculateRequiredMonthlySaving(goal);
-    if (monthlyRequired <= 0) return 0;
+    console.log("monthlyRequired", monthlyRequired);
+    
+    if (monthlyRequired >= 0) return monthlyRequired;
 
     const remainingAmount =
       (goal.targetAmount || 0) - (goal.currentAmount || 0);
@@ -214,23 +215,32 @@ export default function MajorGoals() {
 
   // حساب المبلغ الشهري اللازم توفيره للوصول للهدف في الوقت المحدد
   const calculateRequiredMonthlySaving = (goal: any): number => {
-    if (!goal.targetDate || !goal.targetAmount) return 0;
-
+    if (!goal.targetDate) return 0;
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
-
+    
     // حساب الفرق بالشهور
     const monthsDiff =
       (targetDate.getFullYear() - today.getFullYear()) * 12 +
       (targetDate.getMonth() - today.getMonth());
-
-    if (monthsDiff <= 0) return 0;
-
+    
+    if (monthsDiff >= 0) return monthsDiff
+  };
+  const calculateMoneyRequiredMonthlySaving = (goal: any): number => {
+    if (!goal.targetDate) return 0;
+    const today = new Date();
+    const targetDate = new Date(goal.targetDate);
+    
+    // حساب الفرق بالشهور
+    const monthsDiff =
+      (targetDate.getFullYear() - today.getFullYear()) * 12 +
+      (targetDate.getMonth() - today.getMonth());
+    
     const remainingAmount =
-      (goal.targetAmount || 0) - (goal.currentAmount || 0);
+      (goal.estimatedCost || 0) - (goal.currentAmount || 0);
+      
     return Math.ceil(remainingAmount / monthsDiff);
   };
-
   // إضافة هدف جديد
   const handleAddGoal = () => {
     if (newGoal.title.trim() === "") {
@@ -312,8 +322,8 @@ export default function MajorGoals() {
 
   // حساب نسبة التقدم نحو الهدف
   const calculateProgress = (goal: any): number => {
-    if (!goal.targetAmount || goal.targetAmount <= 0) return 0;
-    return Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100);
+    if (!goal.estimatedCost || goal.estimatedCost <= 0) return 0;
+    return Math.min(100, ((goal.currentAmount || 0) / goal.estimatedCost) * 100);
   };
 
   // تنسيق التاريخ بشكل مقروء
@@ -561,7 +571,7 @@ export default function MajorGoals() {
                         <div className="flex justify-between text-xs sm:text-sm">
                           <span>المبلغ الشهري المطلوب:</span>
                           <span className="font-bold">
-                            {calculateRequiredMonthlySaving(
+                            {calculateMoneyRequiredMonthlySaving(
                               goal
                             ).toLocaleString()}{" "}
                             ريال
