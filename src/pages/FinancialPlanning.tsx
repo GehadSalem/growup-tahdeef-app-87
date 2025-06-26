@@ -140,7 +140,7 @@ const FinancialPlanning = () => {
                expenseDate.getFullYear() === currentYear;
       });
       
-      const total = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+      const total = monthlyExpenses.reduce((sum, expense) => sum + +expense.amount, 0);
       setTotalExpenses(total);
       
       // Convert API expenses to local format
@@ -166,6 +166,8 @@ const FinancialPlanning = () => {
 
   // Calculate remaining balance
   const remainingBalance = monthlyIncome - emergencyFund - totalExpenses;
+  console.log(monthlyIncome, emergencyFund, totalExpenses, remainingBalance);
+  
   const emergencyFundProgress = monthlyIncome > 0 ? (emergencyFund / (monthlyIncome * 6)) * 100 : 0;
 
   const expenseCategories = [
@@ -316,7 +318,8 @@ const FinancialPlanning = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )
+              }
             </div>
           </CardContent>
         </Card>
