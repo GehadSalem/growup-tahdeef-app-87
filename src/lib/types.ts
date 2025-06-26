@@ -193,7 +193,7 @@ export interface Referral {
 /**
  * نوع المهمة اليومية
  */
-export interface DailyTask {
+export interface DailyTaskFrontend {
   id: string;
   title: string;
   description?: string;
@@ -203,6 +203,13 @@ export interface DailyTask {
   createdAt: string;
   updatedAt: string;
   userId: string;
+  isRecurring?: boolean;
+  frequency?: {
+    interval: 'daily' | 'weekly' | 'monthly';
+    daysOfWeek?: number[];
+    dayOfMonth?: number;
+  };
+  reminderTime?: string;
 }
 
 /**
