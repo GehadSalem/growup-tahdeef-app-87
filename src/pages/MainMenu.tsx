@@ -94,28 +94,12 @@ const MainMenu = () => {
       bgColor: "bg-yellow-50"
     },
     {
-      title: "المناسبات والفعاليات",
-      description: "تخطيط وتنظيم المناسبات",
-      icon: Calendar,
-      route: "/events",
-      color: "text-teal-500",
-      bgColor: "bg-teal-50"
-    },
-    {
       title: "المدونة",
       description: "مقالات ونصائح مالية",
       icon: Book,
       route: "/blog",
       color: "text-indigo-500",
       bgColor: "bg-indigo-50"
-    },
-    {
-      title: "المجتمع",
-      description: "تواصل مع الآخرين",
-      icon: MessageSquare,
-      route: "/community",
-      color: "text-pink-500",
-      bgColor: "bg-pink-50"
     },
     {
       title: "الإشعارات",

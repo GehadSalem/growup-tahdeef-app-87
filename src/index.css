@@ -1,5 +1,5 @@
 /* 1. Font imports must come first */
-@import '@fontsource-variable/cairo';
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
 
 /* 2. Tailwind directives */
 @tailwind base;
@@ -74,21 +74,19 @@
   }
 
   html, body, #root {
-    @apply bg-background text-foreground font-cairo scroll-smooth;
+    @apply bg-background text-foreground font-tajawal scroll-smooth;
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
     direction: rtl;
-    line-height: 1.5; /* Base line height */
+    line-height: 1.5;
   }
 
-  /* Consistent line height for all text elements */
   body {
     line-height: inherit;
   }
 
-  /* Heading line heights */
   h1 {
     line-height: 1.2;
   }
@@ -98,13 +96,9 @@
   h3, h4, h5, h6 {
     line-height: 1.4;
   }
-
-  /* Paragraph and text elements */
   p, li, span, a, blockquote {
     line-height: 1.6;
   }
-
-  /* Form elements */
   input, textarea, select, button, label {
     line-height: 1.5;
   }
@@ -112,12 +106,12 @@
 
 /* 4. Components layer */
 @layer components {
-  .font-cairo {
-    font-family: 'Cairo Variable', sans-serif;
+  .font-tajawal {
+    font-family: 'Tajawal', sans-serif;
   }
   
   .btn-primary {
-    @apply bg-growup text-white rounded-xl py-3 px-6 font-cairo font-bold hover:bg-growup-dark transition-all shadow-md;
+    @apply bg-growup text-white rounded-xl py-3 px-6 font-tajawal font-bold hover:bg-growup-dark transition-all shadow-md;
     line-height: 1.5;
   }
   
@@ -140,7 +134,7 @@
   }
   
   .input-field {
-    @apply w-full rounded-lg border border-gray-200 px-4 py-3 text-right font-cairo focus:border-growup focus:outline-none focus:ring-1 focus:ring-growup;
+    @apply w-full rounded-lg border border-gray-200 px-4 py-3 text-right font-tajawal focus:border-growup focus:outline-none focus:ring-1 focus:ring-growup;
     line-height: 1.5;
   }
   
@@ -156,7 +150,6 @@
     @apply h-full rounded-full bg-growup transition-all duration-300;
   }
 
-  /* Line height utility classes */
   .leading-tighter {
     line-height: 1.1;
   }
@@ -173,3 +166,4 @@
     line-height: 2;
   }
 }
+
