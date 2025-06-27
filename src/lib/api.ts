@@ -1,7 +1,7 @@
 
 // Base API configuration
-// const API_BASE_URL = 'https://api.growupe.com/api';
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://api.growupe.com/api';
+// const API_BASE_URL = 'http://localhost:3000/api';
 const SECRET_PREFIX = 'yoursecretkey__';
 
 // API client with authentication
@@ -13,57 +13,64 @@ class ApiClient {
   }
 
   private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = localStorage.getItem('token');
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)
-        ? options.headers as Record<string, string>
-        : {}),
-    };
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem('token');
 
-    if (token) {
-      headers.Authorization = `${SECRET_PREFIX}${token}`;
-    }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers && typeof options.headers === 'object' && !Array.isArray(options.headers)
+      ? options.headers as Record<string, string>
+      : {}),
+  };
 
-    const config: RequestInit = {
-      ...options,
-      headers,
-    };
+  // لا تضيف التوكن لو الطلب تسجيل دخول أو تسجيل
+  const skipAuth = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/google');
 
-    console.log(`API Request: ${options.method || 'GET'} ${this.baseURL}${endpoint}`);
-    
-    const response = await fetch(`${this.baseURL}${endpoint}`, config);
-    
-    console.log(`API Response: ${response.status} ${response.statusText}`);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
+  if (token && !skipAuth) {
+    headers.Authorization = `${SECRET_PREFIX}${token}`;
+  }
+
+  const config: RequestInit = {
+    ...options,
+    headers,
+  };
+
+  console.log(`API Request: ${options.method || 'GET'} ${this.baseURL}${endpoint}`);
+
+  const response = await fetch(`${this.baseURL}${endpoint}`, config);
+
+  console.log(`API Response: ${response.status} ${response.statusText}`);
+
+  if (!response.ok) {
+    if (response.status === 401 && !skipAuth) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
       }
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
-
-    // Handle 204 No Content responses
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    // Check if response has content before parsing JSON
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return response.json();
+      const errorData = await response.json();
+      throw { response: { status: response.status, data: errorData } };
     }
-    
+    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  }
+
+  if (response.status === 204) {
     return undefined as T;
   }
+
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return undefined as T;
+}
+
 
   async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' });

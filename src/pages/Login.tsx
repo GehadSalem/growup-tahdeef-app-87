@@ -125,16 +125,22 @@ export default function Login() {
       handleAuthSuccess(response);
     } catch (error: any) {
       console.error("Auth error:", error);
-      const errData = error.response?.data;
-      if (errData) handleAuthErrors(errData);
+const errData = error?.response?.data;
 
-      if (!authError) {
-        toast({
-          title: "خطأ",
-          description: errData?.message || error.message || "حدث خطأ غير متوقع",
-          variant: "destructive",
-        });
-      }
+if (errData) {
+  console.log("Error details:", errData); // دي هتظهرلك الرسالة الأصلية
+  handleAuthErrors(errData);
+} else {
+  console.log("Raw error:", error);
+}
+
+toast({
+  title: "خطأ",
+  description: errData?.message || error.message || "حدث خطأ غير متوقع",
+  variant: "destructive",
+  duration: 5000,
+});
+
     } finally {
       setIsLoading(false);
     }
