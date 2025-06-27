@@ -581,7 +581,7 @@ const [obligationDueDate, setObligationDueDate] = useState<Date | null>(null);
                             }
                           />
                         </div>
-                        <div>
+                        <div className="">
                           <Label>يوم الاستحقاق في الشهر</Label>
                           {/* <Select
                             value={obligationDueDate.toString()}
@@ -604,9 +604,9 @@ const [obligationDueDate, setObligationDueDate] = useState<Date | null>(null);
                           </Select> */}
                           <Input
   type="date"
-  className="text-right"
-  value={obligationDueDate}
-  onChange={(e) => setObligationDueDate(new Date(e.target.value))}
+  className="text-right justify-end"
+  value={obligationDueDate ? obligationDueDate.toISOString().split("T")[0] : ""}
+  onChange={(e) => setObligationDueDate(e.target.value ? new Date(e.target.value) : null)}
 />
                         </div>
                         <div className="flex gap-2 justify-end">
