@@ -212,7 +212,7 @@ const handleAddInstallment = () => {
   return (
     <Card className="min-w-[320px] w-[320px]">
       <CardHeader>
-        <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
+        <CardTitle className="text-right text-[20px] font-cairo flex items-center justify-start gap-2">
           <Calculator className="h-5 w-5" />
           حاسبة الأقساط الشهرية
         </CardTitle>

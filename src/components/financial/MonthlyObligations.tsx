@@ -111,7 +111,7 @@ useEffect(() => {
       <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold font-cairo">الالتزامات الشهرية</h1>
+        <h1 className="text-[20px] font-bold font-cairo">الالتزامات الشهرية</h1>
         <Button
           className="bg-growup hover:bg-growup-dark"
           onClick={() => setShowAddDialog(true)}
