@@ -1,186 +1,128 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, DollarSign, PieChart } from "lucide-react";
-import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { useQuery } from "@tanstack/react-query";
-import { ExpenseService } from "@/services/expenseService";
-import { IncomeService } from "@/services/incomeService";
+import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useToast } from "@/hooks/use-toast";
 
-interface MonthlySummaryProps {
-  income: number;
-}
+// Initial empty expenses array
+const initialExpenses = [];
 
-export function MonthlySummary({ income }: MonthlySummaryProps) {
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+// Sample data for income/expense
+const initialMonthlyData = [
+  { name: "الدخل", value: 0, color: "#4CAF50" },
+  { name: "المصروفات", value: 0, color: "#F44336" },
+];
 
-  // Get expenses from API
-  const { data: expensesData = [] } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: ExpenseService.getExpenses,
-  });
-
-  // Get incomes from API
-  const { data: incomesData = [] } = useQuery({
-    queryKey: ['incomes'],
-    queryFn: IncomeService.getUserIncomes,
-  });
-
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-
-  // Filter current month expenses
-  const monthlyExpenses = expensesData.filter(expense => {
-    const expenseDate = new Date(expense.date);
-    return expenseDate.getMonth() + 1 === currentMonth && 
-           expenseDate.getFullYear() === currentYear;
-  });
-
-  // Filter current month incomes
-  const monthlyIncomes = incomesData.filter(income => {
-    const incomeDate = new Date(income.date);
-    return incomeDate.getMonth() + 1 === currentMonth && 
-           incomeDate.getFullYear() === currentYear;
-  });
-
-  // Calculate totals
-  const totalExpenses = monthlyExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
-  const totalMonthlyIncome = monthlyIncomes.reduce((sum, income) => sum + (income.amount || 0), 0);
-  const actualIncome = totalMonthlyIncome || income || 0;
+export function MonthlySummary({ income }) {
+  const { toast } = useToast();
+  const [expenses, setExpenses] = useState(initialExpenses);
+  const [monthlyData, setMonthlyData] = useState(initialMonthlyData);
   
-  // Calculate percentage and remaining amount
-  const expensePercentage = actualIncome > 0 ? (totalExpenses / actualIncome) * 100 : 0;
-  const remainingAmount = actualIncome - totalExpenses;
-
+  // Calculate total expenses
+  const totalExpenses = expenses.reduce((sum, item) => sum + item.value, 0);
+  
+  // Calculate savings
+  const savings = income - totalExpenses;
+  
+  // Update monthly data whenever income or expenses change
   useEffect(() => {
-    if (monthlyExpenses.length > 0) {
-      // Group expenses by category for chart
-      const categoryData = monthlyExpenses.reduce((acc, expense) => {
-        const category = expense.category || 'غير محدد';
-        const amount = expense.amount || 0;
-        
-        const existingCategory = acc.find(item => item.name === category);
-        if (existingCategory) {
-          existingCategory.value += amount;
-        } else {
-          acc.push({ name: category, value: amount });
-        }
-        return acc;
-      }, []);
-      
-      setMonthlyData(categoryData);
-    } else {
-      setMonthlyData([]);
+    setMonthlyData([
+      { name: "الدخل", value: income, color: "#4CAF50" },
+      { name: "المصروفات", value: totalExpenses, color: "#F44336" }
+    ]);
+
+    // Check if expenses are getting too high
+    if (totalExpenses > income * 0.8 && income > 0) {
+      toast({
+        title: "تنبيه!",
+        description: "المصروفات تقترب من حد الدخل الشهري",
+        variant: "destructive"
+      });
     }
-  }, [monthlyExpenses]);
-
-  // Colors for pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-
-  const formatCurrency = (value: number) => {
-    if (isNaN(value) || !isFinite(value)) return '0 ر.س';
-    
-    return new Intl.NumberFormat('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  }, [income, totalExpenses, toast]);
 
   return (
-    <section className="mb-4 sm:mb-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-right font-cairo text-base sm:text-lg lg:text-xl">ملخص الشهر الحالي</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* الإحصائيات النصية */}
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex justify-between items-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 ml-2" />
-                  <span className="text-lg sm:text-xl font-bold text-blue-600">{formatCurrency(actualIncome)}</span>
-                </div>
-                <span className="text-gray-700 font-cairo text-sm sm:text-base">الدخل الشهري</span>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 sm:p-4 bg-red-50 rounded-lg">
-                <div className="flex items-center">
-                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 ml-2" />
-                  <span className="text-lg sm:text-xl font-bold text-red-600">{formatCurrency(totalExpenses)}</span>
-                </div>
-                <span className="text-gray-700 font-cairo text-sm sm:text-base">إجمالي المصروفات</span>
-              </div>
-              
-              <div className={`flex justify-between items-center p-3 sm:p-4 rounded-lg ${remainingAmount >= 0 ? 'bg-green-50' : 'bg-orange-50'}`}>
-                <div className="flex items-center">
-                  <TrendingUp className={`h-4 w-4 sm:h-5 sm:w-5 ml-2 ${remainingAmount >= 0 ? 'text-green-600' : 'text-orange-600'}`} />
-                  <span className={`text-lg sm:text-xl font-bold ${remainingAmount >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
-                    {formatCurrency(Math.abs(remainingAmount))}
-                  </span>
-                </div>
-                <span className="text-gray-700 font-cairo text-sm sm:text-base">
-                  {remainingAmount >= 0 ? 'المتبقي' : 'العجز'}
-                </span>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-cairo">{isNaN(expensePercentage) ? '0' : expensePercentage.toFixed(1)}%</span>
-                  <span className="text-gray-600 font-cairo">نسبة المصروفات من الدخل</span>
-                </div>
-                <Progress 
-                  value={isNaN(expensePercentage) ? 0 : (expensePercentage > 100 ? 100 : expensePercentage)} 
-                  className="h-2"
+    <section className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-right font-cairo">ملخص الشهر</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={monthlyData}>
+                <Bar dataKey="value">
+                  {monthlyData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+                <Tooltip 
+                  formatter={(value) => [`${value} ريال`, ""]}
+                  labelFormatter={() => ""}
+                  contentStyle={{ textAlign: 'right', fontFamily: 'Cairo Variable' }}
                 />
-                {expensePercentage > 80 && !isNaN(expensePercentage) && (
-                  <p className="text-xs sm:text-sm text-orange-600 text-right font-cairo">
-                    تحذير: نسبة المصروفات مرتفعة! حاول تقليل المصروفات غير الضرورية.
-                  </p>
-                )}
+              </BarChart>
+            </ResponsiveContainer>
+            
+            <div className="space-y-2 mt-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-[#4CAF50] mr-2"></div>
+                  <span className="font-cairo">{income} ر.س</span>
+                </div>
+                <span className="font-cairo">الدخل</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-[#F44336] mr-2"></div>
+                  <span className="font-cairo">{totalExpenses} ر.س</span>
+                </div>
+                <span className="font-cairo">المصروفات</span>
+              </div>
+              
+              <div className="flex justify-between items-center font-bold">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-[#2196F3] mr-2"></div>
+                  <span className="font-cairo">{savings} ر.س</span>
+                </div>
+                <span className="font-cairo">التوفير</span>
               </div>
             </div>
-            
-            {/* المخطط الدائري */}
-            {monthlyData.length > 0 && (
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex items-center justify-end gap-2 mb-3">
-                  <span className="font-cairo font-bold text-sm sm:text-base">توزيع المصروفات</span>
-                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                </div>
-                <div className="h-48 sm:h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <Pie
-                        data={monthlyData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={60}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {monthlyData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number) => [formatCurrency(value), 'المبلغ']}
-                        labelStyle={{ direction: 'rtl' }}
-                      />
-                      <Legend />
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-right font-cairo">توزيع المصروفات</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={expenses}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  label={({ name }) => name}
+                >
+                  {expenses.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Legend layout="vertical" align="right" verticalAlign="middle" />
+                <Tooltip 
+                  formatter={(value) => [`${value} ر.س`, ""]}
+                  contentStyle={{ textAlign: 'right', fontFamily: 'Cairo Variable' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   );
 }

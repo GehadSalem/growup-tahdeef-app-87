@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,48 +17,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Calendar, Mail, Link, LightbulbIcon, BadgeDollarSign, ChartBar, TrendingUp, TrendingDown, Wallet } from "lucide-react";
-
-interface ExpenseItem {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface WithdrawalItem {
-  amount: number;
-  reason: string;
-  date: string;
-}
-
-interface EmergencyFund {
-  totalAmount: number;
-  withdrawals: WithdrawalItem[];
-}
-
-interface FinancialReport {
-  month: string;
-  income: number;
-  totalExpenses: number;
-  expensePercentage: number;
-  remainingAmount: number;
-  categories: {
-    name: string;
-    amount: number;
-    percentage: number;
-  }[];
-  highestExpense: {
-    category: string;
-    amount: number;
-  };
-  emergencyFundWithdrawal: number;
-  emergencyFundWithdrawalReason: string;
-  tips: string[];
-}
+import { FinancialReport } from "@/lib/types";
 
 interface MonthlyReportProps {
   income: number;
-  expenses: ExpenseItem[];
-  emergencyFund?: EmergencyFund;
+  expenses: { name: string; value: number; color: string }[];
+  emergencyFund?: {
+    totalAmount: number;
+    withdrawals: { amount: number; reason: string; date: string }[];
+  };
 }
 
 export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReportProps) {
@@ -67,46 +35,21 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
   const [webhookUrl, setWebhookUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Helper functions with better error handling
-  const safeNumber = (value: unknown, defaultValue = 0): number => {
-    if (typeof value === 'number' && !isNaN(value)) return value;
-    if (typeof value === 'string') {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? defaultValue : parsed;
-    }
-    return defaultValue;
-  };
-
-  const safeToFixed = (value: unknown, digits = 0): string => {
-    const num = safeNumber(value);
-    return num.toFixed(digits);
-  };
-
-  // Calculate the month names
+  // Calculate the month name
   const currentMonth = format(new Date(), "MMMM yyyy", { locale: ar });
   const previousMonth = format(new Date(new Date().setMonth(new Date().getMonth() - 1)), "MMMM yyyy", { locale: ar });
   
-  // Calculate totals with safe number conversions and better data validation
-  const safeIncome = safeNumber(income);
-  const validExpenses = expenses.filter(expense => expense && typeof expense === 'object');
-  const totalExpenses = validExpenses.reduce((sum, expense) => {
-    const expenseAmount = safeNumber(expense.value);
-    return sum + expenseAmount;
-  }, 0);
+  // Calculate totals
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.value, 0);
+  const expensePercentage = income > 0 ? (totalExpenses / income) * 100 : 0;
+  const remaining = income - totalExpenses;
   
-  const expensePercentage = safeIncome > 0 ? (totalExpenses / safeIncome) * 100 : 0;
-  const remaining = safeIncome - totalExpenses;
-  
-  // Find highest expense category with better safeguards
-  let highestExpense = { name: "لا توجد مصروفات", amount: 0 };
-  if (validExpenses.length > 0) {
-    const expenseWithAmounts = validExpenses.map(expense => ({
-      name: expense.name || "مصروف غير محدد",
-      amount: safeNumber(expense.value)
-    }));
-    highestExpense = expenseWithAmounts.reduce((prev, current) => {
-      return prev.amount > current.amount ? prev : current;
-    }, { name: "", amount: 0 });
+  // Find highest expense category
+  let highestExpense = { name: "", value: 0 };
+  if (expenses.length > 0) {
+    highestExpense = expenses.reduce((prev, current) => 
+      (prev.value > current.value) ? prev : current
+    );
   }
   
   // Calculate emergency fund withdrawal if available
@@ -118,7 +61,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
           return withdrawalDate.getMonth() === now.getMonth() - 1 && 
                  withdrawalDate.getFullYear() === now.getFullYear();
         })
-        .reduce((sum, w) => sum + safeNumber(w.amount), 0)
+        .reduce((sum, w) => sum + w.amount, 0)
     : 0;
   
   const emergencyWithdrawalReason = emergencyFund?.withdrawals
@@ -133,29 +76,29 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
         .join(", ")
     : "";
   
-  // Prepare report data with better type safety
+  // Prepare report data
   const reportData: FinancialReport = {
     month: previousMonth,
-    income: safeIncome,
+    income: income,
     totalExpenses: totalExpenses,
     expensePercentage: expensePercentage,
     remainingAmount: remaining,
-    categories: validExpenses.map(expense => ({
-      name: expense.name || "مصروف غير محدد",
-      amount: safeNumber(expense.value),
-      percentage: safeIncome > 0 ? (safeNumber(expense.value) / safeIncome) * 100 : 0
+    categories: expenses.map(expense => ({
+      name: expense.name,
+      amount: expense.value,
+      percentage: income > 0 ? (expense.value / income) * 100 : 0
     })),
     highestExpense: {
       category: highestExpense.name,
-      amount: highestExpense.amount
+      amount: highestExpense.value
     },
     emergencyFundWithdrawal: emergencyWithdrawal,
     emergencyFundWithdrawalReason: emergencyWithdrawalReason,
     tips: [
       remaining > 0 
-        ? `لقد وفرت هذا الشهر ${safeToFixed(remaining)} ريال — استمر على هذا النهج!` 
+        ? `لقد وفرت هذا الشهر ${remaining.toFixed(0)} ريال — استمر على هذا النهج!` 
         : "حاول أن توفر جزءًا من دخلك الشهر القادم!",
-      highestExpense.name && highestExpense.name !== "لا توجد مصروفات"
+      highestExpense.name 
         ? `الإنفاق على ${highestExpense.name} كان مرتفعًا — حاول تقليله في الشهر القادم.`
         : "تتبع مصاريفك باستمرار لمعرفة أنماط الإنفاق الخاصة بك.",
       "استثمر المتبقي من راتبك في أهدافك الكبرى (تعليم، مشروع، صحة...)."
@@ -400,16 +343,20 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
     }
 
     setIsLoading(true);
+    console.log("إرسال تقرير إلى:", emailAddress);
+    console.log("باستخدام Webhook:", webhookUrl);
 
     try {
+      // إنشاء HTML للتقرير
       const htmlReport = generateHtmlReport();
       
+      // استدعاء webhook لإرسال البريد (Zapier أو أي خدمة أخرى)
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        mode: "no-cors",
+        mode: "no-cors", // للتعامل مع قيود CORS
         body: JSON.stringify({
           email: emailAddress,
           subject: `تقريرك المالي الشهري - ${previousMonth}`,
@@ -438,6 +385,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
   };
   
   const handlePreview = () => {
+    // Create a new window and write the HTML report to it
     const reportWindow = window.open("", "_blank");
     if (reportWindow) {
       reportWindow.document.write(generateHtmlReport());
@@ -497,7 +445,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
               
               <div className="space-y-2 mt-3">
                 <div className="flex justify-between">
-                  <span className="font-medium">{safeIncome.toFixed(0)} ريال</span>
+                  <span className="font-medium">{income.toFixed(0)} ريال</span>
                   <span>الراتب الكلي</span>
                 </div>
                 <div className="flex justify-between">
@@ -524,29 +472,20 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
               </div>
               
               <div className="mt-3">
-                {highestExpense.name && highestExpense.name !== "لا توجد مصروفات" && (
+                {highestExpense.name && (
                   <div className="bg-purple-50 p-2 rounded-md text-right mb-2">
                     <span className="block text-sm text-gray-600">أكثر بند تم الصرف عليه:</span>
-                    <span className="font-bold">{highestExpense.name} - {highestExpense.amount.toFixed(0)} ريال</span>
+                    <span className="font-bold">{highestExpense.name} - {highestExpense.value.toFixed(0)} ريال</span>
                   </div>
                 )}
                 
                 <div className="max-h-36 overflow-y-auto">
-                  {validExpenses.length > 0 ? (
-                    validExpenses.map((expense, index) => {
-                      const amount = safeNumber(expense.value);
-                      return (
-                        <div key={index} className="flex justify-between py-1 border-b border-gray-100">
-                          <span>{amount.toFixed(0)} ريال</span>
-                          <span>{expense.name || "مصروف غير محدد"}</span>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center text-gray-500 py-4">
-                      لا توجد مصروفات مسجلة
+                  {expenses.map((expense, index) => (
+                    <div key={index} className="flex justify-between py-1 border-b border-gray-100">
+                      <span>{expense.value.toFixed(0)} ريال</span>
+                      <span>{expense.name}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
@@ -571,7 +510,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
                 </li>
               )}
               
-              {highestExpense.name && highestExpense.name !== "لا توجد مصروفات" && (
+              {highestExpense.name && (
                 <li className="flex items-center justify-end gap-2">
                   <span>الإنفاق على {highestExpense.name} كان مرتفعًا — حاول تقليله في الشهر القادم.</span>
                   <Wallet className="h-4 w-4 text-amber-500" />
@@ -587,6 +526,7 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
         </div>
       </CardContent>
       
+      {/* Dialog for email report */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -643,3 +583,4 @@ export function MonthlyReport({ income, expenses, emergencyFund }: MonthlyReport
     </Card>
   );
 }
+

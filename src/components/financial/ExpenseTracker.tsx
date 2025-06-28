@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { ExpenseService, CreateExpenseRequest } from "@/services/expenseService";
 
 // Sample expense categories
 const EXPENSE_CATEGORIES = [
@@ -16,52 +14,19 @@ const EXPENSE_CATEGORIES = [
   { id: "entertainment", name: "ترفيه", color: "#FFBB28" },
   { id: "bills", name: "فواتير", color: "#0088FE" },
   { id: "shopping", name: "تسوق", color: "#FF8042" },
-  { id: "health", name: "صحة", color: "#8884d8" },
-  { id: "education", name: "تعليم", color: "#82ca9d" },
-  { id: "other", name: "أخرى", color: "#ffc658" }
+  { id: "other", name: "أخرى", color: "#8884d8" }
 ];
 
 export function ExpenseTracker() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [expenses, setExpenses] = useState([]);
   const [newExpense, setNewExpense] = useState({
     category: "food",
-    amount: 0,
-    description: ""
-  });
-
-  // Get expenses from API
-  const { data: expenses = [] } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: ExpenseService.getExpenses,
-  });
-
-  // Add expense mutation
-  const addExpenseMutation = useMutation({
-    mutationFn: (expenseData: CreateExpenseRequest) => ExpenseService.addExpense(expenseData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      toast({
-        title: "تم إضافة المصروف",
-        description: "تمت إضافة المصروف بنجاح"
-      });
-      setNewExpense({
-        category: "food",
-        amount: 0,
-        description: ""
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في إضافة المصروف",
-        variant: "destructive"
-      });
-    }
+    value: 0
   });
 
   const handleAddExpense = () => {
-    if (newExpense.amount <= 0) {
+    if (newExpense.value <= 0) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال قيمة صحيحة",
@@ -70,27 +35,51 @@ export function ExpenseTracker() {
       return;
     }
     
-    addExpenseMutation.mutate({
-      amount: newExpense.amount,
-      category: newExpense.category,
-      description: newExpense.description || undefined,
-      date: new Date().toISOString()
+    const category = EXPENSE_CATEGORIES.find(c => c.id === newExpense.category);
+    if (!category) return;
+    
+    // Check if category exists
+    const existingExpenseIndex = expenses.findIndex(e => e.category === newExpense.category);
+    
+    if (existingExpenseIndex >= 0) {
+      // Update existing expense
+      const updatedExpenses = [...expenses];
+      updatedExpenses[existingExpenseIndex].value += newExpense.value;
+      setExpenses(updatedExpenses);
+    } else {
+      // Add new expense
+      setExpenses([...expenses, {
+        category: newExpense.category,
+        name: category.name,
+        value: newExpense.value,
+        color: category.color
+      }]);
+    }
+    
+    setNewExpense({
+      category: "food",
+      value: 0
+    });
+    
+    toast({
+      title: "تم الإضافة",
+      description: "تمت إضافة المصروف بنجاح",
     });
   };
 
   return (
-    <section className="mb-4 sm:mb-6">
+    <section className="mb-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-right font-cairo text-lg sm:text-xl">إضافة مصروف جديد</CardTitle>
+          <CardTitle className="text-right font-cairo">إضافة مصروف جديد</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="expense-category">الفئة</Label>
+              <Label className="text-right block font-cairo" htmlFor="expense-category">الفئة</Label>
               <select
                 id="expense-category"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={newExpense.category}
                 onChange={e => setNewExpense({...newExpense, category: e.target.value})}
               >
@@ -103,59 +92,25 @@ export function ExpenseTracker() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="expense-amount">المبلغ (ر.س)</Label>
+              <Label className="text-right block font-cairo" htmlFor="expense-value">المبلغ (ر.س)</Label>
               <Input
-                id="expense-amount"
+                id="expense-value"
                 type="number"
-                value={newExpense.amount || ''}
-                onChange={e => setNewExpense({...newExpense, amount: Number(e.target.value)})}
+                value={newExpense.value || ''}
+                onChange={e => setNewExpense({...newExpense, value: Number(e.target.value)})}
                 min={0}
-                className="text-right text-sm sm:text-base"
-                placeholder="مثال: 50"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-right block font-cairo text-sm sm:text-base" htmlFor="expense-description">الوصف (اختياري)</Label>
-              <Input
-                id="expense-description"
-                type="text"
-                value={newExpense.description}
-                onChange={e => setNewExpense({...newExpense, description: e.target.value})}
-                className="text-right text-sm sm:text-base"
-                placeholder="مثال: غداء مع الأصدقاء"
+                className="text-right"
               />
             </div>
           </div>
           
           <Button
-            className="mt-4 bg-growup hover:bg-growup-dark w-full text-sm sm:text-base py-2 sm:py-3"
+            className="mt-4 bg-growup hover:bg-growup-dark w-full"
             onClick={handleAddExpense}
-            disabled={addExpenseMutation.isPending}
           >
             <Plus className="mr-0 ml-2 h-4 w-4" />
-            {addExpenseMutation.isPending ? "جاري الإضافة..." : "إضافة مصروف"}
+            إضافة مصروف
           </Button>
-
-          {/* Display recent expenses */}
-          {expenses.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-right font-cairo font-bold mb-3 text-sm sm:text-base">المصروفات الأخيرة</h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {expenses.slice(0, 5).map((expense) => (
-                  <div key={expense.id} className="flex justify-between items-center p-2 sm:p-3 bg-gray-50 rounded-md">
-                    <span className="text-sm sm:text-base font-cairo">{expense.amount} ر.س</span>
-                    <div className="text-right">
-                      <div className="font-bold text-xs sm:text-sm">{EXPENSE_CATEGORIES.find(cat => cat.id === expense.category)?.name || expense.category}</div>
-                      {expense.description && (
-                        <div className="text-gray-600 text-xs">{expense.description}</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </section>

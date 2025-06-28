@@ -22,7 +22,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
-import { Obligation } from "@/lib/types.ts";
 
 // تعريف نموذج البيانات
 const formSchema = z.object({
@@ -46,12 +45,7 @@ interface Installment {
   isPaid: boolean;
 }
 
-interface InstallmentCalculatorProps {
-  onAddObligation: (newObligation: Omit<Obligation, 'id'>) => void;
-}
-
-
-export function InstallmentCalculator({ onAddObligation }: InstallmentCalculatorProps)  {
+export function InstallmentCalculator() {
   const { toast } = useToast();
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
@@ -107,36 +101,38 @@ export function InstallmentCalculator({ onAddObligation }: InstallmentCalculator
     }
   };
 
-const handleAddInstallment = () => {
-  const values = form.getValues();
-  console.log("Form values:", values);
-
-  onAddObligation({
-    name: values.itemType,
-    type: "قسط",
-    totalAmount: values.itemPrice,
-    dueDate: addMonths(new Date(), values.months).toISOString().split("T")[0],
-    recurrence: "شهري",
-    notes: "",
-    isPaid: false,
-    enableNotifications: true,
-  });
-
-  console.log("تم استدعاء onAddObligation");
-
-  toast({
-    title: "تم الإضافة",
-    description: "تم إضافة القسط إلى الالتزامات بنجاح",
-  });
-
-  form.reset();
-  setCalculatedAmount(null);
-  setPercentageOfIncome(null);
-  setIsSuitable(null);
-};
-
-
-
+  const handleAddInstallment = () => {
+    const values = form.getValues();
+    const { monthlyAmount, percentage } = calculateMonthlyInstallment(values);
+    
+    const startDate = new Date();
+    const nextPaymentDate = addMonths(startDate, 1);
+    
+    const newInstallment: Installment = {
+      id: `installment-${Date.now()}`,
+      itemType: values.itemType,
+      itemPrice: values.itemPrice,
+      monthlyAmount: monthlyAmount,
+      totalMonths: values.months,
+      remainingMonths: values.months,
+      startDate: format(startDate, "yyyy-MM-dd"),
+      nextPaymentDate: format(nextPaymentDate, "yyyy-MM-dd"),
+      percentageOfIncome: percentage,
+      isPaid: false,
+    };
+    
+    setInstallments([...installments, newInstallment]);
+    
+    toast({
+      title: "تم إضافة القسط",
+      description: "تمت إضافة القسط الجديد إلى قائمة الالتزامات",
+    });
+    
+    form.reset();
+    setCalculatedAmount(null);
+    setPercentageOfIncome(null);
+    setIsSuitable(null);
+  };
 
   // تحديث حالة السداد
   const togglePaymentStatus = (id: string) => {
@@ -210,9 +206,9 @@ const handleAddInstallment = () => {
   }, [installments, toast]);
 
   return (
-    <Card className="min-w-[320px] w-[320px]">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-right text-[20px] font-cairo flex items-center justify-start gap-2">
+        <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
           <Calculator className="h-5 w-5" />
           حاسبة الأقساط الشهرية
         </CardTitle>
@@ -304,12 +300,12 @@ const handleAddInstallment = () => {
                   
                   {calculatedAmount !== null && (
                     <Button
-    type="button"
-    onClick={handleAddInstallment}
-    className="bg-blue-500 hover:bg-blue-600"
-  >
-    إضافة إلى الالتزامات
-  </Button>
+                      type="button"
+                      onClick={handleAddInstallment}
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      إضافة إلى الالتزامات
+                    </Button>
                   )}
                 </div>
               </form>

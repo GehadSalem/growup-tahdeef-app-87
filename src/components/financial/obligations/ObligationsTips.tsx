@@ -1,12 +1,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { LightbulbIcon } from "lucide-react";
-interface ObligationsTipsProps {
-  obligationPercentage: number;
-  savingsRemaining: number;
-}
 
-export function ObligationsTips({ obligationPercentage, savingsRemaining }: ObligationsTipsProps) {
+export function ObligationsTips() {
   return (
     <div className="mt-6">
       <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
