@@ -27,9 +27,6 @@ export class InstallmentService {
     return apiClient.get<Installment[]>('/installments');
   }
 
-  static async getInstallmentById(id: string): Promise<Installment> {
-    return apiClient.get<Installment>(`/installments/${id}`);
-  }
 
   static async markInstallmentPaid(id: string): Promise<Installment> {
     return apiClient.patch<Installment>(`/installments/${id}/pay`);
@@ -41,5 +38,13 @@ export class InstallmentService {
 
   static async deleteInstallment(id: string): Promise<void> {
     return apiClient.delete(`/installments/${id}`);
+  }
+  static async getInstallmentById(id: string): Promise<Installment> {
+    return apiClient.get<Installment>(`/installments/${id}`);
+  }
+
+  // Fetch all installments for a given plan ID
+  static async getInstallmentsByPlanId(planId: string): Promise<Installment[]> {
+    return apiClient.get<Installment[]>(`/installments?installmentPlanId=${planId}`);
   }
 }

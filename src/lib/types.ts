@@ -47,13 +47,29 @@ export interface MonthlyObligation {
   id: string;
   name: string;
   type: "loan" | "occasion" | "purchase" | "other"; // قسط - مناسبة - شراء - آخر
-  amount: number;
+  totalAmount: number;
   dueDate: string;
   frequency: "monthly" | "quarterly" | "yearly" | "once"; // شهري - ربع سنوي - سنوي - مرة واحدة
   isPaid: boolean;
   salaryImpactPercentage: number;
   notes?: string;
-  notificationSent?: boolean; // Add this property
+}
+// Shared types for obligations
+
+
+export type RecurrenceType = 'شهري' | 'ربع سنوي' | 'سنوي' | 'مرة واحدة';
+export type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
+export interface Obligation {
+  id: string;
+  name: string;
+  type: ObligationType;
+  totalAmount: number;
+  dueDate: string;
+  recurrence: RecurrenceType;
+  notes?: string;
+  isPaid: boolean;
+  enableNotifications: boolean;
+  notificationSent?: boolean;
 }
 
 /**

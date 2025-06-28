@@ -183,13 +183,12 @@ export default function MajorGoals() {
 
   // حساب المدة المتبقية بالشهور للوصول للهدف
   const calculateMonthsToGoal = (goal: any): number => {
-    
     if (!goal.targetDate) return 0;
     console.log("passs");
-    
+
     const monthlyRequired = calculateRequiredMonthlySaving(goal);
     console.log("monthlyRequired", monthlyRequired);
-    
+
     if (monthlyRequired >= 0) return monthlyRequired;
 
     const remainingAmount =
@@ -218,27 +217,27 @@ export default function MajorGoals() {
     if (!goal.targetDate) return 0;
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
-    
+
     // حساب الفرق بالشهور
     const monthsDiff =
       (targetDate.getFullYear() - today.getFullYear()) * 12 +
       (targetDate.getMonth() - today.getMonth());
-    
-    if (monthsDiff >= 0) return monthsDiff
+
+    if (monthsDiff >= 0) return monthsDiff;
   };
   const calculateMoneyRequiredMonthlySaving = (goal: any): number => {
     if (!goal.targetDate) return 0;
     const today = new Date();
     const targetDate = new Date(goal.targetDate);
-    
+
     // حساب الفرق بالشهور
     const monthsDiff =
       (targetDate.getFullYear() - today.getFullYear()) * 12 +
       (targetDate.getMonth() - today.getMonth());
-    
+
     const remainingAmount =
       (goal.estimatedCost || 0) - (goal.currentAmount || 0);
-      
+
     return Math.ceil(remainingAmount / monthsDiff);
   };
   // إضافة هدف جديد
@@ -323,7 +322,10 @@ export default function MajorGoals() {
   // حساب نسبة التقدم نحو الهدف
   const calculateProgress = (goal: any): number => {
     if (!goal.estimatedCost || goal.estimatedCost <= 0) return 0;
-    return Math.min(100, ((goal.currentAmount || 0) / goal.estimatedCost) * 100);
+    return Math.min(
+      100,
+      ((goal.currentAmount || 0) / goal.estimatedCost) * 100
+    );
   };
 
   // تنسيق التاريخ بشكل مقروء
@@ -471,11 +473,11 @@ export default function MajorGoals() {
                     <Input
                       id="goal-target-date"
                       type="date"
+                      className="text-right justify-end"
                       value={newGoal.targetDate}
                       onChange={(e) =>
                         setNewGoal({ ...newGoal, targetDate: e.target.value })
                       }
-                      className="text-sm"
                     />
                   </div>
                 </div>

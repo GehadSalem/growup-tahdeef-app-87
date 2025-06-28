@@ -1,11 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Calendar, AlertTriangle, Plus } from "lucide-react";
+import { Calculator, Calendar, AlertTriangle } from "lucide-react";
 import { format, addMonths } from "date-fns";
 import { ar } from "date-fns/locale";
+import { Progress } from "@/components/ui/progress";
 import {
   Form,
   FormControl,
@@ -19,561 +22,409 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CustomInstallmentPlanService, CreateCustomInstallmentPlanRequest } from "@/services/customInstallmentPlanService";
-import { InstallmentService, CreateInstallmentRequest } from "@/services/installmentService";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Obligation } from "@/lib/types.ts";
 
-// Update schema to match backend field names
-const planFormSchema = z.object({
-  name: z.string().min(1, { message: "يجب إدخال اسم المنتج" }), // Changed from productName
-  totalAmount: z.coerce.number().positive({ message: "يجب أن يكون التكلفة الإجمالية أكبر من صفر" }), // Changed from totalCost
-  downPayment: z.coerce.number().min(0).optional(),
-  monthlyAmount: z.coerce.number().int().min(1, { message: "يجب أن تكون عدد الأشهر أكبر من صفر" }), // Changed from monthsCount
-  interestRate: z.coerce.number().min(0).optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  notes: z.string().optional(),
+// تعريف نموذج البيانات
+const formSchema = z.object({
+  itemType: z.string().min(1, { message: "يجب إدخال نوع العنصر" }),
+  itemPrice: z.coerce.number().positive({ message: "يجب أن يكون السعر أكبر من صفر" }),
+  months: z.coerce.number().int().min(1, { message: "يجب أن يكون عدد الشهور أكبر من صفر" }),
+  monthlyIncome: z.coerce.number().positive({ message: "يجب إدخال الدخل الشهري" }),
 });
 
-// Update installment form schema to match backend
-const installmentFormSchema = z.object({
-  amount: z.coerce.number().positive({ message: "يجب أن يكون المبلغ أكبر من صفر" }),
-  paymentDate: z.string().min(1, { message: "يجب تحديد تاريخ الدفع" }),
-  paymentMethod: z.enum(['credit_card', 'bank_transfer', 'cash', 'other']).optional(),
-  notes: z.string().optional(),
-});
+// تعريف واجهة القسط
+interface Installment {
+  id: string;
+  itemType: string;
+  itemPrice: number;
+  monthlyAmount: number;
+  totalMonths: number;
+  remainingMonths: number;
+  startDate: string;
+  nextPaymentDate: string;
+  percentageOfIncome: number;
+  isPaid: boolean;
+}
 
-export function InstallmentCalculator() {
+interface InstallmentCalculatorProps {
+  onAddObligation: (newObligation: Omit<Obligation, 'id'>) => void;
+}
+
+
+export function InstallmentCalculator({ onAddObligation }: InstallmentCalculatorProps)  {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("plans");
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [installments, setInstallments] = useState<Installment[]>([]);
+  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null);
+  const [percentageOfIncome, setPercentageOfIncome] = useState<number | null>(null);
+  const [isSuitable, setIsSuitable] = useState<boolean | null>(null);
 
-  // استعلام الخطط المخصصة
-  const { data: customPlans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['custom-installment-plans'],
-    queryFn: CustomInstallmentPlanService.getPlans,
-  });
-
-  // استعلام الأقساط للخطة المحددة
-  const { data: installments = [], isLoading: installmentsLoading } = useQuery({
-    queryKey: ['installments', selectedPlanId],
-    queryFn: () => selectedPlanId ? InstallmentService.getInstallmentsByPlanId(selectedPlanId) : Promise.resolve([]),
-    enabled: !!selectedPlanId,
-  });
-
-  // Update form with new field names
-  const planForm = useForm<z.infer<typeof planFormSchema>>({
-    resolver: zodResolver(planFormSchema),
+  // تهيئة نموذج الحاسبة
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "", // Changed from productName
-      totalAmount: 0, // Changed from totalCost
-      downPayment: 0,
-      monthlyAmount: 12, // Changed from monthsCount
-      interestRate: 0,
-      startDate: format(new Date(), 'yyyy-MM-dd'),
-      dueDate: "",
-      notes: "",
+      itemType: "",
+      itemPrice: 0,
+      months: 12,
+      monthlyIncome: 0,
     },
   });
 
-  // Update installment form
-  const installmentForm = useForm<z.infer<typeof installmentFormSchema>>({
-    resolver: zodResolver(installmentFormSchema),
-    defaultValues: {
-      amount: 0,
-      paymentDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
-      paymentMethod: "bank_transfer",
-      notes: "",
-    },
-  });
+  // حساب القسط الشهري
+  const calculateMonthlyInstallment = (values: z.infer<typeof formSchema>) => {
+    const { itemPrice, months, monthlyIncome } = values;
+    
+    // حساب القسط الشهري (بدون فائدة في هذا المثال البسيط)
+    const monthlyAmount = itemPrice / months;
+    
+    // حساب نسبة القسط من الدخل
+    const percentage = (monthlyAmount / monthlyIncome) * 100;
+    
+    // تحديد ما إذا كان القسط مناسب (أقل من 40% من الدخل)
+    const suitable = percentage < 40;
+    
+    setCalculatedAmount(monthlyAmount);
+    setPercentageOfIncome(percentage);
+    setIsSuitable(suitable);
+    
+    return { monthlyAmount, percentage, suitable };
+  };
 
-  // إضافة خطة مخصصة جديدة
-  const createPlanMutation = useMutation({
-    mutationFn: CustomInstallmentPlanService.addPlan,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['custom-installment-plans'] });
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const { monthlyAmount, percentage, suitable } = calculateMonthlyInstallment(values);
+    
+    toast({
+      title: "تم حساب القسط الشهري",
+      description: `القسط الشهري: ${monthlyAmount.toFixed(2)} ريال`,
+    });
+    
+    // إظهار نصيحة مناسبة
+    if (!suitable) {
       toast({
-        title: "تم إنشاء الخطة",
-        description: "تم إنشاء خطة التقسيط المخصصة بنجاح",
-      });
-      planForm.reset();
-      setSelectedPlanId(data.id);
-      setActiveTab("installments");
-    },
-    onError: (error: any) => {
-      console.error('Create plan error:', error);
-      toast({
-        title: "خطأ",
-        description: error.message || "فشل في إنشاء الخطة",
+        title: "تنبيه!",
+        description: "ننصحك ألا يتجاوز القسط 40٪ من دخلك",
         variant: "destructive",
       });
     }
+  };
+
+const handleAddInstallment = () => {
+  const values = form.getValues();
+  console.log("Form values:", values);
+
+  onAddObligation({
+    name: values.itemType,
+    type: "قسط",
+    totalAmount: values.itemPrice,
+    dueDate: addMonths(new Date(), values.months).toISOString().split("T")[0],
+    recurrence: "شهري",
+    notes: "",
+    isPaid: false,
+    enableNotifications: true,
   });
 
-  // إضافة قسط لخطة موجودة
-  const createInstallmentMutation = useMutation({
-    mutationFn: InstallmentService.addInstallment,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['installments', selectedPlanId] });
-      toast({
-        title: "تم إضافة القسط",
-        description: "تم إضافة القسط للخطة بنجاح",
-      });
-      installmentForm.reset();
-    },
-    onError: (error: any) => {
-      console.error('Create installment error:', error);
-      toast({
-        title: "خطأ",
-        description: error.message || "فشل في إضافة القسط",
-        variant: "destructive",
-      });
-    }
+  console.log("تم استدعاء onAddObligation");
+
+  toast({
+    title: "تم الإضافة",
+    description: "تم إضافة القسط إلى الالتزامات بنجاح",
   });
 
-  // Update calculation function to use new field names
-  const calculateMonthlyAmount = (totalAmount: number, monthlyAmount: number, interestRate: number = 0, downPayment: number = 0) => {
-    if (totalAmount <= 0 || monthlyAmount <= 0) return 0;
-    
-    const loanAmount = totalAmount - downPayment;
-    
-    if (interestRate > 0) {
-      const monthlyRate = interestRate / 100 / 12;
-      const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, monthlyAmount)) / (Math.pow(1 + monthlyRate, monthlyAmount) - 1);
-      return monthlyPayment;
-    }
-    
-    return loanAmount / monthlyAmount;
-  };
+  form.reset();
+  setCalculatedAmount(null);
+  setPercentageOfIncome(null);
+  setIsSuitable(null);
+};
 
-  // Update form submission handlers
-  const onSubmitPlan = (values: z.infer<typeof planFormSchema>) => {
-    const planData: CreateCustomInstallmentPlanRequest = {
-      name: values.name, // Changed from productName
-      totalAmount: values.totalAmount, // Changed from totalCost
-      downPayment: values.downPayment || 0,
-      monthlyAmount: values.monthlyAmount, // Changed from monthsCount
-      interestRate: values.interestRate || 0,
-      startDate: values.startDate,
-      dueDate: values.dueDate || undefined,
-      notes: values.notes,
-    };
 
-    console.log('Creating plan with data:', planData);
-    createPlanMutation.mutate(planData);
-  };
 
-  const onSubmitInstallment = (values: z.infer<typeof installmentFormSchema>) => {
-    if (!selectedPlanId) {
-      toast({
-        title: "خطأ",
-        description: "يجب اختيار خطة أولاً",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    const installmentData: CreateInstallmentRequest = {
-      amount: values.amount,
-      paymentDate: values.paymentDate,
-      paymentMethod: values.paymentMethod || "bank_transfer",
-      installmentPlanId: selectedPlanId,
-      status: "pending",
-      notes: values.notes,
-    };
-
-    console.log('Creating installment with data:', installmentData);
-    createInstallmentMutation.mutate(installmentData);
-  };
-
-  if (plansLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-t-growup rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm font-cairo text-gray-600">جاري التحميل...</p>
-        </div>
-      </div>
+  // تحديث حالة السداد
+  const togglePaymentStatus = (id: string) => {
+    setInstallments(prevInstallments =>
+      prevInstallments.map(installment => {
+        if (installment.id === id) {
+          const isNowPaid = !installment.isPaid;
+          const updatedInstallment = { ...installment, isPaid: isNowPaid };
+          
+          if (isNowPaid) {
+            // إذا تم السداد، نقلل عدد الشهور المتبقية ونحدث تاريخ السداد التالي
+            const remainingMonths = installment.remainingMonths - 1;
+            if (remainingMonths > 0) {
+              const nextDate = addMonths(new Date(installment.nextPaymentDate), 1);
+              return {
+                ...updatedInstallment,
+                remainingMonths,
+                nextPaymentDate: format(nextDate, "yyyy-MM-dd"),
+              };
+            } else {
+              // القسط انتهى
+              toast({
+                title: "تهانينا!",
+                description: `تم الانتهاء من سداد قسط ${installment.itemType} بنجاح!`,
+              });
+            }
+          }
+          
+          return updatedInstallment;
+        }
+        return installment;
+      })
     );
-  }
+  };
+
+  // التحقق من مواعيد السداد وإرسال إشعارات
+  useEffect(() => {
+    const checkPaymentDates = () => {
+      const today = new Date();
+      const todayFormatted = format(today, "yyyy-MM-dd");
+      
+      installments.forEach(installment => {
+        if (!installment.isPaid && installment.nextPaymentDate === todayFormatted) {
+          toast({
+            title: "تذكير بالسداد!",
+            description: `حان موعد سداد قسط ${installment.itemType} بمبلغ ${installment.monthlyAmount.toFixed(2)} ريال`,
+          });
+        }
+      });
+    };
+    
+    // التحقق عند تحميل المكون وعند تغيير الأقساط
+    checkPaymentDates();
+    
+    // إعداد فحص يومي في الساعة 9 صباحًا
+    const now = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(now.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    
+    const timeUntilTomorrow = tomorrow.getTime() - now.getTime();
+    
+    const dailyCheck = setTimeout(() => {
+      checkPaymentDates();
+      // إعداد فحص متكرر كل 24 ساعة
+      const interval = setInterval(checkPaymentDates, 24 * 60 * 60 * 1000);
+      return () => clearInterval(interval);
+    }, timeUntilTomorrow);
+    
+    return () => clearTimeout(dailyCheck);
+  }, [installments, toast]);
 
   return (
-    <Card>
+    <Card className="min-w-[320px] w-[320px]">
       <CardHeader>
         <CardTitle className="text-right font-cairo flex items-center justify-end gap-2">
           <Calculator className="h-5 w-5" />
-          إدارة خطط التقسيط
+          حاسبة الأقساط الشهرية
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="plans">الخطط المخصصة</TabsTrigger>
-            <TabsTrigger value="installments">إدارة الأقساط</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="plans" className="space-y-6">
-            {/* Updated form with new field names */}
-            <Card className="bg-gray-50">
-              <CardHeader>
-                <CardTitle className="text-right text-lg">إنشاء خطة تقسيط مخصصة</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...planForm}>
-                  <form onSubmit={planForm.handleSubmit(onSubmitPlan)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={planForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">اسم المنتج</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="مثل: سيارة جديدة، أثاث المنزل..."
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={planForm.control}
-                        name="totalAmount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">التكلفة الإجمالية (ر.س)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="50000"
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={planForm.control}
-                        name="downPayment"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">الدفعة المقدمة (ر.س)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="10000"
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={planForm.control}
-                        name="monthlyAmount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">عدد الأشهر</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="12"
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={planForm.control}
-                        name="interestRate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">معدل الفائدة (%)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="5"
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription className="text-right text-sm">
-                              اتركه فارغاً إذا لم توجد فائدة
-                            </FormDescription>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={planForm.control}
-                        name="startDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-right block">تاريخ البداية</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                className="text-right"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-right" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Updated calculation display */}
-                    {planForm.watch('totalAmount') > 0 && planForm.watch('monthlyAmount') > 0 && (
-                      <div className="bg-blue-50 p-4 rounded-lg text-right">
-                        <p className="text-sm text-gray-600 mb-1">القسط الشهري المحسوب:</p>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {calculateMonthlyAmount(
-                            planForm.watch('totalAmount') || 0,
-                            planForm.watch('monthlyAmount') || 1,
-                            planForm.watch('interestRate') || 0,
-                            planForm.watch('downPayment') || 0
-                          ).toFixed(2)} ر.س
-                        </p>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      type="submit" 
-                      className="bg-growup hover:bg-growup-dark w-full"
-                      disabled={createPlanMutation.isPending}
-                    >
-                      {createPlanMutation.isPending ? "جاري الإنشاء..." : "إنشاء الخطة"}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-
-            {/* Updated plans display */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-right">الخطط المخصصة الموجودة</h3>
-              {customPlans.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <p className="text-gray-500">لا توجد خطط مخصصة بعد</p>
-                  <p className="text-sm text-gray-400 mt-2">ابدأ بإنشاء خطة جديدة أعلاه</p>
-                </Card>
-              ) : (
-                <div className="grid gap-4">
-                  {customPlans.map((plan) => (
-                    <Card key={plan.id} className={cn(
-                      "cursor-pointer transition-all",
-                      selectedPlanId === plan.id ? "ring-2 ring-growup bg-growup/5" : ""
-                    )}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedPlanId(plan.id);
-                                setActiveTab("installments");
-                              }}
-                              className="bg-growup hover:bg-growup-dark"
-                            >
-                              إدارة الأقساط
-                            </Button>
-                          </div>
-                          <div className="text-right">
-                            <h4 className="font-bold text-lg">{plan.name}</h4>
-                            <div className="flex gap-4 text-sm text-gray-600 justify-end mt-2">
-                              <span>{plan.monthlyInstallment.toFixed(2)} ر.س/شهرياً</span>
-                              <span>•</span>
-                              <span>{plan.monthlyAmount} شهر</span>
-                              <span>•</span>
-                              <span>{plan.totalAmount.toFixed(2)} ر.س إجمالي</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="installments" className="space-y-6">
-            {!selectedPlanId ? (
-              <Card className="p-8 text-center">
-                <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                <p className="text-lg font-bold mb-2">اختر خطة أولاً</p>
-                <p className="text-gray-500 mb-4">يجب اختيار خطة تقسيط من التبويب السابق لإدارة الأقساط</p>
-                <Button onClick={() => setActiveTab("plans")} className="bg-growup hover:bg-growup-dark">
-                  العودة للخطط
-                </Button>
-              </Card>
-            ) : (
-              <>
-                {/* Updated installment form */}
-                <Card className="bg-gray-50">
-                  <CardHeader>
-                    <CardTitle className="text-right text-lg">إضافة قسط جديد</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...installmentForm}>
-                      <form onSubmit={installmentForm.handleSubmit(onSubmitInstallment)} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={installmentForm.control}
-                            name="amount"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-right block">مبلغ القسط (ر.س)</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    placeholder="1000"
-                                    className="text-right"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-right" />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={installmentForm.control}
-                            name="paymentDate"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-right block">تاريخ الدفع</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="date"
-                                    className="text-right"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-right" />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={installmentForm.control}
-                            name="paymentMethod"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-right block">طريقة الدفع</FormLabel>
-                                <FormControl>
-                                  <select className="w-full p-2 border rounded text-right" {...field}>
-                                    <option value="bank_transfer">تحويل بنكي</option>
-                                    <option value="credit_card">بطاقة ائتمان</option>
-                                    <option value="cash">نقداً</option>
-                                    <option value="other">أخرى</option>
-                                  </select>
-                                </FormControl>
-                                <FormMessage className="text-right" />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={installmentForm.control}
-                            name="notes"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-right block">ملاحظات</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="ملاحظات إضافية..."
-                                    className="text-right"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-right" />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="submit" 
-                          className="bg-blue-500 hover:bg-blue-600 w-full"
-                          disabled={createInstallmentMutation.isPending}
-                        >
-                          {createInstallmentMutation.isPending ? "جاري الإضافة..." : "إضافة القسط"}
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-
-                {/* Updated installments display */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-right">أقساط الخطة المحددة</h3>
-                  {installmentsLoading ? (
-                    <div className="text-center p-4">
-                      <div className="w-6 h-6 border-4 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-                    </div>
-                  ) : installments.length === 0 ? (
-                    <Card className="p-8 text-center">
-                      <p className="text-gray-500">لا توجد أقساط لهذه الخطة بعد</p>
-                    </Card>
-                  ) : (
-                    <div className="space-y-3">
-                      {installments.map((installment) => (
-                        <Card key={installment.id} className="bg-white">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-center">
-                              <div className="flex gap-2 items-center">
-                                <Button
-                                  size="sm"
-                                  variant={installment.status === 'paid' ? "default" : "outline"}
-                                  className={installment.status === 'paid' ? "bg-green-500 hover:bg-green-600" : ""}
-                                >
-                                  {installment.status === 'paid' ? "مدفوع" : 
-                                   installment.status === 'late' ? "متأخر" :
-                                   installment.status === 'missed' ? "مفقود" : "غير مدفوع"}
-                                </Button>
-                                
-                                <div className="text-xs text-gray-500 flex items-center">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  <span>{format(new Date(installment.paymentDate), "d MMMM yyyy", { locale: ar })}</span>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <div className="font-bold">{installment.amount.toFixed(2)} ر.س</div>
-                                <div className="text-sm text-gray-600">
-                                  {installment.paymentMethod}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="itemType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-right block">نوع العنصر</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="مثل: سيارة، هاتف، أثاث..."
+                          className="text-right"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-right" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="itemPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-right block">سعر العنصر (ر.س)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="مثل: 50000"
+                          className="text-right"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-right" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="months"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-right block">عدد شهور التقسيط</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="مثل: 12"
+                          className="text-right"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-right" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="monthlyIncome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-right block">الدخل الشهري (ر.س)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="مثل: 10000"
+                          className="text-right"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-right" />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex gap-2 justify-end">
+                  <Button type="submit" className="bg-growup hover:bg-growup-dark">
+                    حساب القسط
+                  </Button>
+                  
+                  {calculatedAmount !== null && (
+                    <Button
+    type="button"
+    onClick={handleAddInstallment}
+    className="bg-blue-500 hover:bg-blue-600"
+  >
+    إضافة إلى الالتزامات
+  </Button>
                   )}
                 </div>
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+              </form>
+            </Form>
+          </div>
+          
+          {/* نتائج الحساب */}
+          {calculatedAmount !== null && percentageOfIncome !== null && (
+            <div className="bg-gray-50 p-4 rounded-md">
+              <h3 className="text-lg font-bold mb-4 text-right">نتائج الحساب:</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-cairo text-lg font-bold">{calculatedAmount.toFixed(2)} ر.س</span>
+                    <span className="text-gray-700">القسط الشهري:</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-cairo text-lg font-bold">
+                      {percentageOfIncome.toFixed(1)}٪
+                    </span>
+                    <span className="text-gray-700">نسبة القسط من الدخل:</span>
+                  </div>
+                  <Progress 
+                    value={percentageOfIncome} 
+                    className={cn("h-2", percentageOfIncome > 40 ? "bg-red-500" : "bg-green-500")}
+                  />
+                </div>
+                
+                <div className="mt-4">
+                  <div className={`p-3 rounded-md ${isSuitable ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <div className="flex items-center justify-end gap-2 mb-1 font-bold">
+                      <span>{isSuitable ? 'مناسب' : 'غير مناسب'}</span>
+                      {!isSuitable && <AlertTriangle className="h-5 w-5" />}
+                    </div>
+                    <p className="text-right text-sm">
+                      {isSuitable 
+                        ? "القسط في حدود الميزانية المناسبة ولا يشكل عبئًا على دخلك الشهري."
+                        : "ننصحك ألا يتجاوز القسط 40٪ من دخلك الشهري لتجنب الضغط المالي."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* قائمة الأقساط المضافة */}
+        {installments.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-lg font-bold mb-4 text-right">الأقساط المضافة:</h3>
+            <div className="space-y-3">
+              {installments.map((installment) => (
+                <Card key={installment.id} className="bg-gray-50">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={installment.isPaid ? "default" : "outline"}
+                          className={installment.isPaid ? "bg-green-500 hover:bg-green-600" : ""}
+                          onClick={() => togglePaymentStatus(installment.id)}
+                        >
+                          {installment.isPaid ? "تم السداد" : "غير مدفوع"}
+                        </Button>
+                        
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span dir="rtl">
+                            {format(new Date(installment.nextPaymentDate), "d MMMM yyyy", { locale: ar })}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="font-bold">{installment.itemType}</div>
+                        <div className="flex gap-2 text-sm text-gray-600 justify-end">
+                          <span>{installment.monthlyAmount.toFixed(2)} ر.س/شهريًا</span>
+                          <span>•</span>
+                          <span>{installment.remainingMonths} من {installment.totalMonths} شهر</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* نصائح للتقسيط */}
+        <div className="mt-8">
+          <Card className="bg-gradient-to-br from-growup/20 to-growup/5 border-none">
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-bold font-cairo mb-3 text-right">نصائح للتقسيط الذكي</h3>
+              
+              <div className="space-y-3 text-right">
+                <div className="bg-white/60 p-3 rounded-lg">
+                  <p className="font-cairo">تأكد من أن إجمالي أقساطك الشهرية لا يتجاوز 40% من دخلك.</p>
+                </div>
+                
+                <div className="bg-white/60 p-3 rounded-lg">
+                  <p className="font-cairo">قم بمقارنة خيارات التقسيط المختلفة للحصول على أفضل سعر فائدة.</p>
+                </div>
+                
+                <div className="bg-white/60 p-3 rounded-lg">
+                  <p className="font-cairo">ضع في اعتبارك المصاريف الإضافية مثل التأمين والصيانة عند شراء سيارة بالتقسيط.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </CardContent>
     </Card>
   );

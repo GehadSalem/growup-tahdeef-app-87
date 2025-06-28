@@ -89,7 +89,7 @@ const MainMenu = () => {
       title: "قائمة المهام",
       description: "إدارة المهام اليومية",
       icon: ListChecks,
-      route: "/todo",
+      route: "/daily-tasks",
       color: "text-yellow-500",
       bgColor: "bg-yellow-50"
     },

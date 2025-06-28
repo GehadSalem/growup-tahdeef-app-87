@@ -43,3 +43,49 @@
 .read-the-docs {
   color: #888;
 }
+
+/* ======== Custom style for react-mobile-datepicker ======== */
+
+.react-mobile-datepicker {
+  direction: rtl;
+  font-family: 'Cairo', sans-serif;
+  z-index: 9999;
+}
+
+.react-mobile-datepicker .datepicker-header {
+  background-color: #0E9F6E;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+}
+
+.react-mobile-datepicker .datepicker-wheel {
+  flex: 1;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.react-mobile-datepicker .datepicker-wheel-item {
+  padding: 10px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+.react-mobile-datepicker .datepicker-wheel-item.selected {
+  font-weight: bold;
+  color: #0E9F6E;
+}
+
+.react-mobile-datepicker .datepicker-footer {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.react-mobile-datepicker .datepicker-button {
+  padding: 6px 12px;
+  background-color: #0E9F6E;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}

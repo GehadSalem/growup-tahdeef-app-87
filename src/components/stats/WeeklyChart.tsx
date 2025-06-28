@@ -21,6 +21,7 @@ export function WeeklyChart({ data, className, barColor = "#219653" }: WeeklyCha
     ...item,
     index // Add index property
   }));
+console.log("WeeklyChart data:", data);
 
   return (
     <div className={cn("w-full h-40", className)}>
@@ -30,11 +31,13 @@ export function WeeklyChart({ data, className, barColor = "#219653" }: WeeklyCha
           margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
         >
           <XAxis 
-            dataKey="name" 
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 12, fill: '#828282', fontFamily: 'Cairo Variable' }}
-          />
+  dataKey="name" 
+  axisLine={false}
+  tickLine={false}
+  interval={0} // <<< دي مهمة عشان يطبع كل الأيام
+  tick={{ fontSize: 12, fill: '#828282', fontFamily: 'Cairo Variable' }}
+/>
+
           <Tooltip
             contentStyle={{ 
               backgroundColor: '#fff',
