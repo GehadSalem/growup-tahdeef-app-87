@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MajorGoalsService } from "@/services/majorGoalsService";
 import { NotificationHelper } from "@/services/notificationHelper";
+import { DateDropdowns } from "@/components/ui/DateDropdowns";
 
 // أنواع الأهداف الكبرى
 const GOAL_TYPES = [
@@ -470,14 +471,10 @@ export default function MajorGoals() {
                   </div>
                   <div>
                     <Label htmlFor="goal-target-date">تاريخ تحقيق الهدف</Label>
-                    <Input
-                      id="goal-target-date"
-                      type="date"
-                      className="text-right justify-end"
-                      value={newGoal.targetDate}
-                      onChange={(e) =>
-                        setNewGoal({ ...newGoal, targetDate: e.target.value })
-                      }
+                    <DateDropdowns
+                      value={newGoal.targetDate || format(new Date(), "yyyy-MM-dd")}
+                      onChange={(date) => setNewGoal({...newGoal, targetDate: date})}
+                      className="mt-1"
                     />
                   </div>
                 </div>

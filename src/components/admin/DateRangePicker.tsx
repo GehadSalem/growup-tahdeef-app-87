@@ -4,7 +4,7 @@ import { CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DateDropdowns } from "@/components/ui/DateDropdowns";
 import {
   Popover,
   PopoverContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { arSA } from 'date-fns/locale';
+import { Label } from "@/components/ui/label";
 
 interface DateRangePickerProps {
   date: DateRange | undefined;
@@ -26,6 +27,24 @@ export function DateRangePicker({
   className,
   align = "start",
 }: DateRangePickerProps) {
+  const [fromDate, setFromDate] = React.useState(
+    date?.from ? format(date.from, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+  );
+  const [toDate, setToDate] = React.useState(
+    date?.to ? format(date.to, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd")
+  );
+
+  const handleDateChange = () => {
+    setDate({
+      from: new Date(fromDate),
+      to: new Date(toDate),
+    });
+  };
+
+  React.useEffect(() => {
+    handleDateChange();
+  }, [fromDate, toDate]);
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -54,15 +73,25 @@ export function DateRangePicker({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align={align}>
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={setDate}
-            numberOfMonths={2}
-          />
+        <PopoverContent className="w-auto p-4" align={align}>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">من تاريخ:</Label>
+              <DateDropdowns
+                value={fromDate}
+                onChange={setFromDate}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">إلى تاريخ:</Label>
+              <DateDropdowns
+                value={toDate}
+                onChange={setToDate}
+                className="mt-2"
+              />
+            </div>
+          </div>
         </PopoverContent>
       </Popover>
     </div>

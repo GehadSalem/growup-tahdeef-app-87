@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DateDropdowns } from "@/components/ui/DateDropdowns";
 
 // تعريف أنواع الالتزامات
 export type ObligationType = "قسط" | "مناسبة" | "شراء" | "آخر";
@@ -139,11 +140,10 @@ export function AddObligationDialog({ onAddObligation }: AddObligationDialogProp
           
           <div className="space-y-2">
             <Label className="text-right block">تاريخ الاستحقاق</Label>
-            <Input 
-              type="date" 
-              className="text-right" 
+            <DateDropdowns
               value={newObligation.dueDate}
-              onChange={e => setNewObligation({...newObligation, dueDate: e.target.value})}
+              onChange={(date) => setNewObligation({...newObligation, dueDate: date})}
+              className="mt-2"
             />
           </div>
           
